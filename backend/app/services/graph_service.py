@@ -17,6 +17,8 @@ class GraphService:
     def __init__(self):
         self.graph: nx.DiGraph = nx.DiGraph()
         self._betweenness_cache: Optional[Dict[str, float]] = None
+        self._structural_features_cache: Optional[Dict[str, Dict[str, Any]]] = None
+        self._summary_cache: Optional[Dict[str, Any]] = None
 
     def build_graph(self, transactions_df: pd.DataFrame) -> nx.DiGraph:
         """
@@ -30,6 +32,8 @@ class GraphService:
         if transactions_df.empty:
             self.graph = nx.DiGraph()
             self._betweenness_cache = {}
+            self._structural_features_cache = {}
+            self._summary_cache = None
             return self.graph
 
         G = nx.DiGraph()
@@ -61,8 +65,11 @@ class GraphService:
                     )
 
             self.graph = G
-            # Invalidate cached centrality on rebuild
+            # Invalidate and precompute centrality at ingest time
             self._betweenness_cache = None
+            self._structural_features_cache = None
+            self._summary_cache = None
+            self.compute_betweenness_centrality()
 
             logger.info(
                 f"Graph constructed successfully: {G.number_of_nodes()} nodes, "
@@ -136,6 +143,9 @@ class GraphService:
 
     def get_all_structural_features(self) -> Dict[str, Dict[str, Any]]:
         """Calculate structural features for all nodes in the graph."""
+        if self._structural_features_cache is not None:
+            return self._structural_features_cache
+
         centrality = self.compute_betweenness_centrality()
         features = {}
 
@@ -155,15 +165,19 @@ class GraphService:
                 "betweenness_centrality": bc,
             }
 
+        self._structural_features_cache = features
         return features
 
     def get_graph_summary(self) -> Dict[str, Any]:
         """Get topological and descriptive summary of the network."""
+        if self._summary_cache is not None:
+            return self._summary_cache
+
         n_nodes = self.graph.number_of_nodes()
         n_edges = self.graph.number_of_edges()
 
         if n_nodes == 0:
-            return {
+            summary = {
                 "nodes": 0,
                 "edges": 0,
                 "density": 0.0,
@@ -173,6 +187,8 @@ class GraphService:
                 "top_in_degree_nodes": [],
                 "top_out_degree_nodes": [],
             }
+            self._summary_cache = summary
+            return summary
 
         density = round(float(nx.density(self.graph)), 6)
         wcc = nx.number_weakly_connected_components(self.graph)
@@ -198,7 +214,7 @@ class GraphService:
             {"user_id": node, **metrics} for node, metrics in sorted_out
         ]
 
-        return {
+        summary = {
             "nodes": n_nodes,
             "edges": n_edges,
             "density": density,
@@ -208,3 +224,5 @@ class GraphService:
             "top_in_degree_nodes": top_in,
             "top_out_degree_nodes": top_out,
         }
+        self._summary_cache = summary
+        return summary

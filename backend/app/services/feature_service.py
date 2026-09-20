@@ -42,13 +42,16 @@ class FeatureService:
     def __init__(self, graph_service: GraphService):
         self.graph_service = graph_service
         self.user_features: Dict[str, UserFeatures] = {}
+        self._feature_matrix_cache: Optional[Tuple[List[str], np.ndarray, List[str]]] = None
 
     def extract_features(self, transactions_df: pd.DataFrame) -> Dict[str, UserFeatures]:
         """
         Compute combined structural, behavioral, and temporal features for all users.
+        Runs once at dataset ingest and caches the results and feature matrix.
         """
         if transactions_df.empty:
             self.user_features = {}
+            self._feature_matrix_cache = ([], np.empty((0, len(FEATURE_NAMES)), dtype=np.float32), FEATURE_NAMES)
             return self.user_features
 
         # Ensure datetime dtype
@@ -192,17 +195,24 @@ class FeatureService:
             )
 
         self.user_features = features_dict
+        # Invalidate feature matrix cache so it is re-derived from fresh user_features
+        self._feature_matrix_cache = None
         logger.info(f"Feature extraction complete for {len(features_dict)} users.")
         return self.user_features
 
     def get_feature_matrix(self) -> Tuple[List[str], np.ndarray, List[str]]:
         """
         Export the feature matrix for ML modeling (e.g., Isolation Forest).
+        Returns cached matrix computed at ingest time.
 
         :return: (user_ids, 2D numpy array of features, feature_names)
         """
+        if self._feature_matrix_cache is not None:
+            return self._feature_matrix_cache
+
         if not self.user_features:
-            return [], np.empty((0, len(FEATURE_NAMES)), dtype=np.float32), FEATURE_NAMES
+            self._feature_matrix_cache = ([], np.empty((0, len(FEATURE_NAMES)), dtype=np.float32), FEATURE_NAMES)
+            return self._feature_matrix_cache
 
         user_ids = sorted(self.user_features.keys())
         matrix = np.array(
@@ -214,4 +224,5 @@ class FeatureService:
         if np.isnan(matrix).any() or np.isinf(matrix).any():
             matrix = np.nan_to_num(matrix, nan=0.0, posinf=0.0, neginf=0.0)
 
-        return user_ids, matrix, FEATURE_NAMES
+        self._feature_matrix_cache = (user_ids, matrix, FEATURE_NAMES)
+        return self._feature_matrix_cache

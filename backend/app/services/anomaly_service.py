@@ -4,8 +4,11 @@ Trains and evaluates Isolation Forest and Statistical Baseline models on user-le
 Supports dynamic feature-group selection, multi-experiment persistence, deterministic
 percentile-based presentation risk scoring, transparent explainability, and joblib persistence.
 """
+from dataclasses import dataclass
 from datetime import datetime, timezone
+import hashlib
 from pathlib import Path
+import threading
 from typing import Any, Dict, List, Optional, Tuple, Union
 import joblib
 import numpy as np
@@ -33,6 +36,25 @@ from .feature_service import FEATURE_NAMES
 from .split_service import split_service
 
 logger = get_logger(__name__)
+
+PREPROCESSING_VERSION = "v1"
+FEATURE_VERSION = "v1"
+MODEL_VERSION = "v1"
+
+
+@dataclass
+class ScoredDatasetCache:
+    dataset_id: str
+    experiment_label: str
+    split_label: Optional[str]
+    partition: Optional[str]
+    cache_key: str
+    total_users: int
+    suspicious_count: int
+    normal_count: int
+    all_results: List[UserAnomalyResult]
+    suspicious_results: List[UserAnomalyResult]
+    user_map: Dict[str, UserAnomalyResult]
 
 # Canonical grouping of the 19 features
 FEATURE_GROUP_MAP: Dict[str, List[str]] = {
@@ -107,6 +129,43 @@ class AnomalyService:
         self.models_dir.mkdir(parents=True, exist_ok=True)
         # In-memory artifact cache keyed by (dataset_id, experiment_label, split_label)
         self._cache: Dict[Tuple[str, str, Optional[str]], Dict[str, Any]] = {}
+        # Scored and ranked user array cache
+        self._scored_cache: Dict[str, ScoredDatasetCache] = {}
+        self._cache_lock = threading.Lock()
+        self._dataset_locks: Dict[str, threading.Lock] = {}
+
+    def _get_dataset_lock(self, dataset_id: str) -> threading.Lock:
+        with self._cache_lock:
+            if dataset_id not in self._dataset_locks:
+                self._dataset_locks[dataset_id] = threading.Lock()
+            return self._dataset_locks[dataset_id]
+
+    def _compute_cache_key(
+        self,
+        dataset_id: str,
+        experiment_label: str,
+        split_label: Optional[str],
+        partition: Optional[str],
+        artifact: Dict[str, Any],
+    ) -> str:
+        meta = artifact.get("metadata", {})
+        feat_names = meta.get("feature_names", [])
+        feat_sig = hashlib.sha256(",".join(feat_names).encode("utf-8")).hexdigest()[:8]
+        timestamp = meta.get("training_timestamp", meta.get("trained_at", ""))
+        model_type = artifact.get("model_type", "IsolationForest")
+        split_key = f"{split_label or 'all'}:{partition or 'all'}"
+        return f"{dataset_id}:{experiment_label}:{split_key}:{model_type}:{feat_sig}:{timestamp}:{FEATURE_VERSION}:{MODEL_VERSION}"
+
+    def invalidate_scored_cache(self, dataset_id: str, experiment_label: Optional[str] = None) -> None:
+        """Invalidate scored cache for a dataset or specific experiment."""
+        with self._cache_lock:
+            keys_to_del = [
+                k for k in self._scored_cache
+                if k.startswith(f"{dataset_id}:") and (experiment_label is None or f":{experiment_label}:" in k)
+            ]
+            for k in keys_to_del:
+                del self._scored_cache[k]
+        logger.info(f"Invalidated scored cache for dataset '{dataset_id}' (exp='{experiment_label}').")
 
     def _get_model_path(
         self, dataset_id: str, experiment_label: str = "default", split_label: Optional[str] = None
@@ -308,6 +367,8 @@ class AnomalyService:
             if split_lbl == "research-split":
                 self._cache[(dataset_id, exp_label, "research-split")] = artifact
 
+        self.invalidate_scored_cache(dataset_id, exp_label)
+
         logger.info(
             f"Model successfully trained and persisted for dataset '{dataset_id}' "
             f"(experiment='{exp_label}', split='{split_lbl}', mode='{eval_mode}') at {model_path}"
@@ -351,6 +412,9 @@ class AnomalyService:
             self._cache[(dataset_id, clean_exp, None)] = artifact
             if effective_split == "research-split":
                 self._cache[(dataset_id, clean_exp, "research-split")] = artifact
+
+        self.invalidate_scored_cache(dataset_id, clean_exp)
+
         logger.info(
             f"Custom artifact saved for dataset '{dataset_id}' under experiment '{clean_exp}' (split='{effective_split}') at {model_path}"
         )
@@ -499,6 +563,190 @@ class AnomalyService:
 
         return reasons
 
+    def _get_or_compute_scored_users(
+        self,
+        dataset_id: str,
+        experiment_label: str = "default",
+        split_label: Optional[str] = None,
+        partition: Optional[str] = None,
+    ) -> ScoredDatasetCache:
+        """
+        Score all users in the dataset once and cache the full scored+ranked array.
+        Cache key incorporates dataset_id, experiment, split/partition, model type,
+        feature signature, timestamp, and model/feature versions.
+        """
+        clean_exp = (experiment_label or "default").strip()
+        store = dataset_registry.get(dataset_id)
+        artifact = self._load_artifact(dataset_id, clean_exp, split_label)
+
+        cache_key = self._compute_cache_key(
+            dataset_id, clean_exp, split_label, partition, artifact
+        )
+
+        # Fast thread-safe cache lookup
+        with self._cache_lock:
+            if cache_key in self._scored_cache:
+                return self._scored_cache[cache_key]
+
+        # Acquire per-dataset lock so only one thread executes the scoring pass
+        dataset_lock = self._get_dataset_lock(dataset_id)
+        with dataset_lock:
+            with self._cache_lock:
+                if cache_key in self._scored_cache:
+                    return self._scored_cache[cache_key]
+
+            model_type = artifact.get("model_type", "IsolationForest")
+            curr_user_ids, full_matrix, _ = store.get_feature_matrix()
+
+            if len(curr_user_ids) == 0:
+                empty_entry = ScoredDatasetCache(
+                    dataset_id=dataset_id,
+                    experiment_label=clean_exp,
+                    split_label=split_label,
+                    partition=partition,
+                    cache_key=cache_key,
+                    total_users=0,
+                    suspicious_count=0,
+                    normal_count=0,
+                    all_results=[],
+                    suspicious_results=[],
+                    user_map={},
+                )
+                with self._cache_lock:
+                    self._scored_cache[cache_key] = empty_entry
+                return empty_entry
+
+            all_results: List[UserAnomalyResult] = []
+            user_map: Dict[str, UserAnomalyResult] = {}
+
+            # Branch 1: Statistical Baseline Model
+            if model_type == "StatisticalBaseline":
+                raw_scores = artifact.get("raw_scores", {})
+                predictions = artifact.get("predictions", {})
+                risk_scores = artifact.get("risk_scores", {})
+                reasons_dict = artifact.get("reasons", {})
+
+                for uid in curr_user_ids:
+                    score = float(raw_scores.get(uid, 0.0))
+                    pred = int(predictions.get(uid, 1))
+                    is_suspicious = (pred == -1)
+                    status = "suspicious" if is_suspicious else "normal"
+                    risk = float(risk_scores.get(uid, 0.0))
+                    reasons = reasons_dict.get(uid, [])
+
+                    res = UserAnomalyResult(
+                        user_id=uid,
+                        raw_score=score,
+                        prediction=pred,
+                        status=status,
+                        risk_score=risk,
+                        reasons=reasons,
+                    )
+                    all_results.append(res)
+                    user_map[uid] = res
+
+            # Branch 2: Isolation Forest Model
+            else:
+                model: IsolationForest = artifact["model"]
+                meta_dict: Dict[str, Any] = artifact["metadata"]
+                train_scores: np.ndarray = artifact["train_scores"]
+                col_indices: List[int] = artifact["col_indices"]
+                trained_features: List[str] = meta_dict["feature_names"]
+                feature_stats: Dict[str, Dict[str, float]] = meta_dict["feature_stats"]
+
+                X_sliced = full_matrix[:, col_indices]
+                if np.isnan(X_sliced).any() or np.isinf(X_sliced).any():
+                    X_sliced = np.nan_to_num(X_sliced, nan=0.0, posinf=0.0, neginf=0.0)
+
+                raw_scores = model.decision_function(X_sliced)
+                predictions = model.predict(X_sliced)
+
+                # Vectorized percentile rank computation: bit-for-bit matches scalar formula
+                sorted_train = np.sort(train_scores)
+                n_train = len(sorted_train)
+                raw_rounded = np.round(raw_scores, 6)
+                if n_train <= 1:
+                    risks = np.full(len(raw_scores), 50.0, dtype=np.float64)
+                else:
+                    left = np.searchsorted(sorted_train, raw_rounded, side="left")
+                    right = np.searchsorted(sorted_train, raw_rounded, side="right")
+                    ranks = (left + 0.5 * (right - left)) / n_train
+                    risks = np.round(np.clip(100.0 * (1.0 - ranks), 0.0, 100.0), 2)
+
+                user_features_dict = store.feature_service.user_features
+
+                for i, uid in enumerate(curr_user_ids):
+                    score = float(raw_rounded[i])
+                    pred = int(predictions[i])
+                    is_suspicious = (pred == -1)
+                    status = "suspicious" if is_suspicious else "normal"
+                    risk = float(risks[i])
+
+                    # Explainability: only compute reason codes for suspicious entities
+                    if is_suspicious:
+                        user_features_obj = user_features_dict.get(uid)
+                        user_feat_map = {}
+                        if user_features_obj:
+                            user_feat_map = {
+                                feat: getattr(user_features_obj, feat, 0.0)
+                                for feat in trained_features
+                            }
+                        reasons = self._generate_reasons_for_user(
+                            user_feat_map, feature_stats, trained_features, True
+                        )
+                    else:
+                        reasons = []
+
+                    res = UserAnomalyResult(
+                        user_id=uid,
+                        raw_score=score,
+                        prediction=pred,
+                        status=status,
+                        risk_score=risk,
+                        reasons=reasons,
+                    )
+                    all_results.append(res)
+                    user_map[uid] = res
+
+            # Filter by split partition if split_label is provided
+            if split_label:
+                split_obj = split_service.get_split(dataset_id, split_label)
+                allowed_uids = (
+                    set(split_obj.train_user_ids)
+                    if partition == "train"
+                    else set(split_obj.test_user_ids)
+                )
+                all_results = [r for r in all_results if r.user_id in allowed_uids]
+                user_map = {r.user_id: r for r in all_results}
+
+            suspicious_results = [r for r in all_results if r.prediction == -1]
+            suspicious_count = len(suspicious_results)
+            total_users = len(all_results)
+            normal_count = total_users - suspicious_count
+
+            entry = ScoredDatasetCache(
+                dataset_id=dataset_id,
+                experiment_label=clean_exp,
+                split_label=split_label,
+                partition=partition,
+                cache_key=cache_key,
+                total_users=total_users,
+                suspicious_count=suspicious_count,
+                normal_count=normal_count,
+                all_results=all_results,
+                suspicious_results=suspicious_results,
+                user_map=user_map,
+            )
+
+            with self._cache_lock:
+                self._scored_cache[cache_key] = entry
+
+            logger.info(
+                f"Scored & cached {total_users} users for dataset '{dataset_id}' "
+                f"(exp='{clean_exp}', suspicious={suspicious_count}, normal={normal_count})."
+            )
+            return entry
+
     def predict_user_anomalies(
         self,
         dataset_id: str,
@@ -513,153 +761,45 @@ class AnomalyService:
         """
         Evaluate anomaly status and compute risk scores for users in the specified dataset
         under a given experiment configuration.
+        Applies limit/offset against the cached scored+ranked array.
         """
         clean_exp = (experiment_label or "default").strip()
-        store = dataset_registry.get(dataset_id)
-        artifact = self._load_artifact(dataset_id, clean_exp, split_label)
-
-        model_type = artifact.get("model_type", "IsolationForest")
-        curr_user_ids, full_matrix, _ = store.get_feature_matrix()
-
-        if len(curr_user_ids) == 0:
-            return UserAnomalyListResponse(
-                dataset_id=dataset_id,
-                experiment_label=clean_exp,
-                total_users=0,
-                suspicious_count=0,
-                normal_count=0,
-                limit=limit,
-                offset=offset,
-                users=[],
-            )
-
-        results: List[UserAnomalyResult] = []
-        suspicious_count = 0
-        normal_count = 0
-
-        # Branch 1: Statistical Baseline Model
-        if model_type == "StatisticalBaseline":
-            raw_scores = artifact.get("raw_scores", {})
-            predictions = artifact.get("predictions", {})
-            risk_scores = artifact.get("risk_scores", {})
-            reasons_dict = artifact.get("reasons", {})
-
-            for uid in curr_user_ids:
-                score = float(raw_scores.get(uid, 0.0))
-                pred = int(predictions.get(uid, 1))
-                is_suspicious = (pred == -1)
-                if is_suspicious:
-                    suspicious_count += 1
-                    status = "suspicious"
-                else:
-                    normal_count += 1
-                    status = "normal"
-
-                risk = float(risk_scores.get(uid, 0.0))
-                reasons = reasons_dict.get(uid, [])
-
-                res = UserAnomalyResult(
-                    user_id=uid,
-                    raw_score=score,
-                    prediction=pred,
-                    status=status,
-                    risk_score=risk,
-                    reasons=reasons,
-                )
-                results.append(res)
-
-        # Branch 2: Isolation Forest Model
-        else:
-            model: IsolationForest = artifact["model"]
-            meta_dict: Dict[str, Any] = artifact["metadata"]
-            train_scores: np.ndarray = artifact["train_scores"]
-            col_indices: List[int] = artifact["col_indices"]
-            trained_features: List[str] = meta_dict["feature_names"]
-            feature_stats: Dict[str, Dict[str, float]] = meta_dict["feature_stats"]
-
-            X_sliced = full_matrix[:, col_indices]
-            if np.isnan(X_sliced).any() or np.isinf(X_sliced).any():
-                X_sliced = np.nan_to_num(X_sliced, nan=0.0, posinf=0.0, neginf=0.0)
-
-            raw_scores = model.decision_function(X_sliced)
-            predictions = model.predict(X_sliced)
-
-            for i, uid in enumerate(curr_user_ids):
-                score = float(round(raw_scores[i], 6))
-                pred = int(predictions[i])
-                is_suspicious = (pred == -1)
-
-                if is_suspicious:
-                    suspicious_count += 1
-                    status = "suspicious"
-                else:
-                    normal_count += 1
-                    status = "normal"
-
-                risk = compute_risk_score(score, train_scores)
-
-                user_features_obj = store.feature_service.user_features.get(uid)
-                user_feat_map = {}
-                if user_features_obj:
-                    user_feat_map = {
-                        feat: getattr(user_features_obj, feat, 0.0)
-                        for feat in trained_features
-                    }
-
-                reasons = self._generate_reasons_for_user(
-                    user_feat_map, feature_stats, trained_features, is_suspicious
-                )
-
-                res = UserAnomalyResult(
-                    user_id=uid,
-                    raw_score=score,
-                    prediction=pred,
-                    status=status,
-                    risk_score=risk,
-                    reasons=reasons,
-                )
-                results.append(res)
-
-        # Filter by split partition if split_label is provided
-        if split_label:
-            split_obj = split_service.get_split(dataset_id, split_label)
-            allowed_uids = (
-                set(split_obj.train_user_ids)
-                if partition == "train"
-                else set(split_obj.test_user_ids)
-            )
-            results = [r for r in results if r.user_id in allowed_uids]
-            suspicious_count = sum(1 for r in results if r.prediction == -1)
-            normal_count = len(results) - suspicious_count
+        scored_cache = self._get_or_compute_scored_users(
+            dataset_id, clean_exp, split_label, partition
+        )
 
         # Filter by single user if requested
         if user_id:
-            user_matches = [r for r in results if r.user_id == user_id]
+            user_matches = scored_cache.user_map.get(user_id)
             if not user_matches:
                 raise NotFoundException(f"User '{user_id}' not found in dataset '{dataset_id}'.")
+            is_suspicious = (user_matches.prediction == -1)
             return UserAnomalyListResponse(
                 dataset_id=dataset_id,
                 experiment_label=clean_exp,
                 total_users=1,
-                suspicious_count=1 if user_matches[0].prediction == -1 else 0,
-                normal_count=0 if user_matches[0].prediction == -1 else 1,
+                suspicious_count=1 if is_suspicious else 0,
+                normal_count=0 if is_suspicious else 1,
                 limit=limit,
                 offset=0,
-                users=user_matches,
+                users=[user_matches],
             )
 
         if suspicious_only:
-            results = [r for r in results if r.prediction == -1]
+            results_pool = scored_cache.suspicious_results
+            total_count = len(results_pool)
+        else:
+            results_pool = scored_cache.all_results
+            total_count = scored_cache.total_users
 
-        total_count = len(results)
-        paginated_results = results[offset : offset + limit]
+        paginated_results = results_pool[offset : offset + limit]
 
         return UserAnomalyListResponse(
             dataset_id=dataset_id,
             experiment_label=clean_exp,
             total_users=total_count,
-            suspicious_count=suspicious_count,
-            normal_count=normal_count,
+            suspicious_count=scored_cache.suspicious_count,
+            normal_count=scored_cache.normal_count,
             limit=limit,
             offset=offset,
             users=paginated_results,
@@ -673,6 +813,7 @@ class AnomalyService:
     ) -> AnomalySummaryResponse:
         """
         Return aggregate summary of model predictions and metadata for a dataset under an experiment.
+        Reads counts directly from the cached scored dataset.
         """
         clean_exp = (experiment_label or "default").strip()
         dataset_registry.get(dataset_id)
@@ -681,15 +822,12 @@ class AnomalyService:
         meta_dict = artifact["metadata"]
         metadata = ModelMetadata(**meta_dict)
 
-        user_list = self.predict_user_anomalies(
-            dataset_id=dataset_id,
-            experiment_label=clean_exp,
-            limit=100000,
-            split_label=split_label,
+        scored_cache = self._get_or_compute_scored_users(
+            dataset_id, clean_exp, split_label
         )
-        total = user_list.total_users
-        suspicious = user_list.suspicious_count
-        normal = user_list.normal_count
+        total = scored_cache.total_users
+        suspicious = scored_cache.suspicious_count
+        normal = scored_cache.normal_count
         rate = float(round(suspicious / total, 4)) if total > 0 else 0.0
 
         return AnomalySummaryResponse(
