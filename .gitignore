@@ -22,33 +22,9 @@ ENV/
 data/models/*
 !data/models/.gitkeep
 
-# Exported Research Results (generated runs)
-data/results/*
-!data/results/.gitkeep
-
 # Processed Data (runtime output)
 data/processed/*
 !data/processed/.gitkeep
-
-# IDE & OS Metadata
-.vscode/
-.idea/
-*.swp
-*.swo
-.DS_Store
-Thumbs.db
-# Python
-__pycache__/
-*.py[cod]
-.pytest_cache/
-.venv/
-venv/
-env/
-
-# Environment / secrets
-.env
-.env.*
-!.env.example
 
 # Raw / downloaded datasets
 data/raw/*
@@ -57,31 +33,43 @@ data/raw/*
 *.zip
 *.gz
 
-# Temporary files
+# Research dataset fixtures - excluded due to size & licensing (regenerate via script)
+data/research/*.csv
+!data/research/README.md
+
+# Exported Research Results (generated runs)
+data/results/*
+!data/results/.gitkeep
+!data/results/final_e0_e4_comparison.json
+!data/results/final_e0_e4_comparison.csv
+!data/results/final_multiseed_robustness.json
+!data/results/final_multiseed_robustness.csv
+
+# Temporary / Log files
 scratch/
 *.tmp
 *.log
 
-# Local IDE / OS files
+# Local IDE & OS Metadata
 .vscode/
 .idea/
+*.swp
+*.swo
 .DS_Store
 Thumbs.db
 
 # Local model artifacts
-data/models/
 *.joblib
 
-# Frontend dependencies/build
+# Frontend dependencies and build output
 frontend/node_modules/
 frontend/.next/
 frontend/out/
+dist/
 
 # Antigravity / Gemini local files
 .gemini/
 
-# Research dataset fixtures - regenerate/download separately
-data/research/*.csv
-
 # Test artifacts
 test_*.pdf
+
