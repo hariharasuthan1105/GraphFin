@@ -23,6 +23,23 @@ from backend.scripts.convert_ibm_aml import (
     collect_sampled_accounts,
 )
 
+# Resolve fixture paths once at module load so skip conditions can reference them.
+_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+_RESEARCH_DIR = _REPO_ROOT / "data" / "research"
+_MEDIUM_TX = _RESEARCH_DIR / "ibm_aml_medium_5k.csv"
+_LARGE_TX = _RESEARCH_DIR / "ibm_aml_large_50k.csv"
+
+_RESEARCH_FIXTURES_PRESENT = _MEDIUM_TX.exists() and _LARGE_TX.exists()
+_SKIP_NO_FIXTURES = pytest.mark.skipif(
+    not _RESEARCH_FIXTURES_PRESENT,
+    reason=(
+        "Research fixture CSVs not present locally (data/research/ibm_aml_medium_5k.csv "
+        "and ibm_aml_large_50k.csv). "
+        "Run backend/scripts/convert_ibm_aml.py with the IBM AML HI-Small source dataset "
+        "and seed=42 to regenerate — see data/research/README.md."
+    ),
+)
+
 
 @pytest.fixture
 def repo_paths():
@@ -42,6 +59,7 @@ def repo_paths():
     }
 
 
+@_SKIP_NO_FIXTURES
 def test_locked_in_dataset_fixtures_counts_and_reproducibility(repo_paths):
     """
     Test 1: Confirms both locked-in dataset fixtures reproduce their documented

@@ -1,9 +1,7 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { api } from "../api/client";
 import {
   useApp,
-  RESEARCH_TIER_IDS,
-  RESEARCH_TIER_LABELS,
 } from "../context/AppContext";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
@@ -36,6 +34,28 @@ export const DatasetsScreen: React.FC = () => {
   const [manualIdInput, setManualIdInput] = useState("");
   const [selectedCurrency, setSelectedCurrency] = useState("USD");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Locked datasets: fetched dynamically from backend so we can show an honest
+  // empty state on fresh checkouts where the research CSVs haven't been loaded.
+  const [lockedDatasets, setLockedDatasets] = useState<Array<{
+    dataset_id: string;
+    tier: string;
+    label: string;
+    transactions: number;
+    users: number;
+    currency: string;
+  }> | null>(null); // null = still loading, [] = empty (no datasets available)
+  const [lockedDatasetsError, setLockedDatasetsError] = useState<string | null>(null);
+
+  useEffect(() => {
+    api
+      .getLockedDatasets()
+      .then((data) => setLockedDatasets(data))
+      .catch(() => {
+        setLockedDatasets([]);
+        setLockedDatasetsError("Could not reach backend to check research dataset availability.");
+      });
+  }, []);
 
   const handleFileUpload = async (file: File, currencyOverride?: string) => {
     setIsUploading(true);
@@ -346,55 +366,64 @@ export const DatasetsScreen: React.FC = () => {
           </div>
         </div>
 
-        <div className="divide-y divide-hairline border border-hairline rounded overflow-hidden">
-          <div className="p-3 bg-surface-raised/40 flex items-center justify-between">
-            <div className="space-y-0.5">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-blue-400" />
-                <span className="text-xs font-sans font-medium text-text-primary">
-                  {RESEARCH_TIER_LABELS.medium_real}
-                </span>
-              </div>
-              <div className="text-[11px] font-mono text-text-tertiary">
-                ID: {RESEARCH_TIER_IDS.medium_real} · 31,463 txs · 5,000 entities · USD
-              </div>
-            </div>
-            <Button
-              size="sm"
-              variant={datasetId === RESEARCH_TIER_IDS.medium_real ? "secondary" : "ghost"}
-              onClick={() => {
-                setResearchTier("medium_real");
-                setActiveNav("evaluation");
-              }}
-            >
-              {datasetId === RESEARCH_TIER_IDS.medium_real ? "Active Benchmark" : "Load Benchmark"}
-            </Button>
+        {/* Loading state */}
+        {lockedDatasets === null && (
+          <div className="py-4 text-center text-xs font-sans text-text-tertiary">
+            Checking research dataset availability…
           </div>
+        )}
 
-          <div className="p-3 bg-surface-raised/40 flex items-center justify-between">
-            <div className="space-y-0.5">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-blue-400" />
-                <span className="text-xs font-sans font-medium text-text-primary">
-                  {RESEARCH_TIER_LABELS.large_real}
-                </span>
-              </div>
-              <div className="text-[11px] font-mono text-text-tertiary">
-                ID: {RESEARCH_TIER_IDS.large_real} · 353,850 txs · 49,992 entities · USD
-              </div>
-            </div>
-            <Button
-              size="sm"
-              variant={datasetId === RESEARCH_TIER_IDS.large_real ? "secondary" : "ghost"}
-              onClick={() => {
-                setResearchTier("large_real");
-                setActiveNav("evaluation");
-              }}
-            >
-              {datasetId === RESEARCH_TIER_IDS.large_real ? "Active Benchmark" : "Load Benchmark"}
-            </Button>
+        {/* Error reaching backend */}
+        {lockedDatasetsError && (
+          <div className="py-2 text-xs font-sans text-amber-400">
+            {lockedDatasetsError}
           </div>
-        </div>
+        )}
+
+        {/* Empty state — datasets not loaded on this backend instance */}
+        {lockedDatasets !== null && lockedDatasets.length === 0 && !lockedDatasetsError && (
+          <div className="border border-hairline rounded p-4 text-center space-y-1">
+            <p className="text-xs font-sans font-medium text-text-secondary">
+              No locked research datasets currently available
+            </p>
+            <p className="text-[11px] font-sans text-text-tertiary">
+              The IBM AML HI-Small benchmark fixtures have not been loaded on this backend instance.
+              Run <span className="font-mono">backend/scripts/run_final_research_evaluation.py</span> with
+              the source dataset to make them available.
+            </p>
+          </div>
+        )}
+
+        {/* Dynamically available locked datasets */}
+        {lockedDatasets !== null && lockedDatasets.length > 0 && (
+          <div className="divide-y divide-hairline border border-hairline rounded overflow-hidden">
+            {lockedDatasets.map((ds) => (
+              <div key={ds.dataset_id} className="p-3 bg-surface-raised/40 flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-blue-400" />
+                    <span className="text-xs font-sans font-medium text-text-primary">
+                      {ds.label}
+                    </span>
+                  </div>
+                  <div className="text-[11px] font-mono text-text-tertiary">
+                    ID: {ds.dataset_id} · {ds.transactions.toLocaleString()} txs · {ds.users.toLocaleString()} entities · {ds.currency}
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  variant={datasetId === ds.dataset_id ? "secondary" : "ghost"}
+                  onClick={() => {
+                    setResearchTier(ds.tier as any);
+                    setActiveNav("evaluation");
+                  }}
+                >
+                  {datasetId === ds.dataset_id ? "Active Benchmark" : "Load Benchmark"}
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
       </Card>
 
       {/* Manual Dataset ID Input */}

@@ -93,6 +93,24 @@ export const api = {
   getDatasetStatus: (datasetId: string): Promise<{ dataset_id: string; status: string }> =>
     request<{ dataset_id: string; status: string }>(`/transactions/${datasetId}/status`),
 
+  // Locked research datasets
+  getLockedDatasets: (): Promise<Array<{
+    dataset_id: string;
+    tier: string;
+    label: string;
+    transactions: number;
+    users: number;
+    currency: string;
+  }>> =>
+    request<Array<{
+      dataset_id: string;
+      tier: string;
+      label: string;
+      transactions: number;
+      users: number;
+      currency: string;
+    }>>("/datasets/locked"),
+
   // Graph
   getGraphSummary: (datasetId: string): Promise<GraphSummaryResponse> =>
     request<GraphSummaryResponse>(`/graph/${datasetId}/summary`),

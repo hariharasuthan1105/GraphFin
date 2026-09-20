@@ -1,15 +1,81 @@
 from typing import List, Optional
 from fastapi import APIRouter, Body, File, Query, UploadFile, status
+from pydantic import BaseModel
 
 from ...core.logging import get_logger
 from ...schemas.labels import DatasetLabelsSummaryResponse
 from ...schemas.split import SplitCreateRequest, SplitSummaryResponse
 from ...services.label_registry import label_registry
 from ...services.split_service import split_service
+from ...services.dataset_registry import dataset_registry
 
 logger = get_logger(__name__)
 
 router = APIRouter(prefix="/datasets", tags=["Datasets, Splits & Ground-Truth Labels"])
+
+
+# ---------------------------------------------------------------------------
+# Locked research dataset discovery
+# ---------------------------------------------------------------------------
+
+# These UUIDs were assigned when the IBM AML research benchmark datasets were
+# first registered. They are frozen and hardcoded here as the single source of
+# truth so the frontend can query which locked datasets are actually available
+# in the current backend instance, rather than assuming they are always present.
+_LOCKED_DATASET_IDS = {
+    "ddbaab44-78b6-41be-a8fb-e83dfec66358": {
+        "label": "Research — 5,000 accounts (IBM AML HI-Small subsample)",
+        "tier": "medium_real",
+        "transactions": 31463,
+        "users": 5000,
+        "currency": "USD",
+    },
+    "03fb9ab0-4f42-4404-9d76-723fd4d8753e": {
+        "label": "Research — 49,992 accounts (IBM AML HI-Small subsample)",
+        "tier": "large_real",
+        "transactions": 353850,
+        "users": 49992,
+        "currency": "USD",
+    },
+}
+
+
+class LockedDatasetInfo(BaseModel):
+    dataset_id: str
+    tier: str
+    label: str
+    transactions: int
+    users: int
+    currency: str
+
+
+@router.get(
+    "/locked",
+    response_model=List[LockedDatasetInfo],
+    status_code=status.HTTP_200_OK,
+    summary="List Available Locked Research Datasets",
+    description=(
+        "Returns the subset of locked IBM AML research benchmark datasets that are "
+        "currently registered in the backend's dataset registry. "
+        "Returns an empty list on fresh checkouts where the fixture CSVs have not been "
+        "loaded — the frontend should display an honest empty state in this case. "
+        "Locked datasets are pre-registered when the research evaluation script "
+        "(backend/scripts/run_final_research_evaluation.py) has been run."
+    ),
+)
+async def list_locked_datasets() -> List[LockedDatasetInfo]:
+    """Return locked benchmark datasets that are currently available in the registry."""
+    available = []
+    for ds_id, meta in _LOCKED_DATASET_IDS.items():
+        try:
+            dataset_registry.get(ds_id)  # raises NotFoundException if not registered
+            available.append(LockedDatasetInfo(dataset_id=ds_id, **meta))
+        except Exception:
+            # Dataset not present in registry — silently skip it.
+            # This is the expected state on a fresh checkout.
+            pass
+    return available
+
 
 
 @router.post(

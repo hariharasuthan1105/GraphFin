@@ -5,6 +5,36 @@ This directory contains permanent, reproducible real-data fixtures derived from 
 
 These fixtures are locked in place for the final E0–E4 research benchmark evaluation of GraphFin.
 
+> [!IMPORTANT]
+> **Version Control & Dataset Licensing — Read Before Committing**:
+>
+> **Git tracking status**: The generated research dataset CSV files (`ibm_aml_medium_5k.csv`,
+> `ibm_aml_medium_5k_labels.csv`, `ibm_aml_large_50k.csv`, `ibm_aml_large_50k_labels.csv`)
+> are **NOT committed to version control** and are gitignored via `.gitignore`. They must be
+> regenerated locally by anyone reproducing the experiments (see commands below).
+>
+> **Application startup**: The raw IBM AML dataset and these research fixture CSVs are **NOT
+> required for normal GraphFin startup**. The application starts cleanly on a fresh checkout
+> with no data files present at all. If the fixture CSVs are absent, the research benchmark
+> features (locked E0–E4 comparison, 5K/50K tier evaluation) will be unavailable, but all
+> other application functionality (transaction upload, graph analysis, custom anomaly detection)
+> continues to operate normally. The backend will return an empty list from
+> `GET /api/v1/datasets/locked` and the frontend will display an honest empty state.
+>
+> **Open licensing question (unverified — do not resolve unilaterally)**:
+> The original IBM AML HI-Small source dataset is distributed via Kaggle under what appears to
+> be the Community Data License Agreement (CDLA). The exact applicable variant — **Permissive
+> (CDLA-Permissive-1.0)** vs **Sharing (CDLA-Sharing-1.0)** — has **not been definitively
+> verified** for this specific dataset. Whether the derived subsamples produced by
+> `convert_ibm_aml.py` (5,000 and 49,992 account subsets) may be freely redistributed depends
+> on which CDLA variant applies. **Before committing these CSVs to a public repository, verify
+> the dataset's actual license page on Kaggle and/or the IBM Research license terms.** This
+> question is intentionally left open here rather than asserted in either direction.
+>
+> To regenerate these exact research fixtures locally:
+> 1. Download `HI-Small_Trans.csv` from Kaggle's IBM Transactions for Anti-Money Laundering (AML) dataset.
+> 2. Run [`backend/scripts/convert_ibm_aml.py`](../../backend/scripts/convert_ibm_aml.py) using random seed `42` as documented below.
+
 ---
 
 ## 1. Dataset Generation Commands
