@@ -195,8 +195,13 @@ export const GraphScreen: React.FC = () => {
     }
   };
 
-  // Static mode network nodes
-  const staticNetworkNodes: NetworkNode[] = useMemo(() => {
+  // Static investigation limits
+  const [nodeLimit, setNodeLimit] = useState<number>(100);
+  const [expandNeighbors, setExpandNeighbors] = useState<boolean>(true);
+  const edgeLimit = 300;
+
+  // Static mode network nodes & edges with investigation limits
+  const staticNetworkData = useMemo(() => {
     const nodeMap = new Map<string, NetworkNode>();
 
     userList.forEach((u) => {
@@ -233,6 +238,7 @@ export const GraphScreen: React.FC = () => {
           id: e.source,
           degree: 1,
           status,
+          risk_score: anom?.risk_score,
         });
       }
       if (!nodeMap.has(e.target)) {
@@ -247,12 +253,73 @@ export const GraphScreen: React.FC = () => {
           id: e.target,
           degree: 1,
           status,
+          risk_score: anom?.risk_score,
         });
       }
     });
 
-    return Array.from(nodeMap.values());
-  }, [userList, cachedEdges, anomalyResults]);
+    const allNodesList = Array.from(nodeMap.values());
+    if (allNodesList.length <= nodeLimit) {
+      const nodeSet = new Set(allNodesList.map((n) => n.id));
+      const edges = cachedEdges
+        .filter((e) => nodeSet.has(e.source) && nodeSet.has(e.target))
+        .slice(0, edgeLimit);
+      return { nodes: allNodesList, edges, totalCount: allNodesList.length };
+    }
+
+    // Prioritized selection for large graphs:
+    // 1. Selected node + its 1-hop neighbors
+    // 2. Suspicious entities sorted by risk_score descending
+    // 3. High degree structural hubs up to nodeLimit
+    const prioritizedNodeIds = new Set<string>();
+
+    if (selectedNodeId && nodeMap.has(selectedNodeId)) {
+      prioritizedNodeIds.add(selectedNodeId);
+      if (expandNeighbors) {
+        cachedEdges.forEach((e) => {
+          if (e.source === selectedNodeId) prioritizedNodeIds.add(e.target);
+          if (e.target === selectedNodeId) prioritizedNodeIds.add(e.source);
+        });
+      }
+    }
+
+    const suspiciousNodes = allNodesList
+      .filter((n) => n.status === "suspicious")
+      .sort((a, b) => (b.risk_score || 0) - (a.risk_score || 0));
+
+    for (const s of suspiciousNodes) {
+      if (prioritizedNodeIds.size >= nodeLimit) break;
+      prioritizedNodeIds.add(s.id);
+    }
+
+    if (prioritizedNodeIds.size < nodeLimit) {
+      const remainingNodes = allNodesList
+        .filter((n) => !prioritizedNodeIds.has(n.id))
+        .sort((a, b) => (b.degree || 0) - (a.degree || 0));
+
+      for (const r of remainingNodes) {
+        if (prioritizedNodeIds.size >= nodeLimit) break;
+        prioritizedNodeIds.add(r.id);
+      }
+    }
+
+    const filteredNodes = Array.from(prioritizedNodeIds)
+      .map((id) => nodeMap.get(id))
+      .filter(Boolean) as NetworkNode[];
+
+    const nodeSet = new Set(prioritizedNodeIds);
+    const filteredEdges = cachedEdges
+      .filter((e) => nodeSet.has(e.source) && nodeSet.has(e.target))
+      .sort((a, b) => {
+        const aInc = a.source === selectedNodeId || a.target === selectedNodeId ? 1 : 0;
+        const bInc = b.source === selectedNodeId || b.target === selectedNodeId ? 1 : 0;
+        if (aInc !== bInc) return bInc - aInc;
+        return (b.amount || 0) - (a.amount || 0);
+      })
+      .slice(0, edgeLimit);
+
+    return { nodes: filteredNodes, edges: filteredEdges, totalCount: allNodesList.length };
+  }, [userList, cachedEdges, anomalyResults, selectedNodeId, nodeLimit, expandNeighbors]);
 
   // Simulation mode network nodes & edges
   const simNetworkNodes: NetworkNode[] = useMemo(() => {
@@ -281,8 +348,8 @@ export const GraphScreen: React.FC = () => {
   }, [simState]);
 
   // Active display nodes & edges based on mode
-  const activeNodes = viewMode === "simulation" ? simNetworkNodes : staticNetworkNodes;
-  const activeEdges = viewMode === "simulation" ? simNetworkEdges : cachedEdges;
+  const activeNodes = viewMode === "simulation" ? simNetworkNodes : staticNetworkData.nodes;
+  const activeEdges = viewMode === "simulation" ? simNetworkEdges : staticNetworkData.edges;
 
   // Simulation progress helpers
   const simPercent = useMemo(() => {
@@ -382,6 +449,60 @@ export const GraphScreen: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Static Investigation Limits Toolbar */}
+      {viewMode === "static" && (
+        <div className="bg-surface-raised border-b border-hairline px-6 py-2 flex items-center justify-between gap-4 flex-shrink-0 text-xs font-mono flex-wrap">
+          <div className="flex items-center gap-3">
+            <span className="text-text-tertiary">Node Limit:</span>
+            <div className="flex items-center gap-1 bg-surface border border-hairline rounded p-0.5">
+              {[50, 100, 250, 500].map((limit) => (
+                <button
+                  key={limit}
+                  onClick={() => setNodeLimit(limit)}
+                  className={`px-2 py-0.5 rounded text-[11px] transition-colors ${
+                    nodeLimit === limit
+                      ? "bg-accent-primary text-canvas font-semibold"
+                      : "text-text-secondary hover:text-text-primary"
+                  }`}
+                >
+                  {limit}
+                </button>
+              ))}
+            </div>
+            <span className="text-text-tertiary text-[11px]">
+              Showing {staticNetworkData.nodes.length} nodes & {staticNetworkData.edges.length} edges (top suspicious entities + 1-hop neighbors)
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {selectedNodeId && (
+              <div className="flex items-center gap-2">
+                <span className="text-text-secondary text-[11px]">
+                  Selected: <strong className="text-accent-primary font-mono">{selectedNodeId}</strong>
+                </span>
+                <button
+                  onClick={() => setExpandNeighbors(!expandNeighbors)}
+                  className={`px-2 py-0.5 rounded text-[11px] border transition-colors ${
+                    expandNeighbors
+                      ? "bg-accent-primary/20 border-accent-primary text-accent-primary"
+                      : "bg-surface border-hairline text-text-secondary hover:text-text-primary"
+                  }`}
+                  title="Include all 1-hop transactional neighbors of the selected entity"
+                >
+                  {expandNeighbors ? "✓ 1-Hop Neighbors" : "+ 1-Hop Neighbors"}
+                </button>
+                <button
+                  onClick={() => setSelectedNodeId(null)}
+                  className="px-1.5 py-0.5 rounded text-[11px] text-text-tertiary hover:text-text-primary"
+                >
+                  Clear
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Honesty & Disclaimer Banner for Live Simulation */}
       {viewMode === "simulation" && (

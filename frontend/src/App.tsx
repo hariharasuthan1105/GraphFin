@@ -1,14 +1,35 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense, lazy } from "react";
 import { AppProvider, useApp, NavItem } from "./context/AppContext";
 import { LeftRail } from "./components/layout/LeftRail";
 import { TopBar } from "./components/layout/TopBar";
 import { OverviewScreen } from "./screens/OverviewScreen";
-import { DatasetsScreen } from "./screens/DatasetsScreen";
-import { GraphScreen } from "./screens/GraphScreen";
-import { FeaturesScreen } from "./screens/FeaturesScreen";
-import { AnomalyScreen } from "./screens/AnomalyScreen";
-import { LabelsSplitScreen } from "./screens/LabelsSplitScreen";
-import { EvaluationScreen } from "./screens/EvaluationScreen";
+
+// Dynamic code-splitting: Heavy screens loaded on demand when navigated to
+const DatasetsScreen = lazy(() =>
+  import("./screens/DatasetsScreen").then((m) => ({ default: m.DatasetsScreen }))
+);
+const GraphScreen = lazy(() =>
+  import("./screens/GraphScreen").then((m) => ({ default: m.GraphScreen }))
+);
+const FeaturesScreen = lazy(() =>
+  import("./screens/FeaturesScreen").then((m) => ({ default: m.FeaturesScreen }))
+);
+const AnomalyScreen = lazy(() =>
+  import("./screens/AnomalyScreen").then((m) => ({ default: m.AnomalyScreen }))
+);
+const LabelsSplitScreen = lazy(() =>
+  import("./screens/LabelsSplitScreen").then((m) => ({ default: m.LabelsSplitScreen }))
+);
+const EvaluationScreen = lazy(() =>
+  import("./screens/EvaluationScreen").then((m) => ({ default: m.EvaluationScreen }))
+);
+
+const ScreenLoadingFallback: React.FC = () => (
+  <div className="flex flex-col items-center justify-center min-h-[360px] space-y-3">
+    <div className="w-6 h-6 border-2 border-accent-primary border-t-transparent rounded-full animate-spin" />
+    <span className="text-xs font-mono text-text-tertiary">Loading module...</span>
+  </div>
+);
 
 const MainLayout: React.FC = () => {
   const { activeNav, isBackendConnected, checkBackendHealth } = useApp();
@@ -65,13 +86,15 @@ const MainLayout: React.FC = () => {
               isTransitioning ? "animate-panel-out" : "animate-panel-in"
             }`}
           >
-            {displayNav === "overview" && <OverviewScreen />}
-            {displayNav === "datasets" && <DatasetsScreen />}
-            {displayNav === "graph" && <GraphScreen />}
-            {displayNav === "features" && <FeaturesScreen />}
-            {displayNav === "anomalies" && <AnomalyScreen />}
-            {displayNav === "labels_splits" && <LabelsSplitScreen />}
-            {displayNav === "evaluation" && <EvaluationScreen />}
+            <Suspense fallback={<ScreenLoadingFallback />}>
+              {displayNav === "overview" && <OverviewScreen />}
+              {displayNav === "datasets" && <DatasetsScreen />}
+              {displayNav === "graph" && <GraphScreen />}
+              {displayNav === "features" && <FeaturesScreen />}
+              {displayNav === "anomalies" && <AnomalyScreen />}
+              {displayNav === "labels_splits" && <LabelsSplitScreen />}
+              {displayNav === "evaluation" && <EvaluationScreen />}
+            </Suspense>
           </div>
         </main>
       </div>

@@ -44,6 +44,11 @@ export const AnomalyScreen: React.FC = () => {
   const [suspiciousOnly, setSuspiciousOnly] = useState(false);
   const [isLoadingResults, setIsLoadingResults] = useState(false);
 
+  // Server-side pagination state
+  const [page, setPage] = useState<number>(0);
+  const pageSize = 50;
+  const [totalCount, setTotalCount] = useState<number>(0);
+
   // Fetch trained experiments for current dataset
   const loadExperiments = async () => {
     if (!datasetId) return;
@@ -55,22 +60,24 @@ export const AnomalyScreen: React.FC = () => {
     }
   };
 
-  // Fetch user anomaly predictions for current experiment
-  const loadUserAnomalies = async (exp: string, suspOnly = suspiciousOnly) => {
+  // Fetch user anomaly predictions for current experiment with server-side pagination
+  const loadUserAnomalies = async (exp: string, suspOnly = suspiciousOnly, pageNum = page) => {
     if (!datasetId) return;
     setIsLoadingResults(true);
     try {
       const resp = await api.getUserAnomalies(datasetId, {
         experimentLabel: exp,
-        limit: 200,
+        limit: pageSize,
+        offset: pageNum * pageSize,
         suspiciousOnly: suspOnly,
         splitLabel: splitLabel || undefined,
       });
       setUserAnomalies(resp.users || []);
+      setTotalCount(suspOnly ? (resp.suspicious_count || 0) : (resp.total_users || 0));
 
       // Also cache to AppContext to update graph hero node colors
       const map: Record<string, UserAnomalyResult> = {};
-      resp.users.forEach((u) => {
+      (resp.users || []).forEach((u) => {
         map[u.user_id] = u;
       });
       setAnomalyResults(map);
@@ -84,9 +91,9 @@ export const AnomalyScreen: React.FC = () => {
   useEffect(() => {
     if (datasetId) {
       loadExperiments();
-      loadUserAnomalies(experimentLabel, suspiciousOnly);
+      loadUserAnomalies(experimentLabel, suspiciousOnly, page);
     }
-  }, [datasetId, experimentLabel, suspiciousOnly]);
+  }, [datasetId, experimentLabel, suspiciousOnly, page]);
 
   const handleTrainModel = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -227,7 +234,8 @@ export const AnomalyScreen: React.FC = () => {
   const handleSelectExperiment = (exp: string) => {
     setExperimentLabel(exp);
     setFormExpLabel(exp);
-    loadUserAnomalies(exp, suspiciousOnly);
+    setPage(0);
+    loadUserAnomalies(exp, suspiciousOnly, 0);
   };
 
   if (!datasetId) {
@@ -535,7 +543,7 @@ export const AnomalyScreen: React.FC = () => {
               Prediction results for <span className="font-mono text-accent-primary">{experimentLabel}</span>
             </h2>
             <span className="text-xs font-sans text-text-tertiary">
-              Showing {userAnomalies.length} scored entities
+              Showing page {page + 1} ({userAnomalies.length} of {totalCount} {suspiciousOnly ? "suspicious" : "scored"} entities)
             </span>
           </div>
 
@@ -543,12 +551,15 @@ export const AnomalyScreen: React.FC = () => {
             <Checkbox
               label="Suspicious entities only"
               checked={suspiciousOnly}
-              onChange={(e) => setSuspiciousOnly(e.target.checked)}
+              onChange={(e) => {
+                setSuspiciousOnly(e.target.checked);
+                setPage(0);
+              }}
             />
             <Button
               size="sm"
               variant="ghost"
-              onClick={() => loadUserAnomalies(experimentLabel, suspiciousOnly)}
+              onClick={() => loadUserAnomalies(experimentLabel, suspiciousOnly, page)}
             >
               Refresh
             </Button>
@@ -562,6 +573,36 @@ export const AnomalyScreen: React.FC = () => {
           stickyFirstColumn={true}
           emptyMessage="No predictions found for this experiment. Train a model to see scores."
         />
+
+        {/* Server-Side Pagination Bar */}
+        <div className="flex items-center justify-between pt-2">
+          <span className="text-xs font-mono text-text-tertiary">
+            Showing {totalCount === 0 ? 0 : page * pageSize + 1}–
+            {Math.min((page + 1) * pageSize, totalCount)} of {totalCount} {suspiciousOnly ? "suspicious" : "scored"} entities
+          </span>
+
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={page === 0 || isLoadingResults}
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+            >
+              Previous
+            </Button>
+            <span className="text-xs font-mono text-text-secondary px-2">
+              Page {page + 1} of {Math.ceil(totalCount / pageSize) || 1}
+            </span>
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={(page + 1) * pageSize >= totalCount || isLoadingResults}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );

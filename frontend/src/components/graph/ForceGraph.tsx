@@ -127,15 +127,44 @@ export const ForceGraph: React.FC<ForceGraphProps> = ({
           return r + 8;
         })
       )
-      .alphaDecay(0.03); // Quick, deliberate settling in ~100-150 frames
+    // Alpha decay for deliberate, smooth settling
+    simulation.alphaDecay(0.03);
 
-    simulation.on("tick", () => {
+    // Throttle React state updates during force layout simulation
+    // Eliminates ~300 full tree reconciliations during settling
+    let animFrameId: number | null = null;
+    let lastRenderTime = 0;
+    const MIN_FRAME_INTERVAL_MS = 33; // ~30 fps cap for layout animation
+
+    const commitState = () => {
       setSimNodes([...simulationNodes]);
       setSimLinks([...simulationLinks]);
+      animFrameId = null;
+    };
+
+    simulation.on("tick", () => {
+      const now = performance.now();
+      if (now - lastRenderTime >= MIN_FRAME_INTERVAL_MS) {
+        lastRenderTime = now;
+        if (!animFrameId) {
+          animFrameId = requestAnimationFrame(commitState);
+        }
+      }
+    });
+
+    simulation.on("end", () => {
+      if (animFrameId) {
+        cancelAnimationFrame(animFrameId);
+        animFrameId = null;
+      }
+      commitState();
     });
 
     return () => {
       simulation.stop();
+      if (animFrameId) {
+        cancelAnimationFrame(animFrameId);
+      }
     };
   }, [nodes, edges, dimensions, maxDegree]);
 
