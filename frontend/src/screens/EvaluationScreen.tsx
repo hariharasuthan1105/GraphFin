@@ -96,7 +96,7 @@ const OfficialResearchView: React.FC = () => {
   useEffect(() => {
     setIsLoading(true);
     setLoadError(null);
-    fetch("/data/final_e0_e4_comparison.json")
+    fetch(`${import.meta.env.BASE_URL}data/final_e0_e4_comparison.json`)
       .then((r) => {
         if (!r.ok) throw new Error(`Failed to load locked results (HTTP ${r.status})`);
         return r.json();

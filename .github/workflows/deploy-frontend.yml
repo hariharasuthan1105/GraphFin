@@ -17,13 +17,14 @@ concurrency:
 
 jobs:
   build:
+    name: Build GraphFin Frontend
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -38,21 +39,74 @@ jobs:
         working-directory: frontend
         run: npm run build
 
+      - name: Verify build output
+        working-directory: frontend
+        run: |
+          echo "======================================"
+          echo "GraphFin frontend build verification"
+          echo "======================================"
+
+          echo ""
+          echo "=== dist directory ==="
+          ls -la dist
+
+          echo ""
+          echo "=== dist/assets directory ==="
+          ls -la dist/assets
+
+          echo ""
+          echo "=== index.html ==="
+          cat dist/index.html
+
+          echo ""
+          echo "=== JavaScript assets ==="
+          find dist/assets -maxdepth 1 -type f -name "*.js" -print
+
+          echo ""
+          echo "=== CSS assets ==="
+          find dist/assets -maxdepth 1 -type f -name "*.css" -print
+
+          echo ""
+          echo "=== Required file checks ==="
+
+          test -f dist/index.html
+          test -d dist/assets
+
+          JS_FILE=$(find dist/assets -maxdepth 1 -type f -name "*.js" | head -n 1)
+          CSS_FILE=$(find dist/assets -maxdepth 1 -type f -name "*.css" | head -n 1)
+
+          test -n "$JS_FILE"
+          test -n "$CSS_FILE"
+
+          echo ""
+          echo "JavaScript asset:"
+          echo "$JS_FILE"
+
+          echo ""
+          echo "CSS asset:"
+          echo "$CSS_FILE"
+
+          echo ""
+          echo "======================================"
+          echo "✅ GraphFin build output verified"
+          echo "======================================"
+
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
 
-      - name: Upload frontend
+      - name: Upload frontend artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: frontend/dist
 
   deploy:
+    name: Deploy GraphFin to GitHub Pages
+    runs-on: ubuntu-latest
+    needs: build
+
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-
-    runs-on: ubuntu-latest
-    needs: build
 
     steps:
       - name: Deploy to GitHub Pages

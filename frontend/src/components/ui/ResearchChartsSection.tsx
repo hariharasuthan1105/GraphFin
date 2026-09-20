@@ -144,6 +144,38 @@ function buildSingleTierData(
   });
 }
 
+/** Build feature-count data across E0-E4 directly from locked experiment definitions */
+function buildFeatureCountData(
+  experiments: LockedExperiment[]
+): { label: string; count: number; name: string }[] {
+  return ORDERED_LABELS.map((label) => {
+    const ex = experiments.find((e) => e.experiment_label === label);
+    return {
+      label: EXP_SHORT_LABELS[label] ?? label,
+      name: EXP_DISPLAY[label] ?? label,
+      count: ex ? ex.feature_count : 0,
+    };
+  });
+}
+
+// Custom tooltip for integer feature counts
+const IntegerTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div
+      style={CHART_STYLE}
+      className="px-3 py-2 border text-xs space-y-1"
+    >
+      <div className="font-medium text-text-primary mb-1">{label}</div>
+      {payload.map((p: any, i: number) => (
+        <div key={i} style={{ color: p.color || "#60a5fa" }}>
+          {p.name}: <span className="font-mono">{p.value} features</span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 // Custom tooltip that shows 4 decimal places
 const MetricTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
@@ -170,9 +202,11 @@ export const ResearchChartsSection: React.FC<Props> = ({
 }) => {
   const [confView, setConfView] = useState<"selected" | "all">("selected");
 
-  const prAucData   = buildGroupedData(experiments, "pr_auc");
-  const rocAucData  = buildGroupedData(experiments, "roc_auc");
-  const precRecData = buildSingleTierData(experiments, activeTierDatasetId);
+  const prAucData        = buildGroupedData(experiments, "pr_auc");
+  const rocAucData       = buildGroupedData(experiments, "roc_auc");
+  const f1Data           = buildGroupedData(experiments, "f1_score");
+  const featureCountData = buildFeatureCountData(experiments);
+  const precRecData      = buildSingleTierData(experiments, activeTierDatasetId);
 
   const selectedExp = experiments.find(
     (e) => e.experiment_label === selectedExpLabel && e.dataset_id === activeTierDatasetId
@@ -237,7 +271,63 @@ export const ResearchChartsSection: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* ── Chart 3: Precision / Recall / F1 per active tier ── */}
+      {/* ── Chart 3: F1 Score grouped bar, 5K vs 50K ── */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-sans font-medium text-text-primary">
+            F1 Score by Experiment
+          </h3>
+          <span className="text-xs font-sans text-text-tertiary">
+            Harmonic mean of precision and recall (5K vs 50K accounts)
+          </span>
+        </div>
+        <div className="p-4 bg-surface border border-hairline rounded">
+          <div className="h-56 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={f1Data} margin={{ top: 8, right: 16, bottom: 4, left: 0 }} barGap={2} barCategoryGap="30%">
+                <CartesianGrid stroke={GRID_STROKE} strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="label" tick={AXIS_TICK} axisLine={false} tickLine={false} />
+                <YAxis tick={AXIS_TICK} axisLine={false} tickLine={false} domain={[0, "auto"]} tickFormatter={(v) => v.toFixed(3)} />
+                <Tooltip content={<MetricTooltip />} />
+                <Legend wrapperStyle={{ fontSize: "11px", fontFamily: "IBM Plex Mono, monospace", color: "#8B96A3" }} />
+                <Bar dataKey="5K"  name="5K accounts"  fill={TIER_COLORS.medium_real} radius={[2, 2, 0, 0]} maxBarSize={28} />
+                <Bar dataKey="50K" name="50K accounts" fill={TIER_COLORS.large_real}  radius={[2, 2, 0, 0]} maxBarSize={28} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Chart 4: Feature Count by Experiment ── */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-sans font-medium text-text-primary">
+            Feature Count by Experiment
+          </h3>
+          <span className="text-xs font-sans text-text-tertiary">
+            Input feature dimensions across ablation configurations (E0–E4)
+          </span>
+        </div>
+        <div className="p-4 bg-surface border border-hairline rounded">
+          <div className="h-56 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={featureCountData} margin={{ top: 8, right: 16, bottom: 4, left: 0 }} barCategoryGap="35%">
+                <CartesianGrid stroke={GRID_STROKE} strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="label" tick={AXIS_TICK} axisLine={false} tickLine={false} />
+                <YAxis tick={AXIS_TICK} axisLine={false} tickLine={false} domain={[0, 20]} />
+                <Tooltip content={<IntegerTooltip />} />
+                <Bar dataKey="count" name="Features" radius={[2, 2, 0, 0]} maxBarSize={32}>
+                  {featureCountData.map((_, index) => (
+                    <Cell key={`cell-${index}`} fill={EXP_COLORS[ORDERED_LABELS[index]] || "#60a5fa"} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Chart 5: Precision / Recall / F1 per active tier ── */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-sans font-medium text-text-primary">
