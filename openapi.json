@@ -1,0 +1,3511 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Financial Anomaly Detection API",
+    "description": "Backend foundation for Machine Learning Enhanced Graph-Based Anomaly Detection for Financial Transactions. Provides transaction ingestion, graph construction, and behavioral/temporal feature extraction.",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Service Health Check",
+        "description": "Returns the operational status and service name of the backend API.",
+        "operationId": "check_health_api_v1_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/transactions/upload": {
+      "post": {
+        "tags": [
+          "Transactions"
+        ],
+        "summary": "Upload Transactions CSV",
+        "description": "Uploads a CSV file containing transaction data. Validates canonical columns (transaction_id, sender_id, receiver_id, amount, timestamp), rejects invalid records without silent corruption, creates a dataset-scoped state, constructs the transaction graph, and extracts behavioral/temporal features.",
+        "operationId": "upload_transactions_api_v1_transactions_upload_post",
+        "parameters": [
+          {
+            "name": "strict_mode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "If True, any single invalid row aborts the entire dataset upload.",
+              "default": false,
+              "title": "Strict Mode"
+            },
+            "description": "If True, any single invalid row aborts the entire dataset upload."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_transactions_api_v1_transactions_upload_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransactionUploadResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/transactions/{dataset_id}/status": {
+      "get": {
+        "tags": [
+          "Transactions"
+        ],
+        "summary": "Dataset Processing Status",
+        "description": "Check processing status of a dataset by its unique dataset ID.",
+        "operationId": "get_dataset_status_api_v1_transactions__dataset_id__status_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetStatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/transactions/{dataset_id}/summary": {
+      "get": {
+        "tags": [
+          "Transactions"
+        ],
+        "summary": "Transaction Statistics Summary",
+        "description": "Returns aggregate statistical metrics for the specified dataset.",
+        "operationId": "get_transaction_summary_api_v1_transactions__dataset_id__summary_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransactionSummaryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/graph/{dataset_id}/summary": {
+      "get": {
+        "tags": [
+          "Graph Analysis"
+        ],
+        "summary": "Transaction Graph Network Summary",
+        "description": "Returns topological network statistics calculated using NetworkX for the specified dataset, including node count, directed edge count, graph density, connected components, and highest-degree hub nodes.",
+        "operationId": "get_graph_summary_api_v1_graph__dataset_id__summary_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GraphSummaryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/graph/{dataset_id}/nodes/{user_id}": {
+      "get": {
+        "tags": [
+          "Graph Analysis"
+        ],
+        "summary": "Node Structural Metrics",
+        "description": "Retrieve structural graph metrics (in/out degree, weighted volume, betweenness centrality) for a specific entity within a dataset.",
+        "operationId": "get_node_metrics_api_v1_graph__dataset_id__nodes__user_id__get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NodeMetrics"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/features/schema": {
+      "get": {
+        "tags": [
+          "Analytics & Features"
+        ],
+        "summary": "Feature Schema for ML Pipeline",
+        "description": "Returns the ordered list of features that comprise the feature vector for ML modeling.",
+        "operationId": "get_feature_schema_api_v1_analytics_features_schema_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeatureSchemaResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/{dataset_id}/users": {
+      "get": {
+        "tags": [
+          "Analytics & Features"
+        ],
+        "summary": "User Features List",
+        "description": "Returns the fused structural (graph), behavioral (transaction statistics), and temporal (frequency, intervals) features calculated for users in the specified dataset. Prepared as tabular features ready for downstream anomaly detection models.",
+        "operationId": "get_user_analytics_api_v1_analytics__dataset_id__users_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter for a specific user ID",
+              "title": "User Id"
+            },
+            "description": "Filter for a specific user ID"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "description": "Page size limit",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Page size limit"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Page offset index",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Page offset index"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserAnalyticsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/{dataset_id}/users/{user_id}": {
+      "get": {
+        "tags": [
+          "Analytics & Features"
+        ],
+        "summary": "Single User Feature Record",
+        "description": "Retrieve all structural, behavioral, and temporal features for a single entity in a dataset.",
+        "operationId": "get_single_user_features_api_v1_analytics__dataset_id__users__user_id__get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserFeatures"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/anomalies/{dataset_id}/train": {
+      "post": {
+        "tags": [
+          "Anomaly Detection (Machine Learning)"
+        ],
+        "summary": "Train Isolation Forest Model",
+        "description": "Trains an unsupervised Isolation Forest model on the user-level feature matrix associated with the given dataset_id. Supports specifying an experiment_label, hyperparameter overrides (n_estimators, contamination, max_samples, random_state), and feature groups ('graph', 'behavioral', 'temporal').",
+        "operationId": "train_anomaly_model_api_v1_anomalies__dataset_id__train_post",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "experiment_label",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional experiment label (defaults to payload.experiment_label or 'default')",
+              "title": "Experiment Label"
+            },
+            "description": "Optional experiment label (defaults to payload.experiment_label or 'default')"
+          },
+          {
+            "name": "split_label",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional split label for held-out training partition (overrides payload.split_label)",
+              "title": "Split Label"
+            },
+            "description": "Optional split label for held-out training partition (overrides payload.split_label)"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/AnomalyTrainRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Optional hyperparameter, feature group, and experiment label overrides.",
+                "title": "Payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnomalyTrainResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/anomalies/{dataset_id}/baseline": {
+      "post": {
+        "tags": [
+          "Anomaly Detection (Machine Learning)"
+        ],
+        "summary": "Train Statistical Baseline (Non-ML)",
+        "description": "Fits a non-ML rule-based z-score threshold statistical baseline. Flags users exceeding mean + z_threshold * std_dev across structural and behavioral features. Saved under experiment_label (default 'baseline_statistical') for uniform evaluation.",
+        "operationId": "train_statistical_baseline_api_v1_anomalies__dataset_id__baseline_post",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/BaselineTrainRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Configuration for z-score threshold rule.",
+                "title": "Payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnomalyTrainResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/anomalies/{dataset_id}/experiments": {
+      "get": {
+        "tags": [
+          "Anomaly Detection (Machine Learning)"
+        ],
+        "summary": "List All Trained Experiments for Dataset",
+        "description": "Lists all experiment_labels currently trained for a dataset, along with feature groups and hyperparameters.",
+        "operationId": "list_dataset_experiments_api_v1_anomalies__dataset_id__experiments_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExperimentListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/anomalies/{dataset_id}/users": {
+      "get": {
+        "tags": [
+          "Anomaly Detection (Machine Learning)"
+        ],
+        "summary": "Get User Anomaly Scores and Classifications",
+        "description": "Returns per-user anomaly detection results for a given experiment_label including raw continuous scores, relative 0-100 presentation risk scores (inverted percentile rank), suspicious/normal status, and explainability reason codes based on training population deviations.",
+        "operationId": "get_user_anomalies_api_v1_anomalies__dataset_id__users_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "experiment_label",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Experiment identifier (e.g. 'default', 'e1', 'baseline_statistical')",
+              "default": "default",
+              "title": "Experiment Label"
+            },
+            "description": "Experiment identifier (e.g. 'default', 'e1', 'baseline_statistical')"
+          },
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional user ID filter for single entity inspection",
+              "title": "User Id"
+            },
+            "description": "Optional user ID filter for single entity inspection"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "description": "Page size limit",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Page size limit"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Page offset index",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Page offset index"
+          },
+          {
+            "name": "suspicious_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "If true, returns only entities flagged as suspicious",
+              "default": false,
+              "title": "Suspicious Only"
+            },
+            "description": "If true, returns only entities flagged as suspicious"
+          },
+          {
+            "name": "split_label",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional split label to evaluate held-out test partition users",
+              "title": "Split Label"
+            },
+            "description": "Optional split label to evaluate held-out test partition users"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserAnomalyListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/anomalies/{dataset_id}/summary": {
+      "get": {
+        "tags": [
+          "Anomaly Detection (Machine Learning)"
+        ],
+        "summary": "Get Dataset Anomaly Summary",
+        "description": "Returns aggregate anomaly statistics (total entities, suspicious count, normal count, contamination rate, feature groups) along with the active model's metadata for the specified experiment.",
+        "operationId": "get_anomaly_summary_api_v1_anomalies__dataset_id__summary_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "experiment_label",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Experiment identifier (e.g. 'default', 'e1', 'baseline_statistical')",
+              "default": "default",
+              "title": "Experiment Label"
+            },
+            "description": "Experiment identifier (e.g. 'default', 'e1', 'baseline_statistical')"
+          },
+          {
+            "name": "split_label",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional split label to compute summary over test partition",
+              "title": "Split Label"
+            },
+            "description": "Optional split label to compute summary over test partition"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnomalySummaryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/anomalies/{dataset_id}/model": {
+      "get": {
+        "tags": [
+          "Anomaly Detection (Machine Learning)"
+        ],
+        "summary": "Get Trained Model Metadata",
+        "description": "Returns the full stored model metadata (algorithm, sklearn version, hyperparameters, exact feature names and groups used, entity count, training timestamp) for the specified experiment.",
+        "operationId": "get_model_metadata_api_v1_anomalies__dataset_id__model_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "experiment_label",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Experiment identifier (e.g. 'default', 'e1', 'baseline_statistical')",
+              "default": "default",
+              "title": "Experiment Label"
+            },
+            "description": "Experiment identifier (e.g. 'default', 'e1', 'baseline_statistical')"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelMetadata"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/datasets/{dataset_id}/labels": {
+      "post": {
+        "tags": [
+          "Datasets, Splits & Ground-Truth Labels"
+        ],
+        "summary": "Upload Ground-Truth Labels CSV",
+        "description": "Uploads a CSV file containing user/account-level ground-truth labels. Normalizes labels to boolean (accepts 1/0, true/false, fraud/normal, suspicious/normal). Validates that labeled user IDs exist in the dataset's feature matrix without corrupting or leaking into the feature engineering pipeline. Returns summary counts and prevalence rate.",
+        "operationId": "upload_dataset_labels_api_v1_datasets__dataset_id__labels_post",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "user_id_col",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Name of the CSV column containing user/account identifiers",
+              "default": "user_id",
+              "title": "User Id Col"
+            },
+            "description": "Name of the CSV column containing user/account identifiers"
+          },
+          {
+            "name": "label_col",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Name of the CSV column containing ground-truth anomaly/fraud labels",
+              "default": "label",
+              "title": "Label Col"
+            },
+            "description": "Name of the CSV column containing ground-truth anomaly/fraud labels"
+          },
+          {
+            "name": "strict",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "If true, aborts upload if any user_id does not exist in dataset",
+              "default": false,
+              "title": "Strict"
+            },
+            "description": "If true, aborts upload if any user_id does not exist in dataset"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_dataset_labels_api_v1_datasets__dataset_id__labels_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetLabelsSummaryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/datasets/{dataset_id}/labels/summary": {
+      "get": {
+        "tags": [
+          "Datasets, Splits & Ground-Truth Labels"
+        ],
+        "summary": "Get Stored Label Summary",
+        "description": "Returns aggregate counts and prevalence rate of ground-truth labels stored for this dataset.",
+        "operationId": "get_dataset_labels_summary_api_v1_datasets__dataset_id__labels_summary_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetLabelsSummaryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/datasets/{dataset_id}/splits": {
+      "post": {
+        "tags": [
+          "Datasets, Splits & Ground-Truth Labels"
+        ],
+        "summary": "Create Entity-Level Train/Test Split",
+        "description": "Creates and stores a deterministic entity-level train/test partition for a dataset. Requires ground-truth labels to be uploaded first. Stratifies by label if possible, Restricts model fitting and percentile explainability strictly to training entity rows.",
+        "operationId": "create_dataset_split_api_v1_datasets__dataset_id__splits_post",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/SplitCreateRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Split configuration parameters (split_label, test_size, random_state, stratify_by_label)",
+                "title": "Payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SplitSummaryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Datasets, Splits & Ground-Truth Labels"
+        ],
+        "summary": "List All Dataset Splits",
+        "description": "Lists all train/test split partitions configured for this dataset.",
+        "operationId": "list_dataset_splits_api_v1_datasets__dataset_id__splits_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SplitSummaryResponse"
+                  },
+                  "title": "Response List Dataset Splits Api V1 Datasets  Dataset Id  Splits Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/datasets/{dataset_id}/splits/{split_label}": {
+      "get": {
+        "tags": [
+          "Datasets, Splits & Ground-Truth Labels"
+        ],
+        "summary": "Get Split Assignment Summary",
+        "description": "Returns stored split configuration, counts, and prevalence rates without raw user ID lists.",
+        "operationId": "get_dataset_split_api_v1_datasets__dataset_id__splits__split_label__get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "split_label",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Split Label"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SplitSummaryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/evaluation/{dataset_id}/compare": {
+      "get": {
+        "tags": [
+          "Research Evaluation & Comparison"
+        ],
+        "summary": "Compare All Trained Experiments",
+        "description": "Evaluates all trained experiments for the given dataset against stored ground-truth labels. Returns a comparison table ranked by PR-AUC (Average Precision) descending. Captures failed experiments explicitly with status='error' rather than silently omitting them. Clearly groups and distinguishes results by evaluation_mode (in-sample vs held-out). Highlights PR-AUC as the headline metric due to extreme positive-class imbalance in financial fraud.",
+        "operationId": "compare_dataset_experiments_api_v1_evaluation__dataset_id__compare_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "include_curves",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Whether to include full ROC and Precision-Recall curve point arrays for figure plotting",
+              "default": false,
+              "title": "Include Curves"
+            },
+            "description": "Whether to include full ROC and Precision-Recall curve point arrays for figure plotting"
+          },
+          {
+            "name": "split_label",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional dataset split label to evaluate experiments in held-out mode against test partition",
+              "title": "Split Label"
+            },
+            "description": "Optional dataset split label to evaluate experiments in held-out mode against test partition"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvaluationComparisonResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/evaluation/{dataset_id}/export": {
+      "post": {
+        "tags": [
+          "Research Evaluation & Comparison"
+        ],
+        "summary": "Export Research Run Results",
+        "description": "Exports comprehensive evaluation comparison results, experiment manifests, and metric tables into persistent JSON and CSV artifacts under data/results/.",
+        "operationId": "export_research_run_results_api_v1_evaluation__dataset_id__export_post",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResearchExportResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/evaluation/{dataset_id}/{experiment_label}": {
+      "get": {
+        "tags": [
+          "Research Evaluation & Comparison"
+        ],
+        "summary": "Evaluate Single Experiment",
+        "description": "Computes detailed classification (confusion matrix, precision, recall, F1, accuracy) and ranking (ROC-AUC, PR-AUC) metrics for a single trained experiment against ground-truth labels. If the experiment was trained with a split or split_label is provided, evaluates against the held-out test partition.",
+        "operationId": "evaluate_single_experiment_api_v1_evaluation__dataset_id___experiment_label__get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          },
+          {
+            "name": "experiment_label",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Experiment Label"
+            }
+          },
+          {
+            "name": "include_curves",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Whether to include full ROC and Precision-Recall curve point arrays for figure plotting",
+              "default": false,
+              "title": "Include Curves"
+            },
+            "description": "Whether to include full ROC and Precision-Recall curve point arrays for figure plotting"
+          },
+          {
+            "name": "split_label",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional split label to override or specify held-out test partition evaluation",
+              "title": "Split Label"
+            },
+            "description": "Optional split label to override or specify held-out test partition evaluation"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExperimentEvaluationMetrics"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AnomalySummaryResponse": {
+        "properties": {
+          "dataset_id": {
+            "type": "string",
+            "title": "Dataset Id",
+            "description": "Dataset identifier"
+          },
+          "experiment_label": {
+            "type": "string",
+            "title": "Experiment Label",
+            "description": "Experiment identifier",
+            "default": "default"
+          },
+          "total_entities": {
+            "type": "integer",
+            "title": "Total Entities",
+            "description": "Total number of evaluated entities"
+          },
+          "suspicious_count": {
+            "type": "integer",
+            "title": "Suspicious Count",
+            "description": "Count of entities flagged as suspicious"
+          },
+          "normal_count": {
+            "type": "integer",
+            "title": "Normal Count",
+            "description": "Count of entities classified as normal"
+          },
+          "contamination_rate": {
+            "type": "number",
+            "title": "Contamination Rate",
+            "description": "Proportion of entities classified as suspicious"
+          },
+          "feature_groups": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Feature Groups",
+            "description": "Feature groups used during training"
+          },
+          "feature_count": {
+            "type": "integer",
+            "title": "Feature Count",
+            "description": "Number of features used during training"
+          },
+          "model_metadata": {
+            "$ref": "#/components/schemas/ModelMetadata",
+            "description": "Complete stored model metadata"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dataset_id",
+          "total_entities",
+          "suspicious_count",
+          "normal_count",
+          "contamination_rate",
+          "feature_groups",
+          "feature_count",
+          "model_metadata"
+        ],
+        "title": "AnomalySummaryResponse",
+        "description": "High-level summary of anomaly distribution and model configuration."
+      },
+      "AnomalyTrainRequest": {
+        "properties": {
+          "experiment_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Experiment Label",
+            "description": "Experiment identifier (e.g. 'default', 'e1', 'e2', 'baseline_statistical').",
+            "default": "default"
+          },
+          "feature_groups": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feature Groups",
+            "description": "Feature group subsets to include in training ('graph', 'behavioral', 'temporal').",
+            "default": [
+              "graph",
+              "behavioral",
+              "temporal"
+            ]
+          },
+          "n_estimators": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1000.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "N Estimators",
+            "description": "Number of base isolation trees in the ensemble.",
+            "default": 100
+          },
+          "contamination": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 0.5,
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contamination",
+            "description": "Expected proportion of outliers in the data set.",
+            "default": 0.1
+          },
+          "max_samples": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Samples",
+            "description": "Number of samples to draw from features to train each tree ('auto', int, or float (0, 1]).",
+            "default": "auto"
+          },
+          "random_state": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Random State",
+            "description": "Deterministic random seed for reproducible tree splits.",
+            "default": 42
+          },
+          "split_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Split Label",
+            "description": "Optional dataset split label for held-out training partition. If omitted, trains on full population (in_sample)."
+          }
+        },
+        "type": "object",
+        "title": "AnomalyTrainRequest",
+        "description": "Configuration payload for training an Isolation Forest model on a dataset."
+      },
+      "AnomalyTrainResponse": {
+        "properties": {
+          "dataset_id": {
+            "type": "string",
+            "title": "Dataset Id"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "success"
+          },
+          "model_metadata": {
+            "$ref": "#/components/schemas/ModelMetadata"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dataset_id",
+          "message",
+          "model_metadata"
+        ],
+        "title": "AnomalyTrainResponse",
+        "description": "Response returned upon successful model training."
+      },
+      "BaselineTrainRequest": {
+        "properties": {
+          "experiment_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Experiment Label",
+            "description": "Experiment identifier for statistical baseline.",
+            "default": "baseline_statistical"
+          },
+          "z_threshold": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Z Threshold",
+            "description": "Z-score threshold for classifying an entity as anomalous (default: 2.0, representing ~2.28% upper tail).",
+            "default": 2.0
+          },
+          "features": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Features",
+            "description": "List of graph feature names to evaluate using population z-scores (default: weighted_out_degree, betweenness_centrality, total_degree).",
+            "default": [
+              "weighted_out_degree",
+              "betweenness_centrality",
+              "total_degree"
+            ]
+          },
+          "split_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Split Label",
+            "description": "Optional dataset split label for held-out baseline fitting."
+          }
+        },
+        "type": "object",
+        "title": "BaselineTrainRequest",
+        "description": "Configuration payload for training a non-ML rule-based statistical baseline."
+      },
+      "Body_upload_dataset_labels_api_v1_datasets__dataset_id__labels_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "description": "CSV file containing user IDs and ground-truth labels"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_dataset_labels_api_v1_datasets__dataset_id__labels_post"
+      },
+      "Body_upload_transactions_api_v1_transactions_upload_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "description": "CSV file containing transactions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_transactions_api_v1_transactions_upload_post"
+      },
+      "ConfusionMatrix": {
+        "properties": {
+          "tp": {
+            "type": "integer",
+            "title": "Tp",
+            "description": "True Positives (actual fraud flagged as suspicious)"
+          },
+          "fp": {
+            "type": "integer",
+            "title": "Fp",
+            "description": "False Positives (actual normal flagged as suspicious)"
+          },
+          "tn": {
+            "type": "integer",
+            "title": "Tn",
+            "description": "True Negatives (actual normal correctly classified normal)"
+          },
+          "fn": {
+            "type": "integer",
+            "title": "Fn",
+            "description": "False Negatives (actual fraud missed by model)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tp",
+          "fp",
+          "tn",
+          "fn"
+        ],
+        "title": "ConfusionMatrix",
+        "description": "Confusion matrix counts for binary classification."
+      },
+      "DatasetLabelsSummaryResponse": {
+        "properties": {
+          "dataset_id": {
+            "type": "string",
+            "title": "Dataset Id",
+            "description": "UUID of the dataset"
+          },
+          "total_labels_uploaded": {
+            "type": "integer",
+            "title": "Total Labels Uploaded",
+            "description": "Total rows in the uploaded label file"
+          },
+          "matched_count": {
+            "type": "integer",
+            "title": "Matched Count",
+            "description": "Number of labels matched to existing dataset entities"
+          },
+          "unmatched_count": {
+            "type": "integer",
+            "title": "Unmatched Count",
+            "description": "Number of label rows rejected because entity ID was not found"
+          },
+          "positive_count": {
+            "type": "integer",
+            "title": "Positive Count",
+            "description": "Number of positive (anomalous/fraud) labels"
+          },
+          "negative_count": {
+            "type": "integer",
+            "title": "Negative Count",
+            "description": "Number of negative (normal) labels"
+          },
+          "prevalence_rate": {
+            "type": "number",
+            "title": "Prevalence Rate",
+            "description": "Prevalence rate of positive labels among matched entities (positives / matched)"
+          },
+          "rejected_errors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Rejected Errors",
+            "description": "Detailed rejection messages for unmatched or unparseable label rows"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dataset_id",
+          "total_labels_uploaded",
+          "matched_count",
+          "unmatched_count",
+          "positive_count",
+          "negative_count",
+          "prevalence_rate"
+        ],
+        "title": "DatasetLabelsSummaryResponse",
+        "description": "Summary of ground-truth labels attached to a dataset."
+      },
+      "DatasetStatusResponse": {
+        "properties": {
+          "dataset_id": {
+            "type": "string",
+            "title": "Dataset Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dataset_id",
+          "status"
+        ],
+        "title": "DatasetStatusResponse",
+        "description": "Status response for dataset processing/availability."
+      },
+      "EvaluationComparisonResponse": {
+        "properties": {
+          "dataset_id": {
+            "type": "string",
+            "title": "Dataset Id",
+            "description": "UUID of the evaluated dataset"
+          },
+          "total_experiments_evaluated": {
+            "type": "integer",
+            "title": "Total Experiments Evaluated",
+            "description": "Total count of experiments attempted in this run"
+          },
+          "successful_experiments_count": {
+            "type": "integer",
+            "title": "Successful Experiments Count",
+            "description": "Count of successfully evaluated experiments",
+            "default": 0
+          },
+          "failed_experiments_count": {
+            "type": "integer",
+            "title": "Failed Experiments Count",
+            "description": "Count of experiments that encountered an evaluation error",
+            "default": 0
+          },
+          "labels_summary": {
+            "$ref": "#/components/schemas/DatasetLabelsSummaryResponse",
+            "description": "Summary of ground-truth labels used"
+          },
+          "evaluation_mode": {
+            "type": "string",
+            "title": "Evaluation Mode",
+            "description": "Protocol mode: 'in_sample' (pipeline validation), 'held_out' (split test set), or 'mixed'",
+            "default": "in_sample"
+          },
+          "split_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Split Label",
+            "description": "Optional split label if evaluation was restricted to a specific split"
+          },
+          "evaluation_mode_note": {
+            "type": "string",
+            "title": "Evaluation Mode Note",
+            "description": "Notice on in-sample vs held-out evaluation validity",
+            "default": "In-sample evaluation represents pipeline validation. For publication, evaluations must be performed on a held-out test split or time-based partition."
+          },
+          "by_evaluation_mode": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "items": {
+                    "$ref": "#/components/schemas/ExperimentEvaluationMetrics"
+                  },
+                  "type": "array"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "By Evaluation Mode",
+            "description": "Experiments explicitly partitioned by evaluation_mode ('in_sample' vs 'held_out') to prevent conflation"
+          },
+          "headline_metric": {
+            "type": "string",
+            "title": "Headline Metric",
+            "description": "Primary ranking metric",
+            "default": "pr_auc"
+          },
+          "class_imbalance_note": {
+            "type": "string",
+            "title": "Class Imbalance Note",
+            "default": "In financial fraud detection, the positive (anomalous) class is rare (<5%). Under severe class imbalance, accuracy can be misleadingly high. PR-AUC (Average Precision) is the primary headline metric for ranking configurations."
+          },
+          "experiments": {
+            "items": {
+              "$ref": "#/components/schemas/ExperimentEvaluationMetrics"
+            },
+            "type": "array",
+            "title": "Experiments",
+            "description": "List of experiment evaluation metrics sorted by PR-AUC descending (successful first, followed by errors)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dataset_id",
+          "total_experiments_evaluated",
+          "labels_summary",
+          "experiments"
+        ],
+        "title": "EvaluationComparisonResponse",
+        "description": "Multi-experiment performance comparison table sorted by PR-AUC descending."
+      },
+      "ExperimentEvaluationMetrics": {
+        "properties": {
+          "dataset_id": {
+            "type": "string",
+            "title": "Dataset Id",
+            "description": "UUID of the evaluated dataset"
+          },
+          "experiment_label": {
+            "type": "string",
+            "title": "Experiment Label",
+            "description": "Experiment identifier (e.g. 'baseline', 'e1', 'e2')"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Evaluation status: 'success' or 'error'",
+            "default": "success"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error",
+            "description": "Detailed explanation if evaluation status is 'error'"
+          },
+          "model_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Type",
+            "description": "Model architecture ('IsolationForest' or 'StatisticalBaseline')"
+          },
+          "method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Method",
+            "description": "Human-readable method title (e.g. 'Isolation Forest' or 'Statistical (z-score, no ML)')"
+          },
+          "feature_groups": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Feature Groups",
+            "description": "Feature groups used in this experiment"
+          },
+          "feature_names": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Feature Names",
+            "description": "Ordered list of feature column names"
+          },
+          "feature_count": {
+            "type": "integer",
+            "title": "Feature Count",
+            "description": "Total feature dimensions used",
+            "default": 0
+          },
+          "n_estimators": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "N Estimators",
+            "description": "Number of isolation trees (if ML)"
+          },
+          "contamination": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contamination",
+            "description": "Configured outlier contamination rate"
+          },
+          "max_samples": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Samples",
+            "description": "Subsample ratio or count per tree"
+          },
+          "random_state": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Random State",
+            "description": "Random seed used for deterministic fitting"
+          },
+          "training_entity_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Training Entity Count",
+            "description": "Number of unique entities used in training"
+          },
+          "training_timestamp": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Training Timestamp",
+            "description": "ISO 8601 timestamp of model training completion"
+          },
+          "model_artifact_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Artifact Path",
+            "description": "Relative file path where model artifact is stored"
+          },
+          "evaluation_mode": {
+            "type": "string",
+            "title": "Evaluation Mode",
+            "description": "Protocol mode: 'in_sample' (pipeline validation) or 'held_out' (split test set)",
+            "default": "in_sample"
+          },
+          "split_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Split Label",
+            "description": "Dataset split label if evaluated in held-out mode (e.g. 'default', 'test_split')"
+          },
+          "evaluation_mode_note": {
+            "type": "string",
+            "title": "Evaluation Mode Note",
+            "description": "Notice on in-sample vs held-out evaluation validity",
+            "default": "In-sample evaluation represents pipeline validation. For publication, evaluations must be performed on a held-out test split or time-based partition."
+          },
+          "labeled_user_count": {
+            "type": "integer",
+            "title": "Labeled User Count",
+            "description": "Total ground-truth labeled entities stored for this dataset",
+            "default": 0
+          },
+          "usable_labeled_user_count": {
+            "type": "integer",
+            "title": "Usable Labeled User Count",
+            "description": "Count of labeled entities overlapping with dataset feature matrix",
+            "default": 0
+          },
+          "usable_labels_count": {
+            "type": "integer",
+            "title": "Usable Labels Count",
+            "description": "Backward-compatible alias for usable_labeled_user_count",
+            "default": 0
+          },
+          "total_dataset_users": {
+            "type": "integer",
+            "title": "Total Dataset Users",
+            "description": "Total unique entities present in the dataset",
+            "default": 0
+          },
+          "positive_count": {
+            "type": "integer",
+            "title": "Positive Count",
+            "description": "Number of positive (fraud/anomalous) entities among usable labels",
+            "default": 0
+          },
+          "negative_count": {
+            "type": "integer",
+            "title": "Negative Count",
+            "description": "Number of negative (normal) entities among usable labels",
+            "default": 0
+          },
+          "positive_prevalence": {
+            "type": "number",
+            "title": "Positive Prevalence",
+            "description": "Proportion of positive entities (positives / usable labels)",
+            "default": 0.0
+          },
+          "score_name": {
+            "type": "string",
+            "title": "Score Name",
+            "description": "Name of continuous score evaluated",
+            "default": "risk_score"
+          },
+          "score_direction": {
+            "type": "string",
+            "title": "Score Direction",
+            "description": "Continuous score direction: higher = more anomalous",
+            "default": "higher_is_more_anomalous"
+          },
+          "threshold_analysis": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ThresholdAnalysis"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Threshold and continuous ranking analysis"
+          },
+          "confusion_matrix": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ConfusionMatrix"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Binary confusion matrix (TP, FP, TN, FN)"
+          },
+          "precision": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Precision",
+            "description": "Precision = TP / (TP + FP)"
+          },
+          "recall": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recall",
+            "description": "Recall = TP / (TP + FN)"
+          },
+          "f1_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "F1 Score",
+            "description": "Harmonic mean of precision and recall"
+          },
+          "accuracy": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accuracy",
+            "description": "Overall accuracy = (TP + TN) / Total"
+          },
+          "roc_auc": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Roc Auc",
+            "description": "Receiver Operating Characteristic Area Under Curve (computed using continuous scores)"
+          },
+          "pr_auc": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pr Auc",
+            "description": "Precision-Recall Area Under Curve / Average Precision score (headline metric for class imbalance)"
+          },
+          "headline_metric": {
+            "type": "string",
+            "title": "Headline Metric",
+            "description": "Designated primary comparison metric for financial fraud detection under class imbalance",
+            "default": "pr_auc"
+          },
+          "metric_warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Metric Warnings",
+            "description": "Warnings regarding single-class labels, small sample sizes, or undefined metrics"
+          },
+          "roc_curve": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ROCCurveData"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "ROC curve points (FPR, TPR, thresholds) for figure plotting"
+          },
+          "precision_recall_curve": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PrecisionRecallCurveData"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "PR curve points (Precision, Recall, thresholds) for figure plotting"
+          },
+          "class_imbalance_note": {
+            "type": "string",
+            "title": "Class Imbalance Note",
+            "description": "Methodological note regarding class imbalance and metric selection",
+            "default": "In financial fraud detection, the positive (anomalous) class is rare (<5%). Under severe class imbalance, accuracy can be misleadingly high (e.g. 99% accuracy by predicting all normal). PR-AUC (Average Precision) and F1 score are the primary headline metrics for evaluating detection efficacy."
+          }
+        },
+        "type": "object",
+        "required": [
+          "dataset_id",
+          "experiment_label"
+        ],
+        "title": "ExperimentEvaluationMetrics",
+        "description": "Full quantitative performance evaluation metrics and manifest for one trained experiment."
+      },
+      "ExperimentListResponse": {
+        "properties": {
+          "dataset_id": {
+            "type": "string",
+            "title": "Dataset Id",
+            "description": "Dataset identifier"
+          },
+          "total_experiments": {
+            "type": "integer",
+            "title": "Total Experiments",
+            "description": "Total count of trained experiments stored for this dataset"
+          },
+          "experiments": {
+            "items": {
+              "$ref": "#/components/schemas/ModelMetadata"
+            },
+            "type": "array",
+            "title": "Experiments",
+            "description": "List of stored model metadata objects"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dataset_id",
+          "total_experiments",
+          "experiments"
+        ],
+        "title": "ExperimentListResponse",
+        "description": "List of all trained experiments currently stored for a dataset."
+      },
+      "FeatureSchemaResponse": {
+        "properties": {
+          "feature_count": {
+            "type": "integer",
+            "title": "Feature Count"
+          },
+          "features": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Features"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "feature_count",
+          "features",
+          "description"
+        ],
+        "title": "FeatureSchemaResponse"
+      },
+      "GraphSummaryResponse": {
+        "properties": {
+          "nodes": {
+            "type": "integer",
+            "title": "Nodes",
+            "description": "Total number of unique user/account nodes"
+          },
+          "edges": {
+            "type": "integer",
+            "title": "Edges",
+            "description": "Total number of directed transaction edges"
+          },
+          "density": {
+            "type": "number",
+            "title": "Density",
+            "description": "Network density (actual edges / possible edges)"
+          },
+          "is_directed": {
+            "type": "boolean",
+            "title": "Is Directed",
+            "description": "Whether the graph is directed",
+            "default": true
+          },
+          "weakly_connected_components": {
+            "type": "integer",
+            "title": "Weakly Connected Components",
+            "description": "Count of weakly connected subgraphs"
+          },
+          "strongly_connected_components": {
+            "type": "integer",
+            "title": "Strongly Connected Components",
+            "description": "Count of strongly connected subgraphs"
+          },
+          "top_in_degree_nodes": {
+            "items": {
+              "$ref": "#/components/schemas/NodeMetrics"
+            },
+            "type": "array",
+            "title": "Top In Degree Nodes",
+            "description": "Top nodes with highest incoming transaction connections"
+          },
+          "top_out_degree_nodes": {
+            "items": {
+              "$ref": "#/components/schemas/NodeMetrics"
+            },
+            "type": "array",
+            "title": "Top Out Degree Nodes",
+            "description": "Top nodes with highest outgoing transaction connections"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nodes",
+          "edges",
+          "density",
+          "weakly_connected_components",
+          "strongly_connected_components"
+        ],
+        "title": "GraphSummaryResponse",
+        "description": "Statistical summary of the constructed transaction graph."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "healthy"
+          },
+          "service": {
+            "type": "string",
+            "title": "Service",
+            "default": "financial-anomaly-detection-api"
+          }
+        },
+        "type": "object",
+        "title": "HealthResponse"
+      },
+      "ModelMetadata": {
+        "properties": {
+          "model_type": {
+            "type": "string",
+            "title": "Model Type",
+            "description": "Model algorithm ('IsolationForest' or 'StatisticalBaseline')",
+            "default": "IsolationForest"
+          },
+          "method": {
+            "type": "string",
+            "title": "Method",
+            "description": "Human-readable method title (e.g. 'Isolation Forest' or 'Statistical (z-score, no ML)')",
+            "default": "Isolation Forest"
+          },
+          "sklearn_version": {
+            "type": "string",
+            "title": "Sklearn Version",
+            "description": "scikit-learn runtime library version (or 'N/A' for baseline)"
+          },
+          "dataset_id": {
+            "type": "string",
+            "title": "Dataset Id",
+            "description": "UUID of the training dataset"
+          },
+          "experiment_label": {
+            "type": "string",
+            "title": "Experiment Label",
+            "description": "Experiment identifier",
+            "default": "default"
+          },
+          "split_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Split Label",
+            "description": "Optional split label if trained on a held-out partition"
+          },
+          "evaluation_mode": {
+            "type": "string",
+            "title": "Evaluation Mode",
+            "description": "Evaluation mode ('in_sample' or 'held_out')",
+            "default": "in_sample"
+          },
+          "feature_groups": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Feature Groups",
+            "description": "Feature groups selected for this model"
+          },
+          "feature_names": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Feature Names",
+            "description": "Ordered list of feature column names"
+          },
+          "feature_count": {
+            "type": "integer",
+            "title": "Feature Count",
+            "description": "Number of feature dimensions"
+          },
+          "n_estimators": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "N Estimators",
+            "description": "Number of isolation trees (if ML)"
+          },
+          "contamination": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contamination",
+            "description": "Configured outlier contamination rate"
+          },
+          "max_samples": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Samples",
+            "description": "Subsample ratio or count per tree"
+          },
+          "random_state": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Random State",
+            "description": "Random seed used for deterministic fitting"
+          },
+          "z_threshold": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Z Threshold",
+            "description": "Z-score threshold (if statistical baseline)"
+          },
+          "z_score_threshold": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Z Score Threshold",
+            "description": "Z-score threshold alias"
+          },
+          "baseline_feature_names": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Feature Names",
+            "description": "Features used by statistical baseline"
+          },
+          "entity_count": {
+            "type": "integer",
+            "title": "Entity Count",
+            "description": "Number of unique user entities used in training"
+          },
+          "training_entity_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Training Entity Count",
+            "description": "Count of training entities"
+          },
+          "training_timestamp": {
+            "type": "string",
+            "title": "Training Timestamp",
+            "description": "ISO 8601 timestamp of model training completion"
+          },
+          "model_artifact_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Artifact Path",
+            "description": "Relative file path where model artifact is stored"
+          },
+          "feature_stats": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "type": "number"
+              },
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Feature Stats",
+            "description": "Per-feature distributions (p10, p50, p90, min, max, mean, std) for explanations and baseline scoring"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sklearn_version",
+          "dataset_id",
+          "feature_groups",
+          "feature_names",
+          "feature_count",
+          "entity_count",
+          "training_timestamp"
+        ],
+        "title": "ModelMetadata",
+        "description": "Complete metadata and hyperparameter specification for a trained model/experiment."
+      },
+      "NodeMetrics": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
+          },
+          "in_degree": {
+            "type": "integer",
+            "title": "In Degree"
+          },
+          "out_degree": {
+            "type": "integer",
+            "title": "Out Degree"
+          },
+          "total_degree": {
+            "type": "integer",
+            "title": "Total Degree"
+          },
+          "weighted_in_degree": {
+            "type": "number",
+            "title": "Weighted In Degree"
+          },
+          "weighted_out_degree": {
+            "type": "number",
+            "title": "Weighted Out Degree"
+          },
+          "betweenness_centrality": {
+            "type": "number",
+            "title": "Betweenness Centrality"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "in_degree",
+          "out_degree",
+          "total_degree",
+          "weighted_in_degree",
+          "weighted_out_degree",
+          "betweenness_centrality"
+        ],
+        "title": "NodeMetrics"
+      },
+      "PrecisionRecallCurveData": {
+        "properties": {
+          "precision": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Precision",
+            "description": "Precision values across operating points"
+          },
+          "recall": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Recall",
+            "description": "Recall values across operating points"
+          },
+          "thresholds": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Thresholds",
+            "description": "Decision thresholds corresponding to precision/recall"
+          }
+        },
+        "type": "object",
+        "required": [
+          "precision",
+          "recall",
+          "thresholds"
+        ],
+        "title": "PrecisionRecallCurveData",
+        "description": "Coordinates for Precision-Recall (PR) curve plotting."
+      },
+      "ROCCurveData": {
+        "properties": {
+          "fpr": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Fpr",
+            "description": "False Positive Rates at decision thresholds"
+          },
+          "tpr": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Tpr",
+            "description": "True Positive Rates at decision thresholds"
+          },
+          "thresholds": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Thresholds",
+            "description": "Score decision thresholds (continuous)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fpr",
+          "tpr",
+          "thresholds"
+        ],
+        "title": "ROCCurveData",
+        "description": "Coordinates for Receiver Operating Characteristic (ROC) curve plotting."
+      },
+      "ResearchExportResponse": {
+        "properties": {
+          "dataset_id": {
+            "type": "string",
+            "title": "Dataset Id",
+            "description": "UUID of the exported dataset"
+          },
+          "export_timestamp": {
+            "type": "string",
+            "title": "Export Timestamp",
+            "description": "UTC timestamp of the export"
+          },
+          "json_path": {
+            "type": "string",
+            "title": "Json Path",
+            "description": "File path of exported JSON results"
+          },
+          "csv_path": {
+            "type": "string",
+            "title": "Csv Path",
+            "description": "File path of exported CSV results table"
+          },
+          "total_experiments": {
+            "type": "integer",
+            "title": "Total Experiments",
+            "description": "Count of experiments included in the export"
+          },
+          "successful_experiments": {
+            "type": "integer",
+            "title": "Successful Experiments",
+            "description": "Count of successfully evaluated experiments"
+          },
+          "failed_experiments": {
+            "type": "integer",
+            "title": "Failed Experiments",
+            "description": "Count of failed experiments"
+          },
+          "evaluation_mode": {
+            "type": "string",
+            "title": "Evaluation Mode",
+            "description": "Evaluation mode (e.g. 'in_sample')"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dataset_id",
+          "export_timestamp",
+          "json_path",
+          "csv_path",
+          "total_experiments",
+          "successful_experiments",
+          "failed_experiments",
+          "evaluation_mode"
+        ],
+        "title": "ResearchExportResponse",
+        "description": "Response confirming research run export to JSON and CSV artifacts."
+      },
+      "SplitCreateRequest": {
+        "properties": {
+          "split_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Split Label",
+            "description": "Unique identifier for the split configuration (e.g. 'default', 'split_80_20').",
+            "default": "default"
+          },
+          "test_size": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMaximum": 1.0,
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Test Size",
+            "description": "Fraction of entities allocated to the test set (0.0 < test_size < 1.0).",
+            "default": 0.3
+          },
+          "random_state": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Random State",
+            "description": "Seed for deterministic, reproducible random splitting.",
+            "default": 42
+          },
+          "stratify_by_label": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stratify By Label",
+            "description": "Whether to preserve class balance across train and test partitions using ground-truth labels.",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "SplitCreateRequest",
+        "description": "Payload for creating a train/test entity-level split."
+      },
+      "SplitSummaryResponse": {
+        "properties": {
+          "dataset_id": {
+            "type": "string",
+            "title": "Dataset Id",
+            "description": "UUID of the dataset"
+          },
+          "split_label": {
+            "type": "string",
+            "title": "Split Label",
+            "description": "Unique label identifying the split"
+          },
+          "total_users": {
+            "type": "integer",
+            "title": "Total Users",
+            "description": "Total unique labeled entities included in the split"
+          },
+          "train_count": {
+            "type": "integer",
+            "title": "Train Count",
+            "description": "Count of entities assigned to the training partition"
+          },
+          "test_count": {
+            "type": "integer",
+            "title": "Test Count",
+            "description": "Count of entities assigned to the test partition"
+          },
+          "train_positive_count": {
+            "type": "integer",
+            "title": "Train Positive Count",
+            "description": "Number of positive (fraud) entities in train partition"
+          },
+          "train_negative_count": {
+            "type": "integer",
+            "title": "Train Negative Count",
+            "description": "Number of negative (normal) entities in train partition"
+          },
+          "test_positive_count": {
+            "type": "integer",
+            "title": "Test Positive Count",
+            "description": "Number of positive (fraud) entities in test partition"
+          },
+          "test_negative_count": {
+            "type": "integer",
+            "title": "Test Negative Count",
+            "description": "Number of negative (normal) entities in test partition"
+          },
+          "train_prevalence": {
+            "type": "number",
+            "title": "Train Prevalence",
+            "description": "Proportion of positive entities in train partition"
+          },
+          "test_prevalence": {
+            "type": "number",
+            "title": "Test Prevalence",
+            "description": "Proportion of positive entities in test partition"
+          },
+          "overall_prevalence": {
+            "type": "number",
+            "title": "Overall Prevalence",
+            "description": "Proportion of positive entities across all split users"
+          },
+          "stratified": {
+            "type": "boolean",
+            "title": "Stratified",
+            "description": "Whether stratification by label succeeded"
+          },
+          "test_size": {
+            "type": "number",
+            "title": "Test Size",
+            "description": "Configured test size fraction"
+          },
+          "random_state": {
+            "type": "integer",
+            "title": "Random State",
+            "description": "Random seed used for splitting"
+          },
+          "warning": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Warning",
+            "description": "Warning documentation if stratification was disabled or fell back to unstratified split"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At",
+            "description": "ISO timestamp of split creation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dataset_id",
+          "split_label",
+          "total_users",
+          "train_count",
+          "test_count",
+          "train_positive_count",
+          "train_negative_count",
+          "test_positive_count",
+          "test_negative_count",
+          "train_prevalence",
+          "test_prevalence",
+          "overall_prevalence",
+          "stratified",
+          "test_size",
+          "random_state"
+        ],
+        "title": "SplitSummaryResponse",
+        "description": "Compact summary of a dataset entity-level split assignment (without raw user lists)."
+      },
+      "ThresholdAnalysis": {
+        "properties": {
+          "binary_decision_rule": {
+            "type": "string",
+            "title": "Binary Decision Rule",
+            "description": "Description of binary cutoff (contamination or z-score)"
+          },
+          "continuous_score_name": {
+            "type": "string",
+            "title": "Continuous Score Name",
+            "description": "Name of continuous score evaluated ('risk_score' or 'baseline_score')"
+          },
+          "score_direction": {
+            "type": "string",
+            "title": "Score Direction",
+            "description": "Continuous score ranking direction",
+            "default": "higher_is_more_anomalous"
+          },
+          "auc_evaluation_basis": {
+            "type": "string",
+            "title": "Auc Evaluation Basis",
+            "description": "Explanation of AUC metric independence from binary cutoff",
+            "default": "Continuous ranking scores across all thresholds, independent of binary decision cutoff"
+          },
+          "risk_score_is_probability": {
+            "type": "boolean",
+            "title": "Risk Score Is Probability",
+            "description": "Explicit flag confirming risk score is NOT a calibrated probability",
+            "default": false
+          },
+          "risk_score_interpretation": {
+            "type": "string",
+            "title": "Risk Score Interpretation",
+            "description": "Guidance on score interpretation",
+            "default": "Relative presentation ranking score (0-100) scaled from population percentiles. Not a fraud probability."
+          }
+        },
+        "type": "object",
+        "required": [
+          "binary_decision_rule",
+          "continuous_score_name"
+        ],
+        "title": "ThresholdAnalysis",
+        "description": "Analysis of model binary decision boundary vs continuous ranking scores."
+      },
+      "TimeRange": {
+        "properties": {
+          "start": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start"
+          },
+          "end": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End"
+          }
+        },
+        "type": "object",
+        "title": "TimeRange"
+      },
+      "TransactionSummaryResponse": {
+        "properties": {
+          "transactions": {
+            "type": "integer",
+            "title": "Transactions",
+            "description": "Total count of valid transactions"
+          },
+          "users": {
+            "type": "integer",
+            "title": "Users",
+            "description": "Total count of distinct entities/users"
+          },
+          "total_amount": {
+            "type": "number",
+            "title": "Total Amount",
+            "description": "Total cumulative monetary volume"
+          },
+          "average_amount": {
+            "type": "number",
+            "title": "Average Amount",
+            "description": "Average transaction amount"
+          },
+          "min_amount": {
+            "type": "number",
+            "title": "Min Amount",
+            "description": "Minimum transaction amount"
+          },
+          "max_amount": {
+            "type": "number",
+            "title": "Max Amount",
+            "description": "Maximum transaction amount"
+          },
+          "time_range": {
+            "$ref": "#/components/schemas/TimeRange"
+          }
+        },
+        "type": "object",
+        "required": [
+          "transactions",
+          "users",
+          "total_amount",
+          "average_amount",
+          "min_amount",
+          "max_amount"
+        ],
+        "title": "TransactionSummaryResponse",
+        "description": "Summary of ingested transactions."
+      },
+      "TransactionUploadResponse": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "dataset_id": {
+            "type": "string",
+            "title": "Dataset Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "complete"
+          },
+          "total_rows_parsed": {
+            "type": "integer",
+            "title": "Total Rows Parsed"
+          },
+          "valid_transactions": {
+            "type": "integer",
+            "title": "Valid Transactions"
+          },
+          "invalid_rows_count": {
+            "type": "integer",
+            "title": "Invalid Rows Count"
+          },
+          "validation_errors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Validation Errors",
+            "default": []
+          },
+          "duplicate_warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Duplicate Warnings",
+            "default": []
+          },
+          "summary": {
+            "$ref": "#/components/schemas/TransactionSummaryResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message",
+          "dataset_id",
+          "total_rows_parsed",
+          "valid_transactions",
+          "invalid_rows_count",
+          "summary"
+        ],
+        "title": "TransactionUploadResponse",
+        "description": "Response returned upon CSV transaction file upload."
+      },
+      "UserAnalyticsResponse": {
+        "properties": {
+          "total_users": {
+            "type": "integer",
+            "title": "Total Users",
+            "description": "Total number of evaluated users"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit",
+            "description": "Page size limit"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset",
+            "description": "Page offset"
+          },
+          "users": {
+            "items": {
+              "$ref": "#/components/schemas/UserFeatures"
+            },
+            "type": "array",
+            "title": "Users",
+            "description": "List of user feature records"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_users",
+          "limit",
+          "offset",
+          "users"
+        ],
+        "title": "UserAnalyticsResponse",
+        "description": "Paginated user feature collection response."
+      },
+      "UserAnomalyListResponse": {
+        "properties": {
+          "dataset_id": {
+            "type": "string",
+            "title": "Dataset Id",
+            "description": "Dataset identifier"
+          },
+          "experiment_label": {
+            "type": "string",
+            "title": "Experiment Label",
+            "description": "Experiment identifier",
+            "default": "default"
+          },
+          "total_users": {
+            "type": "integer",
+            "title": "Total Users",
+            "description": "Total users evaluated"
+          },
+          "suspicious_count": {
+            "type": "integer",
+            "title": "Suspicious Count",
+            "description": "Total users flagged as suspicious (prediction == -1)"
+          },
+          "normal_count": {
+            "type": "integer",
+            "title": "Normal Count",
+            "description": "Total users classified as normal (prediction == 1)"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit",
+            "description": "Page size limit"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset",
+            "description": "Page offset"
+          },
+          "users": {
+            "items": {
+              "$ref": "#/components/schemas/UserAnomalyResult"
+            },
+            "type": "array",
+            "title": "Users",
+            "description": "List of user anomaly scores and classifications"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dataset_id",
+          "total_users",
+          "suspicious_count",
+          "normal_count",
+          "limit",
+          "offset",
+          "users"
+        ],
+        "title": "UserAnomalyListResponse",
+        "description": "Paginated collection of per-user anomaly detection results."
+      },
+      "UserAnomalyResult": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "title": "User Id",
+            "description": "Unique entity/user identifier"
+          },
+          "raw_score": {
+            "type": "number",
+            "title": "Raw Score",
+            "description": "Raw continuous model score (decision_function score for Isolation Forest, or max z-score for baseline)."
+          },
+          "prediction": {
+            "type": "integer",
+            "title": "Prediction",
+            "description": "Classification decision (-1 for anomaly/outlier, 1 for normal/inlier)."
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Categorical entity classification: 'suspicious' or 'normal'."
+          },
+          "risk_score": {
+            "type": "number",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Risk Score",
+            "description": "Relative presentation risk score (0-100) derived from model output. NOTE: The 0\u2013100 score is a relative presentation/ranking score derived from model output. It is NOT a calibrated probability of fraud. It must not be interpreted as a percentage probability that an account is fraudulent. 100 = most anomalous, 0 = most normal."
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Reasons",
+            "description": "Supporting explainability reason codes derived from training population percentiles."
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "raw_score",
+          "prediction",
+          "status",
+          "risk_score"
+        ],
+        "title": "UserAnomalyResult",
+        "description": "Per-user anomaly detection scoring, classification, and explanation."
+      },
+      "UserFeatures": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "title": "User Id",
+            "description": "Unique entity/user identifier"
+          },
+          "in_degree": {
+            "type": "integer",
+            "title": "In Degree",
+            "description": "Number of incoming transaction connections"
+          },
+          "out_degree": {
+            "type": "integer",
+            "title": "Out Degree",
+            "description": "Number of outgoing transaction connections"
+          },
+          "total_degree": {
+            "type": "integer",
+            "title": "Total Degree",
+            "description": "Sum of incoming and outgoing connections"
+          },
+          "weighted_in_degree": {
+            "type": "number",
+            "title": "Weighted In Degree",
+            "description": "Total volume received across all incoming edges"
+          },
+          "weighted_out_degree": {
+            "type": "number",
+            "title": "Weighted Out Degree",
+            "description": "Total volume sent across all outgoing edges"
+          },
+          "betweenness_centrality": {
+            "type": "number",
+            "title": "Betweenness Centrality",
+            "description": "Node betweenness centrality score in the network"
+          },
+          "transaction_count": {
+            "type": "integer",
+            "title": "Transaction Count",
+            "description": "Total number of transactions involving this user"
+          },
+          "total_sent": {
+            "type": "number",
+            "title": "Total Sent",
+            "description": "Cumulative monetary amount sent"
+          },
+          "total_received": {
+            "type": "number",
+            "title": "Total Received",
+            "description": "Cumulative monetary amount received"
+          },
+          "net_flow": {
+            "type": "number",
+            "title": "Net Flow",
+            "description": "Net flow = total_received - total_sent"
+          },
+          "average_transaction_amount": {
+            "type": "number",
+            "title": "Average Transaction Amount",
+            "description": "Average amount across all user transactions"
+          },
+          "maximum_transaction_amount": {
+            "type": "number",
+            "title": "Maximum Transaction Amount",
+            "description": "Maximum amount in a single transaction"
+          },
+          "unique_receivers": {
+            "type": "integer",
+            "title": "Unique Receivers",
+            "description": "Number of distinct counterparties sent to"
+          },
+          "unique_senders": {
+            "type": "integer",
+            "title": "Unique Senders",
+            "description": "Number of distinct counterparties received from"
+          },
+          "transactions_per_day": {
+            "type": "number",
+            "title": "Transactions Per Day",
+            "description": "Average frequency of transactions per day"
+          },
+          "transactions_per_week": {
+            "type": "number",
+            "title": "Transactions Per Week",
+            "description": "Average frequency of transactions per week"
+          },
+          "average_time_between_transactions": {
+            "type": "number",
+            "title": "Average Time Between Transactions",
+            "description": "Average duration (seconds) between successive transactions"
+          },
+          "minimum_time_between_transactions": {
+            "type": "number",
+            "title": "Minimum Time Between Transactions",
+            "description": "Minimum duration (seconds) between successive transactions"
+          },
+          "maximum_time_between_transactions": {
+            "type": "number",
+            "title": "Maximum Time Between Transactions",
+            "description": "Maximum duration (seconds) between successive transactions"
+          },
+          "feature_vector": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feature Vector",
+            "description": "Raw ordered numerical feature vector for ML model ingestion"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "in_degree",
+          "out_degree",
+          "total_degree",
+          "weighted_in_degree",
+          "weighted_out_degree",
+          "betweenness_centrality",
+          "transaction_count",
+          "total_sent",
+          "total_received",
+          "net_flow",
+          "average_transaction_amount",
+          "maximum_transaction_amount",
+          "unique_receivers",
+          "unique_senders",
+          "transactions_per_day",
+          "transactions_per_week",
+          "average_time_between_transactions",
+          "minimum_time_between_transactions",
+          "maximum_time_between_transactions"
+        ],
+        "title": "UserFeatures",
+        "description": "Unified user profile feature set for downstream anomaly detection."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

@@ -1,0 +1,39 @@
+export const SAMPLE_TRANSACTIONS_CSV = `transaction_id,sender_id,receiver_id,amount,timestamp,transaction_type,merchant,location,device
+TX_1001,USR_ALICE,USR_BOB,250.00,2026-03-01 09:15:00,transfer,none,New York,iOS-App
+TX_1002,USR_BOB,USR_CHARLIE,120.50,2026-03-01 10:30:00,payment,none,Boston,Android-App
+TX_1003,USR_CHARLIE,USR_MERCHANT_99,45.00,2026-03-01 11:45:00,purchase,CoffeeHouse,Boston,Web-Browser
+TX_1004,USR_DAVID,USR_ALICE,500.00,2026-03-01 14:00:00,transfer,none,Chicago,iOS-App
+TX_1005,USR_ALICE,USR_MERCHANT_99,85.20,2026-03-02 08:30:00,purchase,SuperMart,New York,iOS-App
+TX_1006,USR_EMILY,USR_FRANK,310.00,2026-03-02 09:10:00,transfer,none,Seattle,Android-App
+TX_1007,USR_FRANK,USR_GRACE,150.00,2026-03-02 11:20:00,transfer,none,San Francisco,Web-Browser
+TX_1008,USR_GRACE,USR_MERCHANT_99,65.00,2026-03-02 13:00:00,purchase,BookStore,San Francisco,iOS-App
+TX_1009,USR_HENRY,USR_ALICE,1200.00,2026-03-02 15:45:00,transfer,none,Denver,Web-Browser
+TX_1010,USR_ALICE,USR_BOB,350.00,2026-03-03 10:00:00,transfer,none,New York,iOS-App
+TX_1011,USR_BOB,USR_MERCHANT_99,99.90,2026-03-03 12:15:00,purchase,ElectronicsHub,Boston,Android-App
+TX_1012,USR_BURST_01,USR_BOB,50.00,2026-03-03 14:01:10,transfer,none,Miami,Android-App
+TX_1013,USR_BURST_01,USR_CHARLIE,60.00,2026-03-03 14:02:25,transfer,none,Miami,Android-App
+TX_1014,USR_BURST_01,USR_DAVID,70.00,2026-03-03 14:03:40,transfer,none,Miami,Android-App
+TX_1015,USR_BURST_01,USR_EMILY,80.00,2026-03-03 14:05:00,transfer,none,Miami,Android-App
+TX_1016,USR_BURST_01,USR_FRANK,90.00,2026-03-03 14:06:15,transfer,none,Miami,Android-App
+TX_1017,USR_WHALE_01,USR_MERCHANT_99,25000.00,2026-03-03 16:30:00,purchase,LuxuryGoods,New York,Web-Browser
+TX_1018,USR_DAVID,USR_MERCHANT_99,112.50,2026-03-04 09:00:00,purchase,GroceriesDirect,Chicago,iOS-App
+TX_1019,USR_EMILY,USR_MERCHANT_99,44.00,2026-03-04 10:45:00,purchase,BakeryExpress,Seattle,Android-App
+TX_1020,USR_FRANK,USR_ALICE,450.00,2026-03-04 13:20:00,transfer,none,San Francisco,Web-Browser
+TX_1021,USR_GRACE,USR_BOB,220.00,2026-03-04 15:10:00,transfer,none,San Francisco,iOS-App
+TX_1022,USR_HENRY,USR_CHARLIE,780.00,2026-03-05 08:50:00,transfer,none,Denver,Web-Browser
+TX_1023,USR_ALICE,USR_CHARLIE,400.00,2026-03-05 11:30:00,transfer,none,New York,iOS-App
+TX_1024,USR_BOB,USR_DAVID,310.00,2026-03-05 14:15:00,transfer,none,Boston,Android-App
+TX_1025,USR_WHALE_01,USR_ALICE,18500.00,2026-03-05 17:00:00,transfer,none,New York,Web-Browser`;
+
+export const SAMPLE_LABELS_CSV = `user_id,label
+USR_WHALE_01,1
+USR_BURST_01,1
+USR_ALICE,0
+USR_BOB,0
+USR_CHARLIE,0
+USR_DAVID,0
+USR_EMILY,0
+USR_FRANK,0
+USR_GRACE,0
+USR_HENRY,0
+USR_MERCHANT_99,0`;
