@@ -35,6 +35,9 @@ jobs:
         working-directory: frontend
         run: npm ci
 
+      - name: Debug VITE_API_URL
+        run: echo "VITE_API_URL is set to: ${{ vars.VITE_API_URL }}"
+
       - name: Build frontend
         working-directory: frontend
         env:
