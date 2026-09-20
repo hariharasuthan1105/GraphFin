@@ -23,6 +23,9 @@ const LabelsSplitScreen = lazy(() =>
 const EvaluationScreen = lazy(() =>
   import("./screens/EvaluationScreen").then((m) => ({ default: m.EvaluationScreen }))
 );
+const TaxScreen = lazy(() =>
+  import("./screens/TaxScreen").then((m) => ({ default: m.TaxScreen }))
+);
 
 const ScreenLoadingFallback: React.FC = () => (
   <div className="flex flex-col items-center justify-center min-h-[360px] space-y-3">
@@ -94,6 +97,7 @@ const MainLayout: React.FC = () => {
               {displayNav === "anomalies" && <AnomalyScreen />}
               {displayNav === "labels_splits" && <LabelsSplitScreen />}
               {displayNav === "evaluation" && <EvaluationScreen />}
+              {displayNav === "tax" && <TaxScreen />}
             </Suspense>
           </div>
         </main>

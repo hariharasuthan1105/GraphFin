@@ -23,6 +23,12 @@ import {
   StreamStartRequest,
   StreamStateResponse,
 } from "../types/api";
+import {
+  TaxCalculationRequest,
+  TaxCalculationResponse,
+  JurisdictionInfo,
+  TaxRuleMetadata,
+} from "../types/tax";
 
 const BASE_URL = import.meta.env.VITE_API_URL || "";
 const API_PREFIX = `${BASE_URL}/api/v1`;
@@ -325,4 +331,18 @@ export const api = {
     const blob = await response.blob();
     return { blob, filename };
   },
+
+  // Tax Analytics
+  calculateTax: (payload: TaxCalculationRequest): Promise<TaxCalculationResponse> =>
+    request<TaxCalculationResponse>("/tax/calculate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }),
+
+  getTaxJurisdictions: (): Promise<JurisdictionInfo[]> =>
+    request<JurisdictionInfo[]>("/tax/jurisdictions"),
+
+  getTaxRules: (jurisdiction: string, taxYear: string): Promise<TaxRuleMetadata> =>
+    request<TaxRuleMetadata>(`/tax/rules/${encodeURIComponent(jurisdiction)}/${encodeURIComponent(taxYear)}`),
 };

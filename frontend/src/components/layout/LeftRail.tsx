@@ -14,6 +14,7 @@ const NAV_ITEMS: NavOption[] = [
   { id: "anomalies", label: "Anomaly Models" },
   { id: "labels_splits", label: "Labels & Splits" },
   { id: "evaluation", label: "Evaluation" },
+  { id: "tax", label: "Tax Analytics" },
 ];
 
 export const LeftRail: React.FC = () => {

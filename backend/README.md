@@ -42,7 +42,8 @@ financial-anomaly-detection/
 │   │   │       ├── health.py          # GET /api/v1/health
 │   │   │       ├── transactions.py    # POST /upload, GET /{dataset_id}/status, GET /{dataset_id}/summary
 │   │   │       ├── graph.py           # GET /{dataset_id}/summary, GET /{dataset_id}/nodes/{user_id}
-│   │   │       └── analytics.py       # GET /{dataset_id}/users, GET /schema
+│   │   │       ├── analytics.py       # GET /{dataset_id}/users, GET /schema
+│   │   │       └── tax.py             # POST /tax/calculate, GET /tax/jurisdictions, GET /tax/rules/{j}/{y}
 │   │   ├── core/
 │   │   │   ├── config.py              # Environment configuration & paths
 │   │   │   ├── logging.py             # Formatted logging system
@@ -52,6 +53,7 @@ financial-anomaly-detection/
 │   │   │   ├── graph.py               # Graph topological models
 │   │   │   └── analytics.py           # Behavioral, temporal & ML feature models
 │   │   ├── services/
+│   │   │   ├── tax/                   # Multi-jurisdiction deterministic tax engine & providers
 │   │   │   ├── preprocessing.py       # Data cleaning, validation & soft duplicate warnings
 │   │   │   ├── graph_service.py       # NetworkX construction & centrality
 │   │   │   ├── feature_service.py     # Behavioral & temporal feature extraction

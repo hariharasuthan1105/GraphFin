@@ -11,7 +11,8 @@ export type NavItem =
   | "features"
   | "anomalies"
   | "labels_splits"
-  | "evaluation";
+  | "evaluation"
+  | "tax";
 
 export type ResearchTier = "medium_real" | "large_real";
 

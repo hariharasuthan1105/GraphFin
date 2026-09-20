@@ -2,7 +2,7 @@
 Aggregated API v1 Router.
 """
 from fastapi import APIRouter
-from .routes import health, transactions, graph, analytics, anomalies, datasets, evaluation, stream, reports
+from .routes import health, transactions, graph, analytics, anomalies, datasets, evaluation, stream, reports, tax
 
 api_router = APIRouter()
 
@@ -15,4 +15,5 @@ api_router.include_router(datasets.router)
 api_router.include_router(evaluation.router)
 api_router.include_router(stream.router)
 api_router.include_router(reports.router)
+api_router.include_router(tax.router)
 

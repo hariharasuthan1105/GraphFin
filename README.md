@@ -18,6 +18,7 @@ A research-driven system that combines graph-mining metrics with behavioral and 
 - [x] **Ground-Truth Label Ingestion & Evaluation Layer** (`/datasets/{dataset_id}/labels`)
 - [x] **Research Evaluation Layer** (Precision, Recall, F1, Accuracy, ROC-AUC, and headline PR-AUC via `/evaluation/{dataset_id}/compare`)
 - [x] **Automated Pytest Test Suite** (100% passing tests: 75/75 tests)
+- [x] **Multi-Jurisdiction Tax Analytics Module** (India AY 2026–27, US Federal 2026, UK & Scotland 2026–27, Germany 2026, France 2026)
 - [ ] *Milestone 3 (Day 3): Subgraph Pattern Detection & Anomaly Explanation*
 - [ ] *Milestone 4 (Day 4): Frontend Dashboard & Visualization*
 
@@ -77,6 +78,29 @@ The GraphFin research platform supports two evaluation protocols:
 6. **Compare PR-AUC**: `GET /api/v1/evaluation/{dataset_id}/compare` (ranked by PR-AUC, cleanly grouped via `by_evaluation_mode`)
 7. **Inspect ROC & PR Curves**: `GET /api/v1/evaluation/{dataset_id}/compare?include_curves=true`
 8. **Export Research Artifacts**: `POST /api/v1/evaluation/{dataset_id}/export` (exports JSON and CSV to `data/results/`)
+
+---
+
+## Multi-Jurisdiction Tax Analytics Module
+
+GraphFin includes a jurisdiction-aware tax analytics module supporting **India**, **United States**, **United Kingdom & Scotland**, **Germany**, and **France**.
+
+> [!IMPORTANT]
+> **Strict Boundary Notice**:
+> GraphFin's tax analytics module provides jurisdiction-specific estimates. It does NOT infer taxable income from raw transaction volume. A transaction between two accounts is NOT automatically income.
+> The tax module operates strictly from explicitly classified income inputs.
+
+### Supported Jurisdictions & Tax Regimes
+1. **India (`IN`)**: Assessment Year 2026–27 New Tax Regime (Slabs: 0%, 5%, 10%, 15%, 20%, 25%, 30%), Section 87A rebate & marginal relief, Surcharge, 4% Cess (`IN-AY2026-27-v1`). Official source: Income Tax Department (`incometax.gov.in`).
+2. **United States (`US`)**: Tax Year 2026 IRS Federal Income Tax (`US-2026-v1`) for `single`, `married_joint`, `married_separate`, and `head_of_household`. Includes 2026 standard deductions ($16,100 / $32,200 / $24,150). State tax is federal-only unless explicitly selected. Official source: Internal Revenue Service (`irs.gov`).
+3. **United Kingdom (`GB`)**: Tax Year 2026–27 (`GB-2026-27-v1`) for England, Wales, Northern Ireland, and Scotland (Scottish 6-band regime). Includes Personal Allowance (£12,570) and £1-for-£2 tapering above £100,000 adjusted net income. Official source: HMRC (`gov.uk`).
+4. **Germany (`DE`)**: Tax Year 2026 (`DE-2026-v1`). Grundfreibetrag (€12,096), progressive Einkommensteuer formula, Solidarity Surcharge (Solidaritätszuschlag), and optional Church Tax (Kirchensteuer 8%/9%). Official source: BMF (`bundesfinanzministerium.de`).
+5. **France (`FR`)**: Tax Year 2026 (`FR-2026-v1`). Progressive Barème de l'impôt sur le revenu (0%, 11%, 30%, 41%, 45%) with Quotient Familial parts support. Official source: DGFiP (`impots.gouv.fr`).
+
+### API Endpoints
+- `POST /api/v1/tax/calculate` — Calculate estimated income tax liability
+- `GET /api/v1/tax/jurisdictions` — List supported tax jurisdictions
+- `GET /api/v1/tax/rules/{jurisdiction}/{tax_year}` — Fetch official tax rule metadata and bracket definition
 
 ---
 
