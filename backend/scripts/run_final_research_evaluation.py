@@ -178,6 +178,12 @@ def run_tier_pipeline(
             "feature_groups": ["graph", "behavioral", "temporal"],
             "contamination": contamination,
         },
+        {
+            "label": "E5_egonet_baseline",
+            "type": "ml",
+            "feature_groups": ["egonet"],
+            "contamination": contamination,
+        },
     ]
 
     all_seed_runs: List[Dict[str, Any]] = []

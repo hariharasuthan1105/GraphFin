@@ -61,8 +61,9 @@ class StateStore:
             set(df["sender_id"].unique()).union(set(df["receiver_id"].unique()))
         )
 
-        earliest = df["timestamp"].min().to_pydatetime() if pd.notna(df["timestamp"].min()) else None
-        latest = df["timestamp"].max().to_pydatetime() if pd.notna(df["timestamp"].max()) else None
+        ts_series = pd.to_datetime(df["timestamp"], errors="coerce")
+        earliest = ts_series.min().to_pydatetime() if pd.notna(ts_series.min()) else None
+        latest = ts_series.max().to_pydatetime() if pd.notna(ts_series.max()) else None
 
         return TransactionSummaryResponse(
             transactions=len(df),

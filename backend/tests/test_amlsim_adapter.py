@@ -171,15 +171,15 @@ def test_no_label_leakage_in_graphfin_feature_pipeline(tiny_amlsim_dir: Path):
 
     users, matrix, names = feat_svc.get_feature_matrix()
 
-    # 1. Exactly GraphFin's 19 canonical features
-    assert len(names) == 19
+    # 1. Exactly GraphFin's canonical features
+    assert len(names) == len(FEATURE_NAMES)
     assert names == FEATURE_NAMES
     assert "is_sar" not in names
     assert "alert_id" not in names
     assert "tx_type" not in names
 
-    # 2. Feature matrix shape matches users x 19
-    assert matrix.shape == (len(users), 19)
+    # 2. Feature matrix shape matches users x len(FEATURE_NAMES)
+    assert matrix.shape == (len(users), len(FEATURE_NAMES))
     assert not np.isnan(matrix).any()
 
 
@@ -221,9 +221,9 @@ def test_end_to_end_statestore_and_label_registry(tiny_amlsim_dir: Path):
     assert summary.negative_count == 2
     assert summary.unmatched_count == 0
 
-    # Ensure feature matrix remains pure (19 features)
+    # Ensure feature matrix remains pure
     _, matrix, fnames = store.get_feature_matrix()
-    assert matrix.shape == (4, 19)
+    assert matrix.shape == (4, len(FEATURE_NAMES))
     assert fnames == FEATURE_NAMES
 
 

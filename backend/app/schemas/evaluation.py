@@ -74,7 +74,15 @@ class ExperimentEvaluationMetrics(BaseModel):
     training_timestamp: Optional[str] = Field(None, description="ISO 8601 timestamp of model training completion")
     model_artifact_path: Optional[str] = Field(None, description="Relative file path where model artifact is stored")
 
-    # Evaluation Protocol Metadata
+    # Evaluation Protocol & Publication Readiness Metadata
+    is_paper_reportable: bool = Field(
+        default=False,
+        description="Flag confirming whether results are paper-reportable (held-out split on publication-grade dataset scale)",
+    )
+    run_quality_tier: str = Field(
+        default="pipeline_validation",
+        description="Run quality level: 'paper_reportable' vs 'pipeline_validation'",
+    )
     evaluation_mode: str = Field(
         default="in_sample",
         description="Protocol mode: 'in_sample' (pipeline validation) or 'held_out' (split test set)",
@@ -144,6 +152,14 @@ class EvaluationComparisonResponse(BaseModel):
     successful_experiments_count: int = Field(default=0, description="Count of successfully evaluated experiments")
     failed_experiments_count: int = Field(default=0, description="Count of experiments that encountered an evaluation error")
     labels_summary: DatasetLabelsSummaryResponse = Field(..., description="Summary of ground-truth labels used")
+    is_paper_reportable: bool = Field(
+        default=False,
+        description="Flag confirming whether overall evaluation run is paper-reportable",
+    )
+    run_quality_tier: str = Field(
+        default="pipeline_validation",
+        description="Run quality level: 'paper_reportable' vs 'pipeline_validation'",
+    )
     evaluation_mode: str = Field(
         default="in_sample",
         description="Protocol mode: 'in_sample' (pipeline validation), 'held_out' (split test set), or 'mixed'",

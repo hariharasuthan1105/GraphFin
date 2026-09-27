@@ -1,0 +1,180 @@
+{
+  "account_id": "C2094777811",
+  "rank": 7,
+  "anomaly_score": 0.8113,
+  "ground_truth_label": 1,
+  "dataset": "PaySim",
+  "notice": "This is presented as an anomaly explanation, not as evidence that this account committed fraud.",
+  "top_unusual_features": [
+    {
+      "feature": "weighted_in_degree",
+      "value": 17246114.0,
+      "dataset_mean": 121595.2266,
+      "dataset_std": 759506.5625,
+      "z_score": 22.55
+    },
+    {
+      "feature": "total_received",
+      "value": 17246114.0,
+      "dataset_mean": 121595.2266,
+      "dataset_std": 759506.5625,
+      "z_score": 22.55
+    },
+    {
+      "feature": "net_flow",
+      "value": 17246114.0,
+      "dataset_mean": 0.0001,
+      "dataset_std": 822102.125,
+      "z_score": 20.98
+    },
+    {
+      "feature": "transactions_per_week",
+      "value": 273.0,
+      "dataset_mean": 9.663,
+      "dataset_std": 15.3056,
+      "z_score": 17.21
+    },
+    {
+      "feature": "transactions_per_day",
+      "value": 39.0,
+      "dataset_mean": 1.3804,
+      "dataset_std": 2.1865,
+      "z_score": 17.21
+    }
+  ],
+  "full_feature_profile": [
+    {
+      "feature": "weighted_in_degree",
+      "value": 17246114.0,
+      "dataset_mean": 121595.2266,
+      "dataset_std": 759506.5625,
+      "z_score": 22.55
+    },
+    {
+      "feature": "total_received",
+      "value": 17246114.0,
+      "dataset_mean": 121595.2266,
+      "dataset_std": 759506.5625,
+      "z_score": 22.55
+    },
+    {
+      "feature": "net_flow",
+      "value": 17246114.0,
+      "dataset_mean": 0.0001,
+      "dataset_std": 822102.125,
+      "z_score": 20.98
+    },
+    {
+      "feature": "transactions_per_week",
+      "value": 273.0,
+      "dataset_mean": 9.663,
+      "dataset_std": 15.3056,
+      "z_score": 17.21
+    },
+    {
+      "feature": "transactions_per_day",
+      "value": 39.0,
+      "dataset_mean": 1.3804,
+      "dataset_std": 2.1865,
+      "z_score": 17.21
+    },
+    {
+      "feature": "total_degree",
+      "value": 39.0,
+      "dataset_mean": 1.3804,
+      "dataset_std": 2.1865,
+      "z_score": 17.21
+    },
+    {
+      "feature": "transaction_count",
+      "value": 39.0,
+      "dataset_mean": 1.3804,
+      "dataset_std": 2.1865,
+      "z_score": 17.21
+    },
+    {
+      "feature": "unique_senders",
+      "value": 39.0,
+      "dataset_mean": 0.6902,
+      "dataset_std": 2.3494,
+      "z_score": 16.31
+    },
+    {
+      "feature": "in_degree",
+      "value": 39.0,
+      "dataset_mean": 0.6902,
+      "dataset_std": 2.3494,
+      "z_score": 16.31
+    },
+    {
+      "feature": "maximum_transaction_amount",
+      "value": 3310206.75,
+      "dataset_mean": 163928.7344,
+      "dataset_std": 324678.375,
+      "z_score": 9.69
+    },
+    {
+      "feature": "maximum_time_between_transactions",
+      "value": 7200.0,
+      "dataset_mean": 358.0544,
+      "dataset_std": 1762.8599,
+      "z_score": 3.88
+    },
+    {
+      "feature": "out_degree",
+      "value": 0.0,
+      "dataset_mean": 0.6902,
+      "dataset_std": 0.4625,
+      "z_score": -1.49
+    },
+    {
+      "feature": "unique_receivers",
+      "value": 0.0,
+      "dataset_mean": 0.6902,
+      "dataset_std": 0.4625,
+      "z_score": -1.49
+    },
+    {
+      "feature": "average_time_between_transactions",
+      "value": 1326.3199,
+      "dataset_mean": 164.8994,
+      "dataset_std": 909.8058,
+      "z_score": 1.28
+    },
+    {
+      "feature": "average_transaction_amount",
+      "value": 442208.0625,
+      "dataset_mean": 140548.8594,
+      "dataset_std": 264398.1875,
+      "z_score": 1.14
+    },
+    {
+      "feature": "weighted_out_degree",
+      "value": 0.0,
+      "dataset_mean": 121595.2266,
+      "dataset_std": 263497.5938,
+      "z_score": -0.46
+    },
+    {
+      "feature": "total_sent",
+      "value": 0.0,
+      "dataset_mean": 121595.2266,
+      "dataset_std": 263497.5938,
+      "z_score": -0.46
+    },
+    {
+      "feature": "minimum_time_between_transactions",
+      "value": 0.0,
+      "dataset_mean": 57.8204,
+      "dataset_std": 677.5627,
+      "z_score": -0.09
+    },
+    {
+      "feature": "betweenness_centrality",
+      "value": 0.0,
+      "dataset_mean": 0.0,
+      "dataset_std": 0.0,
+      "z_score": 0.0
+    }
+  ]
+}

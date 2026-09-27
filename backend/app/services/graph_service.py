@@ -18,6 +18,7 @@ class GraphService:
         self.graph: nx.DiGraph = nx.DiGraph()
         self._betweenness_cache: Optional[Dict[str, float]] = None
         self._structural_features_cache: Optional[Dict[str, Dict[str, Any]]] = None
+        self._egonet_features_cache: Optional[Dict[str, Dict[str, Any]]] = None
         self._summary_cache: Optional[Dict[str, Any]] = None
 
     def build_graph(self, transactions_df: pd.DataFrame) -> nx.DiGraph:
@@ -33,41 +34,32 @@ class GraphService:
             self.graph = nx.DiGraph()
             self._betweenness_cache = {}
             self._structural_features_cache = {}
+            self._egonet_features_cache = {}
             self._summary_cache = None
             return self.graph
 
         G = nx.DiGraph()
 
         try:
-            for _, row in transactions_df.iterrows():
-                u = str(row["sender_id"])
-                v = str(row["receiver_id"])
-                amount = float(row["amount"])
-                tx_id = str(row["transaction_id"])
+            senders = transactions_df["sender_id"].astype(str).tolist()
+            receivers = transactions_df["receiver_id"].astype(str).tolist()
+            amounts = transactions_df["amount"].astype(float).tolist()
+            tx_ids = transactions_df["transaction_id"].astype(str).tolist()
 
-                # Ensure nodes exist
-                if not G.has_node(u):
-                    G.add_node(u)
-                if not G.has_node(v):
-                    G.add_node(v)
-
+            for u, v, amount, tx_id in zip(senders, receivers, amounts, tx_ids):
                 if G.has_edge(u, v):
-                    G[u][v]["weight"] += amount
-                    G[u][v]["count"] += 1
-                    G[u][v]["transactions"].append(tx_id)
+                    edge = G[u][v]
+                    edge["weight"] += amount
+                    edge["count"] += 1
+                    edge["transactions"].append(tx_id)
                 else:
-                    G.add_edge(
-                        u,
-                        v,
-                        weight=amount,
-                        count=1,
-                        transactions=[tx_id]
-                    )
+                    G.add_edge(u, v, weight=amount, count=1, transactions=[tx_id])
 
             self.graph = G
             # Invalidate and precompute centrality at ingest time
             self._betweenness_cache = None
             self._structural_features_cache = None
+            self._egonet_features_cache = None
             self._summary_cache = None
             self.compute_betweenness_centrality()
 
@@ -97,9 +89,9 @@ class GraphService:
         node_count = self.graph.number_of_nodes()
         try:
             if node_count > sample_threshold:
-                k = min(500, node_count)
+                k = min(100 if node_count > 50000 else 500, node_count)
                 logger.info(f"Large graph ({node_count} nodes): approximating betweenness with k={k}")
-                centrality = nx.betweenness_centrality(self.graph, k=k, normalized=True)
+                centrality = nx.betweenness_centrality(self.graph, k=k, normalized=True, seed=42)
             else:
                 centrality = nx.betweenness_centrality(self.graph, normalized=True)
 
@@ -142,21 +134,28 @@ class GraphService:
         }
 
     def get_all_structural_features(self) -> Dict[str, Dict[str, Any]]:
-        """Calculate structural features for all nodes in the graph."""
+        """Calculate structural features for all nodes in the graph efficiently."""
         if self._structural_features_cache is not None:
             return self._structural_features_cache
 
+        G = self.graph
         centrality = self.compute_betweenness_centrality()
-        features = {}
 
-        for node in self.graph.nodes():
-            in_deg = int(self.graph.in_degree(node))
-            out_deg = int(self.graph.out_degree(node))
-            w_in_deg = round(float(self.graph.in_degree(node, weight="weight")), 2)
-            w_out_deg = round(float(self.graph.out_degree(node, weight="weight")), 2)
+        in_deg_dict = dict(G.in_degree())
+        out_deg_dict = dict(G.out_degree())
+        w_in_deg_dict = dict(G.in_degree(weight="weight"))
+        w_out_deg_dict = dict(G.out_degree(weight="weight"))
+
+        features = {}
+        for node in G.nodes():
+            u_str = str(node)
+            in_deg = int(in_deg_dict.get(node, 0))
+            out_deg = int(out_deg_dict.get(node, 0))
+            w_in_deg = round(float(w_in_deg_dict.get(node, 0.0)), 2)
+            w_out_deg = round(float(w_out_deg_dict.get(node, 0.0)), 2)
             bc = centrality.get(node, 0.0)
 
-            features[node] = {
+            features[u_str] = {
                 "in_degree": in_deg,
                 "out_degree": out_deg,
                 "total_degree": in_deg + out_deg,
@@ -167,6 +166,91 @@ class GraphService:
 
         self._structural_features_cache = features
         return features
+
+    def get_all_egonet_features(self) -> Dict[str, Dict[str, float]]:
+        """
+        Compute reduced-egonet features (single-edge leaf nodes removed)
+        and random-walk-based circular-flow indicator for all nodes (Dumitrescu et al. egonet baseline).
+        Optimized with degree short-circuiting for large graphs.
+        """
+        if self._egonet_features_cache is not None:
+            return self._egonet_features_cache
+
+        G = self.graph
+        features = {}
+
+        if G.number_of_nodes() == 0:
+            self._egonet_features_cache = {}
+            return self._egonet_features_cache
+
+        in_adj = G.pred
+        out_adj = G.succ
+
+        # Precompute total degree per node
+        tot_deg = {u: len(out_adj[u]) + len(in_adj[u]) for u in G.nodes()}
+
+        for u in G.nodes():
+            u_str = str(u)
+            d_u = tot_deg[u]
+
+            # Short-circuit degree <= 1 nodes (isolated or single-leaf node egonets)
+            if d_u <= 1:
+                features[u_str] = {
+                    "egonet_node_count": 1.0,
+                    "egonet_edge_count": 0.0,
+                    "egonet_density": 0.0,
+                    "circular_flow_indicator": 0.0,
+                }
+                continue
+
+            succ = set(out_adj[u])
+            pred = set(in_adj[u])
+            neighbors_1hop = succ.union(pred)
+            neighbors_1hop.add(u)
+
+            leaves = set()
+            for v in neighbors_1hop:
+                if v == u:
+                    continue
+                if tot_deg[v] <= 1:
+                    leaves.add(v)
+                elif len((set(out_adj[v]).union(in_adj[v])).intersection(neighbors_1hop)) <= 1:
+                    leaves.add(v)
+
+            reduced_nodes = neighbors_1hop - leaves
+            n_nodes = len(reduced_nodes)
+
+            # Edges between reduced nodes
+            n_edges = sum(
+                1 for v in reduced_nodes
+                for w in out_adj[v] if w in reduced_nodes
+            )
+
+            possible_edges = n_nodes * (n_nodes - 1)
+            density = float(n_edges / possible_edges) if possible_edges > 0 else 0.0
+
+            out_deg_u = len(succ)
+            circular_flow = 0.0
+            if out_deg_u > 0:
+                for v in succ:
+                    if u in out_adj[v]:
+                        circular_flow += 1.0 / out_deg_u
+                    out_deg_v = len(out_adj[v])
+                    if out_deg_v > 0:
+                        for w in out_adj[v]:
+                            if w != u and u in out_adj[w]:
+                                circular_flow += 1.0 / (out_deg_u * out_deg_v)
+
+            features[u_str] = {
+                "egonet_node_count": float(n_nodes),
+                "egonet_edge_count": float(n_edges),
+                "egonet_density": float(round(density, 6)),
+                "circular_flow_indicator": float(round(circular_flow, 6)),
+            }
+
+        self._egonet_features_cache = features
+        return features
+
 
     def get_graph_summary(self) -> Dict[str, Any]:
         """Get topological and descriptive summary of the network."""

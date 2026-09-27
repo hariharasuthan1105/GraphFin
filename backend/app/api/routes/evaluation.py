@@ -7,11 +7,35 @@ from ...schemas.evaluation import (
     ExperimentEvaluationMetrics,
     ResearchExportResponse,
 )
+from ...schemas.transfer import (
+    TransferExperimentRequest,
+    TransferExperimentResponse,
+)
 from ...services.evaluation_service import evaluation_service
+from ...services.transfer_service import transfer_service
 
 logger = get_logger(__name__)
 
 router = APIRouter(prefix="/evaluation", tags=["Research Evaluation & Comparison"])
+
+
+@router.post(
+    "/transfer",
+    response_model=TransferExperimentResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Execute Cross-Dataset Transfer Experiment",
+    description=(
+        "Executes source-only model fitting and transfers models/scalers to a target dataset. "
+        "Strictly verifies feature schema equality before fitting. "
+        "Computes PR-AUC with 95% Bootstrap Confidence Intervals (N=1000), Precision@K (P@10, P@25, P@50, P@100), "
+        "transfer degradation metrics, and feature distribution shift diagnostics."
+    ),
+)
+async def evaluate_cross_dataset_transfer(
+    payload: TransferExperimentRequest,
+) -> TransferExperimentResponse:
+    """Evaluate cross-dataset generalization transfer between source and target datasets."""
+    return transfer_service.evaluate_transfer(payload)
 
 
 @router.get(

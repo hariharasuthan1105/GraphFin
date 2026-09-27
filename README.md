@@ -31,6 +31,17 @@ A research-driven system that combines graph-mining metrics with behavioral and 
 | **E2** | Graph + Behavioral | Isolation Forest | Unsupervised IF combining graph metrics with user transaction statistics (14 features). |
 | **E3** | Graph + Temporal | Isolation Forest | Unsupervised IF combining graph metrics with burst and interval metrics (11 features). |
 | **E4** | Graph + Behavioral + Temporal | Isolation Forest | Comprehensive feature fusion combining all three groups (19 features, default). |
+| **E5** | Reduced-Egonet + Circular-Flow | Isolation Forest | Reduced 1-hop egonet topology (single-edge leaf nodes removed) + 2/3-step circular flow indicator (23 features total). |
+
+### Cross-Dataset Transfer Generalization Protocol (IBM AML $\leftrightarrow$ PaySim)
+
+GraphFin evaluates cross-dataset transfer generalization across datasets using a strict source-only model fitting protocol:
+- **Source-Only Model Fitting**: Isolation Forest models and standard scaling parameters ($\mu, \sigma$) are fit strictly on the source dataset. Target data is never used during fitting.
+- **Canonical Feature Representation**: 19 entity-level features with identical schema ordering across IBM AML and PaySim.
+- **Betweenness Centrality Strategy**: Exact betweenness centrality for IBM AML, sampled Brandes centrality ($k=100$, random_state=42) for PaySim at scale.
+- **Account Label Derivation**: "Any Involvement" rule for PaySim (an account is labeled fraud ($y=1$) if involved as sender or receiver in $\ge 1$ fraudulent transaction).
+- **Evaluation Metrics**: PR-AUC with 1000-sample 95% Bootstrap CIs, ROC-AUC, Precision, Recall, F1, Precision@K ($P@10, P@25, P@50, P@100$), absolute/relative transfer degradation, and standardized feature distribution shift ($\Delta \mu$).
+
 
 > [!IMPORTANT]
 > The 0–100 score is a relative presentation/ranking score derived from model output.

@@ -27,6 +27,7 @@ from backend.app.services.dataset_registry import dataset_registry
 from backend.app.services.evaluation_service import evaluation_service
 from backend.app.services.label_registry import label_registry
 from backend.app.services.split_service import split_service
+from backend.app.services.feature_service import FEATURE_NAMES
 
 DEMO_TRANSACTIONS_PATH = Path(__file__).parents[2] / "graphfin_sample_transactions.csv"
 DEMO_LABELS_PATH = Path(__file__).parents[2] / "graphfin_demo_labels.csv"
@@ -245,7 +246,7 @@ def test_no_label_leakage_for_all_experiments(client: TestClient, demo_dataset_w
     _, matrix, feat_names = store.get_feature_matrix()
 
     # Verify no label columns in feature matrix
-    assert matrix.shape[1] == 19
+    assert matrix.shape[1] == len(FEATURE_NAMES)
     for col in feat_names:
         assert "label" not in col.lower()
         assert "fraud" not in col.lower()

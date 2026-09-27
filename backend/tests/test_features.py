@@ -2,6 +2,7 @@
 Tests for behavioral, temporal, and fused graph feature extraction.
 """
 from fastapi.testclient import TestClient
+from backend.app.services.feature_service import FEATURE_NAMES
 
 
 def test_user_analytics_extraction(client: TestClient, valid_csv_bytes: bytes):
@@ -41,7 +42,7 @@ def test_user_analytics_extraction(client: TestClient, valid_csv_bytes: bytes):
 
     # ML Vector check
     assert user_a["feature_vector"] is not None
-    assert len(user_a["feature_vector"]) == 19
+    assert len(user_a["feature_vector"]) == len(FEATURE_NAMES)
 
 
 def test_single_user_analytics(client: TestClient, valid_csv_bytes: bytes):
@@ -64,7 +65,7 @@ def test_feature_schema_endpoint(client: TestClient):
     response = client.get("/api/v1/analytics/features/schema")
     assert response.status_code == 200
     data = response.json()
-    assert data["feature_count"] == 19
+    assert data["feature_count"] == len(FEATURE_NAMES)
     assert "in_degree" in data["features"]
     assert "betweenness_centrality" in data["features"]
     assert "total_sent" in data["features"]

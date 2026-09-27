@@ -83,6 +83,12 @@ FEATURE_GROUP_MAP: Dict[str, List[str]] = {
         "minimum_time_between_transactions",
         "maximum_time_between_transactions",
     ],
+    "egonet": [
+        "egonet_node_count",
+        "egonet_edge_count",
+        "egonet_density",
+        "circular_flow_indicator",
+    ],
 }
 
 
@@ -560,6 +566,19 @@ class AnomalyService:
             p90 = feature_stats.get("weighted_in_degree", {}).get("p90", 0.0)
             if val > p90 and val > 0.0:
                 reasons.append("unusually high graph incoming weight")
+
+        # Egonet Baseline Reason Heuristics
+        if "circular_flow_indicator" in trained_set:
+            val = user_feat_dict.get("circular_flow_indicator", 0.0)
+            p90 = feature_stats.get("circular_flow_indicator", {}).get("p90", 0.0)
+            if val > p90 and val > 0.0:
+                reasons.append("unusually high circular flow indicator")
+
+        if "egonet_density" in trained_set:
+            val = user_feat_dict.get("egonet_density", 0.0)
+            p90 = feature_stats.get("egonet_density", {}).get("p90", 0.0)
+            if val > p90 and val > 0.0:
+                reasons.append("unusually high egonet density")
 
         return reasons
 

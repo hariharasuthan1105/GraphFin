@@ -29,6 +29,8 @@ _LOCKED_DATASET_IDS = {
         "transactions": 31463,
         "users": 5000,
         "currency": "USD",
+        "is_paper_reportable": False,
+        "run_quality_tier": "pipeline_validation",
     },
     "03fb9ab0-4f42-4404-9d76-723fd4d8753e": {
         "label": "Research — 49,992 accounts (IBM AML HI-Small subsample)",
@@ -36,6 +38,17 @@ _LOCKED_DATASET_IDS = {
         "transactions": 353850,
         "users": 49992,
         "currency": "USD",
+        "is_paper_reportable": True,
+        "run_quality_tier": "paper_reportable",
+    },
+    "e8d9c7b6-a5f4-4e3d-b2c1-a09876543210": {
+        "label": "Research — PaySim Financial Transactions Benchmark",
+        "tier": "paysim_real",
+        "transactions": 130306,
+        "users": 157750,
+        "currency": "USD",
+        "is_paper_reportable": True,
+        "run_quality_tier": "paper_reportable",
     },
 }
 
@@ -47,6 +60,8 @@ class LockedDatasetInfo(BaseModel):
     transactions: int
     users: int
     currency: str
+    is_paper_reportable: bool = False
+    run_quality_tier: str = "pipeline_validation"
 
 
 @router.get(

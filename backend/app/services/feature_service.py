@@ -1,6 +1,6 @@
 """
 Feature Engineering Service.
-Calculates behavioral, temporal, and fused graph features for financial entities.
+Calculates behavioral, temporal, structural graph, and reduced-egonet features for financial entities.
 Prepares clean numerical feature matrices for downstream anomaly detection models.
 """
 from datetime import datetime
@@ -33,11 +33,22 @@ FEATURE_NAMES: List[str] = [
     "average_time_between_transactions",
     "minimum_time_between_transactions",
     "maximum_time_between_transactions",
+    "egonet_node_count",
+    "egonet_edge_count",
+    "egonet_density",
+    "circular_flow_indicator",
 ]
+
+GRAPH_FEATURES: List[str] = FEATURE_NAMES[:6]
+BEHAVIORAL_FEATURES: List[str] = FEATURE_NAMES[6:14]
+TEMPORAL_FEATURES: List[str] = FEATURE_NAMES[14:19]
+EGONET_FEATURES: List[str] = FEATURE_NAMES[19:23]
+CANONICAL_TRANSFER_FEATURES: List[str] = FEATURE_NAMES[:19]
+
 
 
 class FeatureService:
-    """Service to extract structural, behavioral, and temporal features per entity."""
+    """Service to extract structural, behavioral, temporal, and egonet features per entity."""
 
     def __init__(self, graph_service: GraphService):
         self.graph_service = graph_service
@@ -46,7 +57,7 @@ class FeatureService:
 
     def extract_features(self, transactions_df: pd.DataFrame) -> Dict[str, UserFeatures]:
         """
-        Compute combined structural, behavioral, and temporal features for all users.
+        Compute combined structural, behavioral, temporal, and egonet features for all users.
         Runs once at dataset ingest and caches the results and feature matrix.
         """
         if transactions_df.empty:
@@ -55,147 +66,164 @@ class FeatureService:
             return self.user_features
 
         # Ensure datetime dtype
-        if not pd.api.types.is_datetime64_any_dtype(transactions_df["timestamp"]):
-            transactions_df["timestamp"] = pd.to_datetime(transactions_df["timestamp"])
+        df = transactions_df.copy()
+        if not pd.api.types.is_datetime64_any_dtype(df["timestamp"]):
+            df["timestamp"] = pd.to_datetime(df["timestamp"])
 
-        # 1. Structural features from the Graph Service
+        # 1. Structural & Egonet features from the Graph Service
         structural_features = self.graph_service.get_all_structural_features()
+        egonet_features = self.graph_service.get_all_egonet_features()
 
-        # All unique users across senders and receivers
-        all_users = set(transactions_df["sender_id"].unique()).union(
-            set(transactions_df["receiver_id"].unique())
+        all_users = set(df["sender_id"].astype(str).unique()).union(
+            set(df["receiver_id"].astype(str).unique())
         )
 
         logger.info(f"Extracting features for {len(all_users)} unique users...")
 
-        # Pre-group transactions for efficient feature aggregation
-        sent_grouped = transactions_df.groupby("sender_id")
-        recv_grouped = transactions_df.groupby("receiver_id")
+        df["sender_str"] = df["sender_id"].astype(str)
+        df["receiver_str"] = df["receiver_id"].astype(str)
+
+        # Vectorized Behavioral Aggregations
+        sent_stats = df.groupby("sender_str").agg(
+            total_sent=("amount", "sum"),
+            unique_receivers=("receiver_str", "nunique"),
+            sent_count=("amount", "count"),
+            sent_max=("amount", "max"),
+        )
+
+        recv_stats = df.groupby("receiver_str").agg(
+            total_received=("amount", "sum"),
+            unique_senders=("sender_str", "nunique"),
+            recv_count=("amount", "count"),
+            recv_max=("amount", "max"),
+        )
+
+        # Vectorized Temporal Aggregations
+        # Combine user transaction timestamps for time deltas
+        sender_tx = df[["sender_str", "timestamp", "amount"]].rename(columns={"sender_str": "user_id"})
+        receiver_tx = df[["receiver_str", "timestamp", "amount"]].rename(columns={"receiver_str": "user_id"})
+        user_tx = pd.concat([sender_tx, receiver_tx], ignore_index=True)
+        user_tx = user_tx.sort_values(["user_id", "timestamp"])
+
+        # Compute time delta (seconds) between successive transactions for each user
+        user_tx["prev_ts"] = user_tx.groupby("user_id")["timestamp"].shift(1)
+        user_tx["delta"] = (user_tx["timestamp"] - user_tx["prev_ts"]).dt.total_seconds()
+
+        temp_stats = user_tx.groupby("user_id").agg(
+            tx_count=("timestamp", "count"),
+            min_ts=("timestamp", "min"),
+            max_ts=("timestamp", "max"),
+            avg_amount=("amount", "mean"),
+            max_amount=("amount", "max"),
+            avg_delta=("delta", "mean"),
+            min_delta=("delta", "min"),
+            max_delta=("delta", "max"),
+        )
+
+        sorted_users = sorted(list(all_users), key=str)
+
+        # Vectorized DataFrame construction across all users
+        u_df = pd.DataFrame(index=sorted_users)
+        u_df["total_sent"] = sent_stats["total_sent"].reindex(sorted_users).fillna(0.0)
+        u_df["unique_receivers"] = sent_stats["unique_receivers"].reindex(sorted_users).fillna(0).astype(int)
+        u_df["total_received"] = recv_stats["total_received"].reindex(sorted_users).fillna(0.0)
+        u_df["unique_senders"] = recv_stats["unique_senders"].reindex(sorted_users).fillna(0).astype(int)
+
+        u_df["tx_count"] = temp_stats["tx_count"].reindex(sorted_users).fillna(0).astype(int)
+        u_df["avg_amount"] = temp_stats["avg_amount"].reindex(sorted_users).fillna(0.0)
+        u_df["max_amount"] = temp_stats["max_amount"].reindex(sorted_users).fillna(0.0)
+        u_df["avg_delta"] = temp_stats["avg_delta"].reindex(sorted_users).fillna(0.0)
+        u_df["min_delta"] = temp_stats["min_delta"].reindex(sorted_users).fillna(0.0)
+        u_df["max_delta"] = temp_stats["max_delta"].reindex(sorted_users).fillna(0.0)
+
+        min_ts = temp_stats["min_ts"].reindex(sorted_users)
+        max_ts = temp_stats["max_ts"].reindex(sorted_users)
+        time_span_days = ((max_ts - min_ts).dt.total_seconds() / 86400.0).clip(lower=1.0).fillna(1.0)
+
+        u_df["tx_per_day"] = np.where(u_df["tx_count"] > 1, u_df["tx_count"] / time_span_days, np.where(u_df["tx_count"] == 1, 1.0, 0.0))
+        u_df["tx_per_week"] = u_df["tx_per_day"] * 7.0
+        u_df["net_flow"] = u_df["total_received"] - u_df["total_sent"]
+
+        # Structural & Egonet
+        struct_df = pd.DataFrame.from_dict(structural_features, orient="index").reindex(sorted_users).fillna(0)
+        ego_df = pd.DataFrame.from_dict(egonet_features, orient="index").reindex(sorted_users).fillna(0)
+
+        for col in ["in_degree", "out_degree", "total_degree"]:
+            if col in struct_df.columns:
+                struct_df[col] = struct_df[col].astype(int)
 
         features_dict: Dict[str, UserFeatures] = {}
+        for uid in sorted_users:
+            u_str = str(uid)
+            u_row = u_df.loc[u_str]
+            s_row = struct_df.loc[u_str] if u_str in struct_df.index else {}
+            e_row = ego_df.loc[u_str] if u_str in ego_df.index else {}
 
-        sorted_users = sorted(all_users, key=str)
-        for user_id in sorted_users:
-            user_str = str(user_id)
+            in_deg = int(s_row.get("in_degree", 0))
+            out_deg = int(s_row.get("out_degree", 0))
+            tot_deg = int(s_row.get("total_degree", 0))
+            w_in_deg = float(round(s_row.get("weighted_in_degree", 0.0), 2))
+            w_out_deg = float(round(s_row.get("weighted_out_degree", 0.0), 2))
+            bc = float(s_row.get("betweenness_centrality", 0.0))
 
-            # --- Behavioral Features ---
-            # Sent aggregations
-            if user_id in sent_grouped.groups:
-                sent_df = sent_grouped.get_group(user_id)
-                total_sent = float(sent_df["amount"].sum())
-                unique_receivers = int(sent_df["receiver_id"].nunique())
-            else:
-                sent_df = pd.DataFrame()
-                total_sent = 0.0
-                unique_receivers = 0
+            tx_cnt = int(u_row["tx_count"])
+            tot_s = float(round(u_row["total_sent"], 2))
+            tot_r = float(round(u_row["total_received"], 2))
+            net_f = float(round(u_row["net_flow"], 2))
+            avg_a = float(round(u_row["avg_amount"], 2))
+            max_a = float(round(u_row["max_amount"], 2))
+            u_rec = int(u_row["unique_receivers"])
+            u_snd = int(u_row["unique_senders"])
 
-            # Received aggregations
-            if user_id in recv_grouped.groups:
-                recv_df = recv_grouped.get_group(user_id)
-                total_received = float(recv_df["amount"].sum())
-                unique_senders = int(recv_df["sender_id"].nunique())
-            else:
-                recv_df = pd.DataFrame()
-                total_received = 0.0
-                unique_senders = 0
+            t_day = float(round(u_row["tx_per_day"], 4))
+            t_wk = float(round(u_row["tx_per_week"], 4))
+            avg_t = float(round(u_row["avg_delta"] if tx_cnt > 1 else 0.0, 2))
+            min_t = float(round(u_row["min_delta"] if tx_cnt > 1 else 0.0, 2))
+            max_t = float(round(u_row["max_delta"] if tx_cnt > 1 else 0.0, 2))
 
-            # Combined user transactions
-            if not sent_df.empty and not recv_df.empty:
-                user_tx_df = pd.concat([sent_df, recv_df]).drop_duplicates(subset=["transaction_id"])
-            elif not sent_df.empty:
-                user_tx_df = sent_df
-            else:
-                user_tx_df = recv_df
+            ego_n = float(e_row.get("egonet_node_count", 0.0))
+            ego_e = float(e_row.get("egonet_edge_count", 0.0))
+            ego_d = float(round(e_row.get("egonet_density", 0.0), 6))
+            circ_f = float(round(e_row.get("circular_flow_indicator", 0.0), 6))
 
-            tx_count = len(user_tx_df)
-            avg_amount = float(user_tx_df["amount"].mean()) if tx_count > 0 else 0.0
-            max_amount = float(user_tx_df["amount"].max()) if tx_count > 0 else 0.0
-            net_flow = total_received - total_sent
-
-            # --- Temporal Features ---
-            sorted_tx = user_tx_df.sort_values("timestamp")
-            timestamps = sorted_tx["timestamp"].tolist()
-
-            if tx_count <= 1:
-                avg_time_between = 0.0
-                min_time_between = 0.0
-                max_time_between = 0.0
-                tx_per_day = 1.0
-                tx_per_week = 7.0
-            else:
-                deltas = [
-                    (timestamps[i] - timestamps[i - 1]).total_seconds()
-                    for i in range(1, len(timestamps))
-                ]
-                avg_time_between = float(np.mean(deltas))
-                min_time_between = float(np.min(deltas))
-                max_time_between = float(np.max(deltas))
-
-                total_time_seconds = (timestamps[-1] - timestamps[0]).total_seconds()
-                # Use at least 1 day as the divisor to prevent artificial explosion
-                days_span = max(1.0, total_time_seconds / 86400.0)
-                tx_per_day = float(tx_count / days_span)
-                tx_per_week = float(tx_per_day * 7.0)
-
-            # --- Structural / Graph Features ---
-            struct = structural_features.get(user_str, {
-                "in_degree": 0,
-                "out_degree": 0,
-                "total_degree": 0,
-                "weighted_in_degree": 0.0,
-                "weighted_out_degree": 0.0,
-                "betweenness_centrality": 0.0,
-            })
-
-            # Vector ready for ML (Isolation Forest)
-            feature_vector = [
-                float(struct["in_degree"]),
-                float(struct["out_degree"]),
-                float(struct["total_degree"]),
-                float(struct["weighted_in_degree"]),
-                float(struct["weighted_out_degree"]),
-                float(struct["betweenness_centrality"]),
-                float(tx_count),
-                float(round(total_sent, 2)),
-                float(round(total_received, 2)),
-                float(round(net_flow, 2)),
-                float(round(avg_amount, 2)),
-                float(round(max_amount, 2)),
-                float(unique_receivers),
-                float(unique_senders),
-                float(round(tx_per_day, 4)),
-                float(round(tx_per_week, 4)),
-                float(round(avg_time_between, 2)),
-                float(round(min_time_between, 2)),
-                float(round(max_time_between, 2)),
+            feat_vec = [
+                float(in_deg), float(out_deg), float(tot_deg),
+                w_in_deg, w_out_deg, bc,
+                float(tx_cnt), tot_s, tot_r, net_f, avg_a, max_a,
+                float(u_rec), float(u_snd),
+                t_day, t_wk, avg_t, min_t, max_t,
+                ego_n, ego_e, ego_d, circ_f,
             ]
 
-            features_dict[user_str] = UserFeatures(
-                user_id=user_str,
-                in_degree=struct["in_degree"],
-                out_degree=struct["out_degree"],
-                total_degree=struct["total_degree"],
-                weighted_in_degree=struct["weighted_in_degree"],
-                weighted_out_degree=struct["weighted_out_degree"],
-                betweenness_centrality=struct["betweenness_centrality"],
-                transaction_count=tx_count,
-                total_sent=round(total_sent, 2),
-                total_received=round(total_received, 2),
-                net_flow=round(net_flow, 2),
-                average_transaction_amount=round(avg_amount, 2),
-                maximum_transaction_amount=round(max_amount, 2),
-                unique_receivers=unique_receivers,
-                unique_senders=unique_senders,
-                transactions_per_day=round(tx_per_day, 4),
-                transactions_per_week=round(tx_per_week, 4),
-                average_time_between_transactions=round(avg_time_between, 2),
-                minimum_time_between_transactions=round(min_time_between, 2),
-                maximum_time_between_transactions=round(max_time_between, 2),
-                feature_vector=feature_vector,
+            features_dict[u_str] = UserFeatures(
+                user_id=u_str,
+                in_degree=in_deg,
+                out_degree=out_deg,
+                total_degree=tot_deg,
+                weighted_in_degree=w_in_deg,
+                weighted_out_degree=w_out_deg,
+                betweenness_centrality=bc,
+                transaction_count=tx_cnt,
+                total_sent=tot_s,
+                total_received=tot_r,
+                net_flow=net_f,
+                average_transaction_amount=avg_a,
+                maximum_transaction_amount=max_a,
+                unique_receivers=u_rec,
+                unique_senders=u_snd,
+                transactions_per_day=t_day,
+                transactions_per_week=t_wk,
+                average_time_between_transactions=avg_t,
+                minimum_time_between_transactions=min_t,
+                maximum_time_between_transactions=max_t,
+                egonet_node_count=ego_n,
+                egonet_edge_count=ego_e,
+                egonet_density=ego_d,
+                circular_flow_indicator=circ_f,
+                feature_vector=feat_vec,
             )
 
         self.user_features = features_dict
-        # Invalidate feature matrix cache so it is re-derived from fresh user_features
         self._feature_matrix_cache = None
         logger.info(f"Feature extraction complete for {len(features_dict)} users.")
         return self.user_features
@@ -220,9 +248,34 @@ class FeatureService:
             dtype=np.float32,
         )
 
-        # Defensive check: ensure no NaN or infinite values can reach the ML layer
         if np.isnan(matrix).any() or np.isinf(matrix).any():
             matrix = np.nan_to_num(matrix, nan=0.0, posinf=0.0, neginf=0.0)
 
         self._feature_matrix_cache = (user_ids, matrix, FEATURE_NAMES)
         return self._feature_matrix_cache
+
+    def get_feature_validation_summary(self) -> List[Dict[str, Any]]:
+        """
+        Generate feature validation summary table (feature name, mean, std, min, max, % missing).
+        Used to sanity-check feature matrix before running experiments.
+        """
+        user_ids, matrix, feature_names = self.get_feature_matrix()
+        if len(user_ids) == 0 or matrix.shape[0] == 0:
+            return []
+
+        summary = []
+        for j, fname in enumerate(feature_names):
+            col = matrix[:, j]
+            n_total = len(col)
+            n_missing = int(np.isnan(col).sum() + np.isinf(col).sum())
+            pct_missing = round((n_missing / n_total * 100.0), 2) if n_total > 0 else 0.0
+
+            summary.append({
+                "feature_name": fname,
+                "mean": float(round(np.mean(col), 4)),
+                "std": float(round(np.std(col), 4)),
+                "min": float(round(np.min(col), 4)),
+                "max": float(round(np.max(col), 4)),
+                "pct_missing": pct_missing,
+            })
+        return summary

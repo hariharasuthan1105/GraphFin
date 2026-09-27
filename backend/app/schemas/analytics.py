@@ -40,6 +40,12 @@ class UserFeatures(BaseModel):
         ..., description="Maximum duration (seconds) between successive transactions"
     )
 
+    # Egonet features (Dumitrescu et al. baseline)
+    egonet_node_count: Optional[float] = Field(None, description="Number of nodes in reduced 1-hop egonet")
+    egonet_edge_count: Optional[float] = Field(None, description="Number of edges in reduced 1-hop egonet")
+    egonet_density: Optional[float] = Field(None, description="Density of reduced 1-hop egonet")
+    circular_flow_indicator: Optional[float] = Field(None, description="Random-walk circular flow return probability")
+
     # Clean array representation for ML algorithms (e.g., Isolation Forest)
     feature_vector: Optional[List[float]] = Field(
         None, description="Raw ordered numerical feature vector for ML model ingestion"

@@ -134,7 +134,7 @@ class ResearchRunner:
             )
 
         # 2. Strict Label Leakage Check
-        if feat_names != FEATURE_NAMES or len(feat_names) != 19:
+        if list(feat_names) != list(FEATURE_NAMES) or len(feat_names) != len(FEATURE_NAMES):
             raise ValidationException(
                 f"Feature matrix columns corrupted or misaligned. Expected {FEATURE_NAMES}, got {feat_names}."
             )

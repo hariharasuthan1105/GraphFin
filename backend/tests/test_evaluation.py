@@ -312,11 +312,11 @@ def test_audit_label_leakage_regression(client: TestClient, sample_csv_bytes: by
 
     dataset_id = upload_sample_dataset(client, sample_csv_bytes)
 
-    # Verify dataset feature matrix only contains the exact 19 features
+    # Verify dataset feature matrix only contains the exact features
     store = dataset_registry.get(dataset_id)
     uids, matrix, feat_names = store.get_feature_matrix()
     assert feat_names == FEATURE_NAMES
-    assert len(FEATURE_NAMES) == 19
+    assert len(FEATURE_NAMES) == 23
     for col in feat_names:
         assert "label" not in col.lower()
         assert "fraud" not in col.lower()
@@ -329,7 +329,8 @@ def test_audit_label_leakage_regression(client: TestClient, sample_csv_bytes: by
     )
     assert resp_before.status_code == 200
     meta_before = resp_before.json()["model_metadata"]
-    assert meta_before["feature_names"] == FEATURE_NAMES
+    from backend.app.services.feature_service import CANONICAL_TRANSFER_FEATURES
+    assert meta_before["feature_names"] == CANONICAL_TRANSFER_FEATURES
 
     users_before = client.get(f"/api/v1/anomalies/{dataset_id}/users?experiment_label=e4").json()["users"]
 
@@ -354,7 +355,7 @@ def test_audit_label_leakage_regression(client: TestClient, sample_csv_bytes: by
     )
     assert resp_after.status_code == 200
     meta_after = resp_after.json()["model_metadata"]
-    assert meta_after["feature_names"] == FEATURE_NAMES
+    assert meta_after["feature_names"] == CANONICAL_TRANSFER_FEATURES
 
     users_after = client.get(f"/api/v1/anomalies/{dataset_id}/users?experiment_label=e4_after").json()["users"]
 

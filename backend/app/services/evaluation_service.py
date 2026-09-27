@@ -224,6 +224,14 @@ class EvaluationService:
             "Statistical (z-score, no ML)" if is_baseline else "Isolation Forest",
         )
 
+        is_paper_reportable = bool(
+            eval_mode == "held_out"
+            and usable_count >= 500
+            and positive_count > 0
+            and negative_count > 0
+        )
+        run_quality_tier = "paper_reportable" if is_paper_reportable else "pipeline_validation"
+
         return ExperimentEvaluationMetrics(
             dataset_id=dataset_id,
             experiment_label=clean_exp,
@@ -241,6 +249,8 @@ class EvaluationService:
             training_entity_count=metadata.entity_count,
             training_timestamp=metadata.training_timestamp,
             model_artifact_path=getattr(metadata, "model_artifact_path", f"data/models/{dataset_id}__{clean_exp}.joblib"),
+            is_paper_reportable=is_paper_reportable,
+            run_quality_tier=run_quality_tier,
             evaluation_mode=eval_mode,
             split_label=effective_split,
             evaluation_mode_note=eval_note,
