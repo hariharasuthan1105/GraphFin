@@ -22,20 +22,25 @@ ENV/
 data/models/*
 !data/models/.gitkeep
 
-# Processed Data (runtime output)
+# Processed Data (runtime output, intermediate datasets)
 data/processed/*
 !data/processed/.gitkeep
 
-# Raw / downloaded datasets
+# Raw / downloaded datasets (large source files > 50MB)
 data/raw/*
 !data/raw/.gitkeep
 !data/raw/sample_transactions.csv
+data/raw/PS_*.csv
 *.zip
 *.gz
 
-# Research dataset fixtures - excluded due to size & licensing (regenerate via script)
+# Research dataset fixtures
+# Exclude raw/large files over 50MB; whitelist small committable research artifacts (<50MB)
 data/research/*.csv
 !data/research/README.md
+!data/research/ibm_aml_large_50k_labels.csv
+!data/research/paysim_labels.csv
+!data/research/paysim_transactions.csv
 
 # Exported Research Results (generated runs)
 data/results/*
@@ -44,6 +49,13 @@ data/results/*
 !data/results/final_e0_e4_comparison.csv
 !data/results/final_multiseed_robustness.json
 !data/results/final_multiseed_robustness.csv
+!data/results/cross_dataset/
+!data/results/cross_dataset/**
+data/results/cross_dataset/archive/
+!data/results/permutation_and_casestudy/
+!data/results/permutation_and_casestudy/**
+!data/results/final_report/
+!data/results/final_report/**
 
 # Temporary / Log files
 scratch/
