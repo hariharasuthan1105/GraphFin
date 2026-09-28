@@ -2,10 +2,14 @@ services:
   - type: web
     name: graphfin-backend
     env: python
+    plan: free
     buildCommand: pip install -r backend/requirements.txt
     startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/v1/health
     envVars:
       - key: PYTHONPATH
         value: "."
+      - key: PYTHON_VERSION
+        value: "3.12.10"
       - key: CORS_ORIGINS
-        value: "https://hariharasuthan1105.github.io,http://localhost:5173"
+        value: "https://hariharasuthan1105.github.io,http://localhost:5173,http://localhost:3000"
