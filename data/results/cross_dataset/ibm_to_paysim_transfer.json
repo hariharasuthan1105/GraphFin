@@ -9,7 +9,7 @@
     "e8d9c7b6-a5f4-4e3d-b2c1-a09876543210": "Sampled betweenness centrality (Brandes with k=500, random_state=42)"
   },
   "paysim_account_label_rule": "Account-involvement rule: An account is labeled positive (1) if it appears as sender or receiver in at least one transaction where isFraud == 1; negative (0) otherwise.",
-  "timestamp": "2026-09-27T19:10:05.082854+00:00",
+  "timestamp": "2026-09-28T16:28:58.680019+00:00",
   "experiments": [
     {
       "experiment_label": "E0",
@@ -23,20 +23,27 @@
       "source_pr_auc": 0.0116,
       "source_pr_auc_ci": {
         "point_estimate": 0.0116,
-        "ci_lower": 0.0082,
-        "ci_upper": 0.0212
+        "ci_lower": 0.008,
+        "ci_upper": 0.0212,
+        "skipped_resamples": 0
       },
+      "source_prevalence": 0.005001,
+      "source_test_positives": 75,
       "target_pr_auc": 0.0018,
       "target_pr_auc_ci": {
         "point_estimate": 0.0018,
-        "ci_lower": 0.0127,
-        "ci_upper": 0.0182
+        "ci_lower": 0.0018,
+        "ci_upper": 0.0028,
+        "skipped_resamples": 0
       },
+      "target_prevalence": 0.001412,
+      "target_test_positives": 232,
       "target_roc_auc": 0.5787,
       "target_precision": 0.0,
       "target_recall": 0.0,
       "target_f1": 0.0,
       "target_accuracy": 0.9972,
+      "is_degenerate": false,
       "confusion_matrix": {
         "tp": 0,
         "fp": 223,
@@ -68,20 +75,27 @@
       "source_pr_auc": 0.0222,
       "source_pr_auc_ci": {
         "point_estimate": 0.0222,
-        "ci_lower": 0.0118,
-        "ci_upper": 0.05
+        "ci_lower": 0.0101,
+        "ci_upper": 0.0511,
+        "skipped_resamples": 0
       },
+      "source_prevalence": 0.005001,
+      "source_test_positives": 75,
       "target_pr_auc": 0.0081,
       "target_pr_auc_ci": {
         "point_estimate": 0.0081,
-        "ci_lower": 0.0477,
-        "ci_upper": 0.0777
+        "ci_lower": 0.0059,
+        "ci_upper": 0.0112,
+        "skipped_resamples": 0
       },
+      "target_prevalence": 0.001412,
+      "target_test_positives": 232,
       "target_roc_auc": 0.7697,
       "target_precision": 0.0,
       "target_recall": 0.0,
       "target_f1": 0.0,
       "target_accuracy": 0.9986,
+      "is_degenerate": false,
       "confusion_matrix": {
         "tp": 0,
         "fp": 0,
@@ -114,20 +128,27 @@
       "source_pr_auc": 0.0173,
       "source_pr_auc_ci": {
         "point_estimate": 0.0173,
-        "ci_lower": 0.01,
-        "ci_upper": 0.0422
+        "ci_lower": 0.0093,
+        "ci_upper": 0.0408,
+        "skipped_resamples": 0
       },
+      "source_prevalence": 0.005001,
+      "source_test_positives": 75,
       "target_pr_auc": 0.0091,
       "target_pr_auc_ci": {
         "point_estimate": 0.0091,
-        "ci_lower": 0.0505,
-        "ci_upper": 0.0896
+        "ci_lower": 0.0065,
+        "ci_upper": 0.0132,
+        "skipped_resamples": 0
       },
+      "target_prevalence": 0.001412,
+      "target_test_positives": 232,
       "target_roc_auc": 0.773,
       "target_precision": 0.0,
       "target_recall": 0.0,
       "target_f1": 0.0,
       "target_accuracy": 0.9986,
+      "is_degenerate": false,
       "confusion_matrix": {
         "tp": 0,
         "fp": 0,
@@ -160,20 +181,27 @@
       "source_pr_auc": 0.0121,
       "source_pr_auc_ci": {
         "point_estimate": 0.0121,
-        "ci_lower": 0.0081,
-        "ci_upper": 0.0193
+        "ci_lower": 0.0079,
+        "ci_upper": 0.0195,
+        "skipped_resamples": 0
       },
+      "source_prevalence": 0.005001,
+      "source_test_positives": 75,
       "target_pr_auc": 0.0043,
       "target_pr_auc_ci": {
         "point_estimate": 0.0043,
-        "ci_lower": 0.0254,
-        "ci_upper": 0.0417
+        "ci_lower": 0.0032,
+        "ci_upper": 0.01,
+        "skipped_resamples": 0
       },
+      "target_prevalence": 0.001412,
+      "target_test_positives": 232,
       "target_roc_auc": 0.7464,
       "target_precision": 0.005,
       "target_recall": 0.0345,
       "target_f1": 0.0087,
       "target_accuracy": 0.989,
+      "is_degenerate": false,
       "confusion_matrix": {
         "tp": 8,
         "fp": 1583,
@@ -207,20 +235,27 @@
       "source_pr_auc": 0.0149,
       "source_pr_auc_ci": {
         "point_estimate": 0.0149,
-        "ci_lower": 0.009,
-        "ci_upper": 0.0321
+        "ci_lower": 0.0088,
+        "ci_upper": 0.0294,
+        "skipped_resamples": 0
       },
+      "source_prevalence": 0.005001,
+      "source_test_positives": 75,
       "target_pr_auc": 0.0053,
       "target_pr_auc_ci": {
         "point_estimate": 0.0053,
-        "ci_lower": 0.0301,
-        "ci_upper": 0.0559
+        "ci_lower": 0.0038,
+        "ci_upper": 0.0109,
+        "skipped_resamples": 0
       },
+      "target_prevalence": 0.001412,
+      "target_test_positives": 232,
       "target_roc_auc": 0.7564,
       "target_precision": 0.0,
       "target_recall": 0.0,
       "target_f1": 0.0,
       "target_accuracy": 0.9986,
+      "is_degenerate": false,
       "confusion_matrix": {
         "tp": 0,
         "fp": 0,
@@ -252,20 +287,27 @@
       "source_pr_auc": 0.0099,
       "source_pr_auc_ci": {
         "point_estimate": 0.0099,
-        "ci_lower": 0.0057,
-        "ci_upper": 0.0241
+        "ci_lower": 0.0067,
+        "ci_upper": 0.0258,
+        "skipped_resamples": 0
       },
+      "source_prevalence": 0.005001,
+      "source_test_positives": 75,
       "target_pr_auc": 0.0014,
       "target_pr_auc_ci": {
         "point_estimate": 0.0014,
-        "ci_lower": 0.0101,
-        "ci_upper": 0.013
+        "ci_lower": 0.0012,
+        "ci_upper": 0.0019,
+        "skipped_resamples": 0
       },
+      "target_prevalence": 0.001412,
+      "target_test_positives": 232,
       "target_roc_auc": 0.5,
       "target_precision": 0.0,
       "target_recall": 0.0,
       "target_f1": 0.0,
       "target_accuracy": 0.9986,
+      "is_degenerate": true,
       "confusion_matrix": {
         "tp": 0,
         "fp": 0,
@@ -282,7 +324,7 @@
         "source_pr_auc": 0.0099,
         "target_pr_auc": 0.0014,
         "absolute_degradation": 0.0085,
-        "relative_degradation": 0.8586
+        "relative_degradation": null
       }
     }
   ],
@@ -480,7 +522,7 @@
     "source_split_label": "research-split",
     "target_split_label": "research-split",
     "random_state": 42,
-    "n_bootstraps": 100,
+    "n_bootstraps": 500,
     "feature_count": 23,
     "feature_names": [
       "in_degree",

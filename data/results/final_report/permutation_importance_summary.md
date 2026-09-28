@@ -2,7 +2,7 @@
 
 ## Overview
 
-Permutation importance was evaluated for the **E4 (Full GraphFin)** model configuration across 10 repeats on held-out test sets. Importance is measured as the mean decrease in Precision-Recall AUC (PR-AUC) when permuting each canonical feature.
+Permutation importance was evaluated for the **E4 (Full GraphFin)** model configuration across 10 repeats on held-out test evaluation sets. Importance is measured as the mean decrease in Precision-Recall AUC (PR-AUC) when permuting each canonical feature.
 
 ---
 
@@ -36,25 +36,25 @@ Permutation importance was evaluated for the **E4 (Full GraphFin)** model config
 
 | Feature | Importance Mean | Importance Std |
 |---|---|---|
-| `average_transaction_amount` | +0.012506 | 0.001850 |
-| `maximum_transaction_amount` | +0.009575 | 0.001420 |
-| `out_degree` | +0.006509 | 0.001110 |
-| `total_sent` | +0.005896 | 0.000980 |
-| `maximum_time_between_transactions` | +0.004532 | 0.000890 |
-| `unique_senders` | +0.003896 | 0.000760 |
-| `average_time_between_transactions` | +0.003578 | 0.000640 |
-| `total_degree` | +0.003171 | 0.000580 |
-| `minimum_time_between_transactions` | +0.002186 | 0.000430 |
-| `weighted_in_degree` | +0.002079 | 0.000410 |
-| `net_flow` | +0.001892 | 0.000380 |
-| `transaction_count` | +0.001330 | 0.000290 |
-| `weighted_out_degree` | +0.001190 | 0.000250 |
-| `betweenness_centrality` | 0.000000 | 0.000000 |
-| `transactions_per_day` | -0.000623 | 0.000180 |
-| `transactions_per_week` | -0.001265 | 0.000240 |
-| `in_degree` | -0.001693 | 0.000310 |
-| `total_received` | -0.002483 | 0.000490 |
-| `unique_receivers` | -0.002500 | 0.000520 |
+| `average_transaction_amount` | +0.016599 | 0.001614 |
+| `maximum_transaction_amount` | +0.013465 | 0.001970 |
+| `total_received` | +0.009105 | 0.000995 |
+| `net_flow` | +0.008961 | 0.001135 |
+| `weighted_in_degree` | +0.008134 | 0.001330 |
+| `total_sent` | +0.006883 | 0.001796 |
+| `weighted_out_degree` | +0.003645 | 0.001812 |
+| `transactions_per_day` | +0.000016 | 0.000412 |
+| `betweenness_centrality` | +0.000000 | 0.000000 |
+| `unique_receivers` | -0.000089 | 0.001868 |
+| `average_time_between_transactions` | -0.000785 | 0.000885 |
+| `minimum_time_between_transactions` | -0.001258 | 0.002488 |
+| `out_degree` | -0.001403 | 0.001956 |
+| `transactions_per_week` | -0.001461 | 0.000567 |
+| `maximum_time_between_transactions` | -0.001462 | 0.000449 |
+| `unique_senders` | -0.002548 | 0.000615 |
+| `in_degree` | -0.002859 | 0.002207 |
+| `transaction_count` | -0.003102 | 0.000312 |
+| `total_degree` | -0.003409 | 0.000433 |
 
 ---
 
@@ -62,24 +62,25 @@ Permutation importance was evaluated for the **E4 (Full GraphFin)** model config
 
 | Canonical Feature | IBM AML Importance | PaySim Importance |
 |---|---|---|
-| `total_sent` | +0.004280 | +0.005896 |
-| `weighted_out_degree` | +0.003781 | +0.001190 |
-| `betweenness_centrality` | +0.002907 | 0.000000 * |
-| `transactions_per_week` | +0.001985 | -0.001265 |
-| `transactions_per_day` | +0.001908 | -0.000623 |
-| `unique_senders` | +0.001372 | +0.003896 |
-| `in_degree` | +0.001347 | -0.001693 |
-| `maximum_transaction_amount` | +0.001214 | +0.009575 |
-| `net_flow` | +0.000143 | +0.001892 |
-| `transaction_count` | -0.000224 | +0.001330 |
-| `out_degree` | -0.000377 | +0.006509 |
-| `maximum_time_between_transactions` | -0.000956 | +0.004532 |
-| `average_time_between_transactions` | -0.001002 | +0.003578 |
-| `minimum_time_between_transactions` | -0.001590 | +0.002186 |
-| `total_degree` | -0.001811 | +0.003171 |
-| `unique_receivers` | -0.002210 | -0.002500 |
-| `average_transaction_amount` | -0.002719 | +0.012506 |
-| `weighted_in_degree` | -0.008930 | +0.002079 |
-| `total_received` | -0.009162 | -0.002483 |
+| `total_sent` | +0.004280 | +0.006883 |
+| `weighted_out_degree` | +0.003781 | +0.003645 |
+| `betweenness_centrality` | +0.002907 | +0.000000 * |
+| `transactions_per_week` | +0.001985 | -0.001461 |
+| `transactions_per_day` | +0.001908 | +0.000016 |
+| `unique_senders` | +0.001372 | -0.002548 |
+| `in_degree` | +0.001347 | -0.002859 |
+| `maximum_transaction_amount` | +0.001214 | +0.013465 |
+| `net_flow` | +0.000143 | +0.008961 |
+| `transaction_count` | -0.000224 | -0.003102 |
+| `out_degree` | -0.000377 | -0.001403 |
+| `maximum_time_between_transactions` | -0.000956 | -0.001462 |
+| `average_time_between_transactions` | -0.001002 | -0.000785 |
+| `minimum_time_between_transactions` | -0.001590 | -0.001258 |
+| `total_degree` | -0.001811 | -0.003409 |
+| `unique_receivers` | -0.002210 | -0.000089 |
+| `average_transaction_amount` | -0.002719 | +0.016599 |
+| `weighted_in_degree` | -0.008930 | +0.008134 |
+| `total_received` | -0.009162 | +0.009105 |
 
-*\* Note on `betweenness_centrality` in PaySim*: In the 300K sequential sample of PaySim, the transaction network is largely bipartite with tree-like local structures, yielding zero betweenness centrality variance across nodes. Consequently, permuting `betweenness_centrality` causes zero change in anomaly scores on PaySim, whereas on IBM AML it provides non-zero importance (+0.002907). Across all 19 features, every feature has non-zero importance in at least one dataset domain.
+*\* Note on `betweenness_centrality` in PaySim*: In PaySim, transaction graph edges connect customer accounts directly to merchant or cashing sinks (star / bipartite graph topology) with no intermediate node forwarding across the simulation steps. Consequently, shortest paths never route through intermediate nodes, yielding zero variance in betweenness centrality across nodes. Permuting `betweenness_centrality` therefore results in zero change in anomaly ranking on PaySim, whereas on IBM AML it provides positive importance. Across all 19 features, every feature exhibits non-zero importance in at least one dataset domain.
+
