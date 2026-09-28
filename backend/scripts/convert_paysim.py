@@ -115,14 +115,19 @@ def convert_paysim(
     if out_tx_path.exists():
         out_tx_path.unlink()
 
+    # Read raw CSV (full or sampled across full row index range)
+    if sample_rows is not None:
+        full_raw_df = pd.read_csv(input_path, dtype=str)
+        if len(full_raw_df) > sample_rows:
+            sampled_raw_df = full_raw_df.sample(n=sample_rows, random_state=seed).sort_index().reset_index(drop=True)
+        else:
+            sampled_raw_df = full_raw_df
+        chunks = [sampled_raw_df]
+    else:
+        chunks = pd.read_csv(input_path, chunksize=chunksize, dtype=str)
+
     # Streaming chunks
-    for chunk in pd.read_csv(input_path, chunksize=chunksize, dtype=str):
-        if sample_rows is not None and total_rows_in >= sample_rows:
-            break
-
-        if sample_rows is not None and total_rows_in + len(chunk) > sample_rows:
-            chunk = chunk.iloc[: sample_rows - total_rows_in]
-
+    for chunk in chunks:
         total_rows_in += len(chunk)
 
         missing = [c for c in RAW_REQUIRED_COLUMNS if c not in chunk.columns]
