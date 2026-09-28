@@ -1,6 +1,10 @@
 import json
-import time
 from pathlib import Path
+import sys
+import time
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
+
 import pandas as pd
 
 from backend.app.services.dataset_registry import dataset_registry
@@ -48,7 +52,7 @@ def main():
         source_dataset_id=ibm_ds_id,
         target_dataset_id=ps_ds_id,
         experiments=["E0", "E1", "E2", "E3", "E4", "E5"],
-        n_bootstraps=100
+        n_bootstraps=500
     )
     res_a = transfer_service.evaluate_transfer(req_a)
     print(f"Experiment A completed in {time.time()-t_start:.2f} seconds.", flush=True)
@@ -75,7 +79,7 @@ def main():
         source_dataset_id=ps_ds_id,
         target_dataset_id=ibm_ds_id,
         experiments=["E0", "E1", "E2", "E3", "E4", "E5"],
-        n_bootstraps=100
+        n_bootstraps=500
     )
     res_b = transfer_service.evaluate_transfer(req_b)
     print(f"Experiment B completed in {time.time()-t_start:.2f} seconds.", flush=True)
