@@ -109,6 +109,8 @@ def convert_paysim(
     invalid_rows_count = 0
 
     account_labels: Dict[str, int] = {}
+    all_steps_set: Set[int] = set()
+    total_tx_fraud = 0
     first_chunk = True
     tx_counter = 1
 
@@ -166,6 +168,9 @@ def convert_paysim(
         active_steps = steps[valid_mask].tolist()
         active_types = tx_types[valid_mask].tolist()
         active_fraud = fraud_flags[valid_mask].tolist()
+
+        all_steps_set.update(active_steps)
+        total_tx_fraud += sum(active_fraud)
 
         n_active = len(active_senders)
         tx_ids = [f"TX_PS_{i:08d}" for i in range(tx_counter, tx_counter + n_active)]
@@ -232,6 +237,11 @@ def convert_paysim(
     positive_labels = sum(account_labels.values())
     negative_labels = unique_accounts - positive_labels
     prevalence_rate = (positive_labels / unique_accounts * 100.0) if unique_accounts > 0 else 0.0
+    tx_prevalence_rate = (total_tx_fraud / valid_rows_count * 100.0) if valid_rows_count > 0 else 0.0
+
+    min_step = min(all_steps_set) if all_steps_set else 0
+    max_step = max(all_steps_set) if all_steps_set else 0
+    unique_steps = len(all_steps_set)
 
     summary = {
         "rows_in": total_rows_in,
@@ -242,6 +252,11 @@ def convert_paysim(
         "positive_labels": positive_labels,
         "negative_labels": negative_labels,
         "prevalence_rate": round(prevalence_rate, 4),
+        "tx_fraud_count": total_tx_fraud,
+        "tx_prevalence_rate": round(tx_prevalence_rate, 4),
+        "min_step": min_step,
+        "max_step": max_step,
+        "unique_steps": unique_steps,
         "output_tx_path": str(out_tx_path),
         "output_labels_path": str(out_labels_path),
     }
@@ -253,6 +268,8 @@ def convert_paysim(
     print(f"Valid Rows Identified        : {valid_rows_count:,}")
     print(f"Invalid Rows Excluded        : {invalid_rows_count:,} (self-transfers / non-positive amounts)")
     print(f"Transactions Written (Out)   : {total_rows_out:,}")
+    print(f"Step Range Covered           : {min_step} to {max_step} ({unique_steps} unique steps)")
+    print(f"Transaction Fraud Count      : {total_tx_fraud:,} ({tx_prevalence_rate:.4f}%)")
     print(f"Unique Accounts Extracted    : {unique_accounts:,}")
     print(f"Negative Accounts (label=0)  : {negative_labels:,}")
     print(f"Positive Accounts (label=1)  : {positive_labels:,}")
