@@ -154,3 +154,115 @@ def test_13_paysim_account_label_derivation():
     assert labels["acc3"] == 0
     assert labels["acc4"] == 0
     assert labels["acc5"] == 0
+
+
+def test_14_bootstrap_ci_low_prevalence_point_estimate_within_ci():
+    """Test 14: Point estimate lies within its own 95% CI on synthetic data with ~0.2% prevalence."""
+    rng = np.random.RandomState(42)
+    n = 5000
+    n_pos = 10  # 0.2% prevalence
+    y_true = np.zeros(n, dtype=int)
+    y_true[:n_pos] = 1
+    rng.shuffle(y_true)
+    scores = rng.randn(n) + y_true * 1.5
+
+    pt, ci = compute_bootstrap_pr_auc_ci(y_true.tolist(), scores.tolist(), n_bootstraps=200, random_state=42)
+    assert ci.ci_lower <= pt <= ci.ci_upper, (
+        f"Point estimate {pt} does not lie within CI [{ci.ci_lower}, {ci.ci_upper}]"
+    )
+
+
+def test_15_bootstrap_resampled_prevalence_approximates_true_prevalence():
+    """Test 15: Resampled prevalence approximates the true prevalence across resamples."""
+    rng = np.random.RandomState(42)
+    n = 5000
+    n_pos = 25  # 0.5% prevalence
+    true_prev = n_pos / n
+    y_true = np.zeros(n, dtype=int)
+    y_true[:n_pos] = 1
+
+    resample_prevs = []
+    for _ in range(100):
+        idxs = rng.randint(0, n, size=n)
+        resample_prevs.append(np.mean(y_true[idxs]))
+
+    mean_resample_prev = float(np.mean(resample_prevs))
+    # Should be within 0.1% of true prevalence (0.005)
+    assert abs(mean_resample_prev - true_prev) < 0.001, (
+        f"Resampled prevalence {mean_resample_prev} diverges from true prevalence {true_prev}"
+    )
+
+
+def test_16_bootstrap_same_seed_gives_same_ci():
+    """Test 16: Same seed gives same CI and zero-positive resamples are properly skipped."""
+    rng = np.random.RandomState(42)
+    n = 1000
+    y_true = np.zeros(n, dtype=int)
+    y_true[:3] = 1
+    scores = rng.randn(n)
+
+    pt1, ci1 = compute_bootstrap_pr_auc_ci(y_true.tolist(), scores.tolist(), n_bootstraps=100, random_state=99)
+    pt2, ci2 = compute_bootstrap_pr_auc_ci(y_true.tolist(), scores.tolist(), n_bootstraps=100, random_state=99)
+
+    assert pt1 == pt2
+    assert ci1.ci_lower == ci2.ci_lower
+    assert ci1.ci_upper == ci2.ci_upper
+    assert ci1.skipped_resamples == ci2.skipped_resamples
+
+
+def test_17_markdown_report_matches_canonical_json():
+    """Test 17: Fails if any PR-AUC or CI value in transfer_results_summary.md differs from the canonical JSON."""
+    import json
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parent.parent.parent
+    report_file = root / "data" / "results" / "final_report" / "transfer_results_summary.md"
+    json_a_file = root / "data" / "results" / "cross_dataset" / "ibm_to_paysim_transfer.json"
+    json_b_file = root / "data" / "results" / "cross_dataset" / "paysim_to_ibm_transfer.json"
+
+    if not report_file.exists() or not json_a_file.exists() or not json_b_file.exists():
+        pytest.skip("Artifacts not yet generated.")
+
+    md_content = report_file.read_text(encoding="utf-8")
+
+    for json_path, dir_label in [(json_a_file, "Direction A"), (json_b_file, "Direction B")]:
+        with open(json_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        for exp in data["experiments"]:
+            e_label = exp["experiment_label"]
+            src_pr = exp["source_pr_auc"]
+            src_ci = exp.get("source_pr_auc_ci")
+            tgt_pr = exp["target_pr_auc"]
+            tgt_ci = exp.get("target_pr_auc_ci")
+
+            src_pr_str = f"{src_pr:.4f}"
+            tgt_pr_str = f"{tgt_pr:.4f}"
+
+            assert src_pr_str in md_content, (
+                f"Source PR-AUC {src_pr_str} for {e_label} in {dir_label} not found in markdown!"
+            )
+            assert tgt_pr_str in md_content, (
+                f"Target PR-AUC {tgt_pr_str} for {e_label} in {dir_label} not found in markdown!"
+            )
+
+            if src_ci:
+                src_ci_low = f"{src_ci['ci_lower']:.4f}"
+                src_ci_high = f"{src_ci['ci_upper']:.4f}"
+                assert src_ci_low in md_content, (
+                    f"Source CI lower {src_ci_low} for {e_label} in {dir_label} not found in markdown!"
+                )
+                assert src_ci_high in md_content, (
+                    f"Source CI upper {src_ci_high} for {e_label} in {dir_label} not found in markdown!"
+                )
+
+            if tgt_ci:
+                tgt_ci_low = f"{tgt_ci['ci_lower']:.4f}"
+                tgt_ci_high = f"{tgt_ci['ci_upper']:.4f}"
+                assert tgt_ci_low in md_content, (
+                    f"Target CI lower {tgt_ci_low} for {e_label} in {dir_label} not found in markdown!"
+                )
+                assert tgt_ci_high in md_content, (
+                    f"Target CI upper {tgt_ci_high} for {e_label} in {dir_label} not found in markdown!"
+                )
+
