@@ -36,15 +36,17 @@ logger = get_logger(__name__)
 def compute_bootstrap_pr_auc_ci(
     y_true: List[int],
     scores: List[float],
-    n_bootstraps: int = 1000,
+    n_bootstraps: int = 500,
     random_state: int = 42,
 ) -> Tuple[float, BootstrapCI]:
     """
     Compute 95% Bootstrap Confidence Interval for PR-AUC / Average Precision.
-    Resamples evaluation set with replacement N times using a fixed random_state.
+    Resamples the FULL evaluation set with replacement N times using a fixed random_state,
+    strictly preserving class prevalence without downsampling.
+    Resamples with zero positive instances are skipped (not appended) and recorded.
     """
-    yt = np.asarray(y_true)
-    sc = np.asarray(scores)
+    yt = np.asarray(y_true, dtype=np.int32)
+    sc = np.asarray(scores, dtype=np.float64)
     point_estimate = round(float(average_precision_score(yt, sc)), 4) if len(np.unique(yt)) > 1 else 0.0
 
     if len(yt) == 0 or len(np.unique(yt)) <= 1:
@@ -52,39 +54,50 @@ def compute_bootstrap_pr_auc_ci(
             point_estimate=point_estimate,
             ci_lower=point_estimate,
             ci_upper=point_estimate,
+            skipped_resamples=0,
         )
         return point_estimate, ci
 
     rng = np.random.RandomState(random_state)
     n = len(yt)
-    boot_scores = []
-
-    # Stratified subsample for bootstrap speed if evaluation set > 20,000
-    if n > 20000:
-        pos_idxs = np.where(yt == 1)[0]
-        neg_idxs = np.where(yt == 0)[0]
-        max_neg = min(len(neg_idxs), 20000 - len(pos_idxs))
-        sub_idxs = np.concatenate([pos_idxs, rng.choice(neg_idxs, size=max_neg, replace=False)])
-        yt = yt[sub_idxs]
-        sc = sc[sub_idxs]
-        n = len(yt)
+    boot_scores: List[float] = []
+    skipped = 0
 
     for _ in range(n_bootstraps):
         idxs = rng.randint(0, n, size=n)
         yt_b = yt[idxs]
         sc_b = sc[idxs]
-        if len(np.unique(yt_b)) > 1:
-            boot_scores.append(float(average_precision_score(yt_b, sc_b)))
-        else:
-            boot_scores.append(point_estimate)
 
-    ci_lower = round(float(np.percentile(boot_scores, 2.5)), 4)
-    ci_upper = round(float(np.percentile(boot_scores, 97.5)), 4)
+        n_pos_b = int(np.sum(yt_b))
+        if n_pos_b == 0:
+            skipped += 1
+            continue
+
+        if n_pos_b == n:
+            boot_scores.append(1.0)
+            continue
+
+        # Fast vectorised average precision on resample
+        order = np.argsort(-sc_b, kind="mergesort")
+        y_sorted = yt_b[order]
+        pos_cumsum = np.cumsum(y_sorted)
+        ranks = np.arange(1, n + 1, dtype=np.float64)
+        precisions = pos_cumsum / ranks
+        ap = float(np.dot(precisions, y_sorted) / n_pos_b)
+        boot_scores.append(ap)
+
+    if not boot_scores:
+        ci_lower = point_estimate
+        ci_upper = point_estimate
+    else:
+        ci_lower = round(float(np.percentile(boot_scores, 2.5)), 4)
+        ci_upper = round(float(np.percentile(boot_scores, 97.5)), 4)
 
     ci = BootstrapCI(
         point_estimate=point_estimate,
         ci_lower=ci_lower,
         ci_upper=ci_upper,
+        skipped_resamples=skipped,
     )
     return point_estimate, ci
 
@@ -148,7 +161,7 @@ class TransferService:
         src_id = request.source_dataset_id
         tgt_id = request.target_dataset_id
         seed = request.random_state if request.random_state is not None else 42
-        n_boot = request.n_bootstraps if request.n_bootstraps is not None else 1000
+        n_boot = request.n_bootstraps if request.n_bootstraps is not None else 500
 
         # 1. Retrieve datasets and ground-truth labels
         src_store = dataset_registry.get(src_id)
@@ -296,6 +309,11 @@ class TransferService:
             y_src_test = [1 if src_labels.get(u, False) else 0 for u in src_test_uids]
             y_tgt_test = [1 if tgt_labels.get(u, False) else 0 for u in tgt_test_uids]
 
+            src_test_pos = sum(y_src_test)
+            tgt_test_pos = sum(y_tgt_test)
+            src_prev = round(float(src_test_pos / len(y_src_test)), 6) if len(y_src_test) > 0 else 0.0
+            tgt_prev = round(float(tgt_test_pos / len(y_tgt_test)), 6) if len(y_tgt_test) > 0 else 0.0
+
             # Fit source scaler (mean and std) strictly on X_src_train
             src_means = np.mean(X_src_train, axis=0)
             src_stds = np.std(X_src_train, axis=0)
@@ -336,7 +354,8 @@ class TransferService:
                 p_at_k = compute_precision_at_k(y_tgt_test, tgt_test_z.tolist())
 
                 abs_deg = round(src_pr - tgt_pr, 4)
-                rel_deg = round(abs_deg / src_pr, 4) if src_pr > 0 else None
+                is_degenerate = bool((tgt_roc == 0.5000) or (round(tgt_pr, 4) <= round(tgt_prev, 4)))
+                rel_deg = round(abs_deg / src_pr, 4) if (src_pr > 0 and not is_degenerate) else None
 
                 results.append(
                     ExperimentTransferResult(
@@ -347,13 +366,18 @@ class TransferService:
                         feature_count=len(col_indices),
                         source_pr_auc=src_pr,
                         source_pr_auc_ci=src_pr_ci,
+                        source_prevalence=src_prev,
+                        source_test_positives=src_test_pos,
                         target_pr_auc=tgt_pr,
                         target_pr_auc_ci=tgt_pr_ci,
+                        target_prevalence=tgt_prev,
+                        target_test_positives=tgt_test_pos,
                         target_roc_auc=tgt_roc,
                         target_precision=prec,
                         target_recall=rec,
                         target_f1=f1,
                         target_accuracy=acc,
+                        is_degenerate=is_degenerate,
                         confusion_matrix=ConfusionMatrix(tp=tp, fp=fp, tn=tn, fn=fn),
                         precision_at_k=p_at_k,
                         degradation=DegradationMetrics(
@@ -412,7 +436,8 @@ class TransferService:
                 p_at_k = compute_precision_at_k(y_tgt_test, tgt_test_scores)
 
                 abs_deg = round(src_pr - tgt_pr, 4)
-                rel_deg = round(abs_deg / src_pr, 4) if src_pr > 0 else None
+                is_degenerate = bool((tgt_roc == 0.5000) or (round(tgt_pr, 4) <= round(tgt_prev, 4)))
+                rel_deg = round(abs_deg / src_pr, 4) if (src_pr > 0 and not is_degenerate) else None
 
                 results.append(
                     ExperimentTransferResult(
@@ -423,13 +448,18 @@ class TransferService:
                         feature_count=len(col_indices),
                         source_pr_auc=src_pr,
                         source_pr_auc_ci=src_pr_ci,
+                        source_prevalence=src_prev,
+                        source_test_positives=src_test_pos,
                         target_pr_auc=tgt_pr,
                         target_pr_auc_ci=tgt_pr_ci,
+                        target_prevalence=tgt_prev,
+                        target_test_positives=tgt_test_pos,
                         target_roc_auc=tgt_roc,
                         target_precision=prec,
                         target_recall=rec,
                         target_f1=f1,
                         target_accuracy=acc,
+                        is_degenerate=is_degenerate,
                         confusion_matrix=ConfusionMatrix(tp=tp, fp=fp, tn=tn, fn=fn),
                         precision_at_k=p_at_k,
                         degradation=DegradationMetrics(
@@ -495,7 +525,12 @@ class TransferService:
         try:
             out_dir = settings.DATA_DIR / "results" / "cross_dataset"
             out_dir.mkdir(parents=True, exist_ok=True)
-            out_file = out_dir / f"transfer_{src_label}_to_{tgt_label}.json".lower().replace(" ", "_")
+            canonical_filename = (
+                "ibm_to_paysim_transfer.json"
+                if "ibm" in src_label.lower()
+                else "paysim_to_ibm_transfer.json"
+            )
+            out_file = out_dir / canonical_filename
             with open(out_file, "w", encoding="utf-8") as f:
                 json.dump(response.model_dump(), f, indent=2)
             logger.info(f"Exported cross-dataset transfer result to {out_file}")

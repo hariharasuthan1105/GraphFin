@@ -11,6 +11,7 @@ class BootstrapCI(BaseModel):
     point_estimate: float = Field(..., description="Point estimate (e.g. PR-AUC)")
     ci_lower: float = Field(..., description="2.5th percentile lower confidence bound")
     ci_upper: float = Field(..., description="97.5th percentile upper confidence bound")
+    skipped_resamples: int = Field(0, description="Number of resamples skipped due to zero positives")
 
 
 class PrecisionAtK(BaseModel):
@@ -54,15 +55,20 @@ class ExperimentTransferResult(BaseModel):
 
     source_pr_auc: Optional[float] = Field(None, description="Same-protocol source PR-AUC")
     source_pr_auc_ci: Optional[BootstrapCI] = Field(None, description="Source PR-AUC 95% Bootstrap CI")
+    source_prevalence: Optional[float] = Field(None, description="Source evaluation set positive class prevalence")
+    source_test_positives: Optional[int] = Field(None, description="Source evaluation set positive count")
 
     target_pr_auc: Optional[float] = Field(None, description="Target PR-AUC under transfer")
     target_pr_auc_ci: Optional[BootstrapCI] = Field(None, description="Target PR-AUC 95% Bootstrap CI")
+    target_prevalence: Optional[float] = Field(None, description="Target evaluation set positive class prevalence")
+    target_test_positives: Optional[int] = Field(None, description="Target evaluation set positive count")
     target_roc_auc: Optional[float] = Field(None, description="Target ROC-AUC")
     target_precision: Optional[float] = Field(None, description="Target Precision")
     target_recall: Optional[float] = Field(None, description="Target Recall")
     target_f1: Optional[float] = Field(None, description="Target F1 Score")
     target_accuracy: Optional[float] = Field(None, description="Target Accuracy")
 
+    is_degenerate: Optional[bool] = Field(False, description="True if performance is equivalent to random ranking")
     confusion_matrix: Optional[ConfusionMatrix] = Field(None, description="Target confusion matrix")
     precision_at_k: Optional[PrecisionAtK] = Field(None, description="Target Precision@K metrics")
     degradation: Optional[DegradationMetrics] = Field(None, description="Transfer degradation stats")
