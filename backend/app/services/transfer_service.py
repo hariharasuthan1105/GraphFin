@@ -119,7 +119,7 @@ def compute_precision_at_k(
     order = np.argsort(scores)[::-1]
     y_sorted = np.asarray(y_true)[order]
 
-    res = {}
+    res = {f"p_at_{k}": 0.0 for k in [10, 25, 50, 100]}
     for k in k_values:
         eff_k = min(k, n)
         if eff_k > 0:
@@ -130,6 +130,7 @@ def compute_precision_at_k(
         res[f"p_at_{k}"] = p_k
 
     return PrecisionAtK(**res)
+
 
 
 def compute_degradation(source_pr_auc: float, target_pr_auc: float) -> DegradationMetrics:
@@ -161,7 +162,8 @@ class TransferService:
         src_id = request.source_dataset_id
         tgt_id = request.target_dataset_id
         seed = request.random_state if request.random_state is not None else 42
-        n_boot = request.n_bootstraps if request.n_bootstraps is not None else 500
+        n_boot = request.n_bootstraps if request.n_bootstraps is not None else 1000
+
 
         # 1. Retrieve datasets and ground-truth labels
         src_store = dataset_registry.get(src_id)
@@ -288,14 +290,16 @@ class TransferService:
                 results.append(
                     ExperimentTransferResult(
                         experiment_label=exp_key,
-                        status="error",
-                        error="Selected feature groups produced 0 features.",
+                        status="unsupported",
+                        supported=False,
+                        error="Selected feature groups produced 0 compatible features for transfer.",
                         method=cfg["method"],
                         feature_groups=groups,
                         feature_count=0,
                     )
                 )
                 continue
+
 
             # Feature matrices for source train, source test, and target test
             X_src_train = src_full_matrix[src_train_indices, :][:, col_indices]

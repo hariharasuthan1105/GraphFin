@@ -1,318 +1,55 @@
 {
-  "source_dataset_id": "e8d9c7b6-a5f4-4e3d-b2c1-a09876543210",
-  "target_dataset_id": "03fb9ab0-4f42-4404-9d76-723fd4d8753e",
+  "source_dataset_id": "paysim_test",
+  "target_dataset_id": "ibm_test",
   "direction": "PaySim->IBM AML",
-  "is_paper_reportable": true,
-  "run_quality_tier": "paper_reportable",
+  "is_paper_reportable": false,
+  "run_quality_tier": "pipeline_validation",
   "betweenness_centrality_method": {
-    "e8d9c7b6-a5f4-4e3d-b2c1-a09876543210": "Sampled betweenness centrality (Brandes with k=500, random_state=42)",
-    "03fb9ab0-4f42-4404-9d76-723fd4d8753e": "Sampled betweenness centrality (Brandes with k=500, random_state=42)"
+    "paysim_test": "Sampled betweenness centrality (Brandes with k=500, random_state=42)",
+    "ibm_test": "Sampled betweenness centrality (Brandes with k=500, random_state=42)"
   },
   "paysim_account_label_rule": "Account-involvement rule: An account is labeled positive (1) if it appears as sender or receiver in at least one transaction where isFraud == 1; negative (0) otherwise.",
-  "timestamp": "2026-09-28T16:49:50.445632+00:00",
+  "timestamp": "2026-09-29T18:51:58.406749+00:00",
   "experiments": [
     {
       "experiment_label": "E0",
       "status": "success",
+      "supported": true,
       "error": null,
       "method": "Statistical z-score (source fitted)",
       "feature_groups": [
         "graph"
       ],
       "feature_count": 6,
-      "source_pr_auc": 0.0065,
+      "source_pr_auc": 0.0,
       "source_pr_auc_ci": {
-        "point_estimate": 0.0065,
-        "ci_lower": 0.0048,
-        "ci_upper": 0.0108,
+        "point_estimate": 0.0,
+        "ci_lower": 0.0,
+        "ci_upper": 0.0,
         "skipped_resamples": 0
       },
-      "source_prevalence": 0.001412,
-      "source_test_positives": 232,
-      "target_pr_auc": 0.0128,
+      "source_prevalence": 0.0,
+      "source_test_positives": 0,
+      "target_pr_auc": 0.0,
       "target_pr_auc_ci": {
-        "point_estimate": 0.0128,
-        "ci_lower": 0.0087,
-        "ci_upper": 0.0227,
+        "point_estimate": 0.0,
+        "ci_lower": 0.0,
+        "ci_upper": 0.0,
         "skipped_resamples": 0
       },
-      "target_prevalence": 0.005001,
-      "target_test_positives": 75,
-      "target_roc_auc": 0.7187,
-      "target_precision": 0.0071,
-      "target_recall": 0.9467,
-      "target_f1": 0.0141,
-      "target_accuracy": 0.342,
-      "is_degenerate": false,
-      "confusion_matrix": {
-        "tp": 71,
-        "fp": 9864,
-        "tn": 5059,
-        "fn": 4
-      },
-      "precision_at_k": {
-        "p_at_10": 0.1,
-        "p_at_25": 0.04,
-        "p_at_50": 0.02,
-        "p_at_100": 0.01
-      },
-      "degradation": {
-        "source_pr_auc": 0.0065,
-        "target_pr_auc": 0.0128,
-        "absolute_degradation": -0.0063,
-        "relative_degradation": -0.9692
-      }
-    },
-    {
-      "experiment_label": "E1",
-      "status": "success",
-      "error": null,
-      "method": "Isolation Forest (Graph only)",
-      "feature_groups": [
-        "graph"
-      ],
-      "feature_count": 6,
-      "source_pr_auc": 0.0077,
-      "source_pr_auc_ci": {
-        "point_estimate": 0.0077,
-        "ci_lower": 0.0057,
-        "ci_upper": 0.0105,
-        "skipped_resamples": 0
-      },
-      "source_prevalence": 0.001412,
-      "source_test_positives": 232,
-      "target_pr_auc": 0.0136,
-      "target_pr_auc_ci": {
-        "point_estimate": 0.0136,
-        "ci_lower": 0.0091,
-        "ci_upper": 0.0316,
-        "skipped_resamples": 0
-      },
-      "target_prevalence": 0.005001,
-      "target_test_positives": 75,
-      "target_roc_auc": 0.7453,
-      "target_precision": 0.0142,
-      "target_recall": 0.1333,
-      "target_f1": 0.0257,
-      "target_accuracy": 0.9493,
-      "is_degenerate": false,
-      "confusion_matrix": {
-        "tp": 10,
-        "fp": 696,
-        "tn": 14227,
-        "fn": 65
-      },
-      "precision_at_k": {
-        "p_at_10": 0.1,
-        "p_at_25": 0.08,
-        "p_at_50": 0.04,
-        "p_at_100": 0.02
-      },
-      "degradation": {
-        "source_pr_auc": 0.0077,
-        "target_pr_auc": 0.0136,
-        "absolute_degradation": -0.0059,
-        "relative_degradation": -0.7662
-      }
-    },
-    {
-      "experiment_label": "E2",
-      "status": "success",
-      "error": null,
-      "method": "Isolation Forest (Graph + Behavioral)",
-      "feature_groups": [
-        "graph",
-        "behavioral"
-      ],
-      "feature_count": 14,
-      "source_pr_auc": 0.0091,
-      "source_pr_auc_ci": {
-        "point_estimate": 0.0091,
-        "ci_lower": 0.0066,
-        "ci_upper": 0.013,
-        "skipped_resamples": 0
-      },
-      "source_prevalence": 0.001412,
-      "source_test_positives": 232,
-      "target_pr_auc": 0.0119,
-      "target_pr_auc_ci": {
-        "point_estimate": 0.0119,
-        "ci_lower": 0.0082,
-        "ci_upper": 0.0183,
-        "skipped_resamples": 0
-      },
-      "target_prevalence": 0.005001,
-      "target_test_positives": 75,
-      "target_roc_auc": 0.7377,
-      "target_precision": 0.0148,
-      "target_recall": 0.1467,
-      "target_f1": 0.0269,
-      "target_accuracy": 0.947,
-      "is_degenerate": false,
-      "confusion_matrix": {
-        "tp": 11,
-        "fp": 731,
-        "tn": 14192,
-        "fn": 64
-      },
-      "precision_at_k": {
-        "p_at_10": 0.0,
-        "p_at_25": 0.0,
-        "p_at_50": 0.02,
-        "p_at_100": 0.03
-      },
-      "degradation": {
-        "source_pr_auc": 0.0091,
-        "target_pr_auc": 0.0119,
-        "absolute_degradation": -0.0028,
-        "relative_degradation": -0.3077
-      }
-    },
-    {
-      "experiment_label": "E3",
-      "status": "success",
-      "error": null,
-      "method": "Isolation Forest (Graph + Temporal)",
-      "feature_groups": [
-        "graph",
-        "temporal"
-      ],
-      "feature_count": 11,
-      "source_pr_auc": 0.0054,
-      "source_pr_auc_ci": {
-        "point_estimate": 0.0054,
-        "ci_lower": 0.0041,
-        "ci_upper": 0.0077,
-        "skipped_resamples": 0
-      },
-      "source_prevalence": 0.001412,
-      "source_test_positives": 232,
-      "target_pr_auc": 0.0155,
-      "target_pr_auc_ci": {
-        "point_estimate": 0.0155,
-        "ci_lower": 0.0102,
-        "ci_upper": 0.0275,
-        "skipped_resamples": 0
-      },
-      "target_prevalence": 0.005001,
-      "target_test_positives": 75,
-      "target_roc_auc": 0.7565,
-      "target_precision": 0.0197,
-      "target_recall": 0.2667,
-      "target_f1": 0.0367,
-      "target_accuracy": 0.9301,
-      "is_degenerate": false,
-      "confusion_matrix": {
-        "tp": 20,
-        "fp": 994,
-        "tn": 13929,
-        "fn": 55
-      },
-      "precision_at_k": {
-        "p_at_10": 0.0,
-        "p_at_25": 0.0,
-        "p_at_50": 0.0,
-        "p_at_100": 0.02
-      },
-      "degradation": {
-        "source_pr_auc": 0.0054,
-        "target_pr_auc": 0.0155,
-        "absolute_degradation": -0.0101,
-        "relative_degradation": -1.8704
-      }
-    },
-    {
-      "experiment_label": "E4",
-      "status": "success",
-      "error": null,
-      "method": "Isolation Forest (Full GraphFin)",
-      "feature_groups": [
-        "graph",
-        "behavioral",
-        "temporal"
-      ],
-      "feature_count": 19,
-      "source_pr_auc": 0.0093,
-      "source_pr_auc_ci": {
-        "point_estimate": 0.0093,
-        "ci_lower": 0.0065,
-        "ci_upper": 0.0144,
-        "skipped_resamples": 0
-      },
-      "source_prevalence": 0.001412,
-      "source_test_positives": 232,
-      "target_pr_auc": 0.0133,
-      "target_pr_auc_ci": {
-        "point_estimate": 0.0133,
-        "ci_lower": 0.0089,
-        "ci_upper": 0.0276,
-        "skipped_resamples": 0
-      },
-      "target_prevalence": 0.005001,
-      "target_test_positives": 75,
-      "target_roc_auc": 0.748,
-      "target_precision": 0.0159,
-      "target_recall": 0.2267,
-      "target_f1": 0.0297,
-      "target_accuracy": 0.926,
-      "is_degenerate": false,
-      "confusion_matrix": {
-        "tp": 17,
-        "fp": 1052,
-        "tn": 13871,
-        "fn": 58
-      },
-      "precision_at_k": {
-        "p_at_10": 0.0,
-        "p_at_25": 0.04,
-        "p_at_50": 0.04,
-        "p_at_100": 0.03
-      },
-      "degradation": {
-        "source_pr_auc": 0.0093,
-        "target_pr_auc": 0.0133,
-        "absolute_degradation": -0.004,
-        "relative_degradation": -0.4301
-      }
-    },
-    {
-      "experiment_label": "E5",
-      "status": "success",
-      "error": null,
-      "method": "Isolation Forest (Egonet + Circular Flow)",
-      "feature_groups": [
-        "egonet"
-      ],
-      "feature_count": 4,
-      "source_pr_auc": 0.0014,
-      "source_pr_auc_ci": {
-        "point_estimate": 0.0014,
-        "ci_lower": 0.0012,
-        "ci_upper": 0.0019,
-        "skipped_resamples": 0
-      },
-      "source_prevalence": 0.001412,
-      "source_test_positives": 232,
-      "target_pr_auc": 0.005,
-      "target_pr_auc_ci": {
-        "point_estimate": 0.005,
-        "ci_lower": 0.004,
-        "ci_upper": 0.0082,
-        "skipped_resamples": 0
-      },
-      "target_prevalence": 0.005001,
-      "target_test_positives": 75,
-      "target_roc_auc": 0.5,
+      "target_prevalence": 0.0,
+      "target_test_positives": 0,
+      "target_roc_auc": 0.0,
       "target_precision": 0.0,
       "target_recall": 0.0,
       "target_f1": 0.0,
-      "target_accuracy": 0.995,
+      "target_accuracy": 1.0,
       "is_degenerate": true,
       "confusion_matrix": {
         "tp": 0,
         "fp": 0,
-        "tn": 14923,
-        "fn": 75
+        "tn": 1,
+        "fn": 0
       },
       "precision_at_k": {
         "p_at_10": 0.0,
@@ -321,9 +58,117 @@
         "p_at_100": 0.0
       },
       "degradation": {
-        "source_pr_auc": 0.0014,
-        "target_pr_auc": 0.005,
-        "absolute_degradation": -0.0036,
+        "source_pr_auc": 0.0,
+        "target_pr_auc": 0.0,
+        "absolute_degradation": 0.0,
+        "relative_degradation": null
+      }
+    },
+    {
+      "experiment_label": "E1",
+      "status": "success",
+      "supported": true,
+      "error": null,
+      "method": "Isolation Forest (Graph only)",
+      "feature_groups": [
+        "graph"
+      ],
+      "feature_count": 6,
+      "source_pr_auc": 0.0,
+      "source_pr_auc_ci": {
+        "point_estimate": 0.0,
+        "ci_lower": 0.0,
+        "ci_upper": 0.0,
+        "skipped_resamples": 0
+      },
+      "source_prevalence": 0.0,
+      "source_test_positives": 0,
+      "target_pr_auc": 0.0,
+      "target_pr_auc_ci": {
+        "point_estimate": 0.0,
+        "ci_lower": 0.0,
+        "ci_upper": 0.0,
+        "skipped_resamples": 0
+      },
+      "target_prevalence": 0.0,
+      "target_test_positives": 0,
+      "target_roc_auc": 0.0,
+      "target_precision": 0.0,
+      "target_recall": 0.0,
+      "target_f1": 0.0,
+      "target_accuracy": 1.0,
+      "is_degenerate": true,
+      "confusion_matrix": {
+        "tp": 0,
+        "fp": 0,
+        "tn": 1,
+        "fn": 0
+      },
+      "precision_at_k": {
+        "p_at_10": 0.0,
+        "p_at_25": 0.0,
+        "p_at_50": 0.0,
+        "p_at_100": 0.0
+      },
+      "degradation": {
+        "source_pr_auc": 0.0,
+        "target_pr_auc": 0.0,
+        "absolute_degradation": 0.0,
+        "relative_degradation": null
+      }
+    },
+    {
+      "experiment_label": "E4",
+      "status": "success",
+      "supported": true,
+      "error": null,
+      "method": "Isolation Forest (Full GraphFin)",
+      "feature_groups": [
+        "graph",
+        "behavioral",
+        "temporal"
+      ],
+      "feature_count": 19,
+      "source_pr_auc": 0.0,
+      "source_pr_auc_ci": {
+        "point_estimate": 0.0,
+        "ci_lower": 0.0,
+        "ci_upper": 0.0,
+        "skipped_resamples": 0
+      },
+      "source_prevalence": 0.0,
+      "source_test_positives": 0,
+      "target_pr_auc": 0.0,
+      "target_pr_auc_ci": {
+        "point_estimate": 0.0,
+        "ci_lower": 0.0,
+        "ci_upper": 0.0,
+        "skipped_resamples": 0
+      },
+      "target_prevalence": 0.0,
+      "target_test_positives": 0,
+      "target_roc_auc": 0.0,
+      "target_precision": 0.0,
+      "target_recall": 0.0,
+      "target_f1": 0.0,
+      "target_accuracy": 1.0,
+      "is_degenerate": true,
+      "confusion_matrix": {
+        "tp": 0,
+        "fp": 0,
+        "tn": 1,
+        "fn": 0
+      },
+      "precision_at_k": {
+        "p_at_10": 0.0,
+        "p_at_25": 0.0,
+        "p_at_50": 0.0,
+        "p_at_100": 0.0
+      },
+      "degradation": {
+        "source_pr_auc": 0.0,
+        "target_pr_auc": 0.0,
+        "absolute_degradation": 0.0,
         "relative_degradation": null
       }
     }
@@ -331,198 +176,198 @@
   "feature_distribution_check": [
     {
       "feature_name": "in_degree",
-      "source_mean": 0.5478,
-      "target_mean": 1.309,
-      "source_std": 0.7149,
-      "target_std": 1.4454,
-      "standardized_mean_difference": 0.6676
+      "source_mean": 0.6667,
+      "target_mean": 0.6667,
+      "source_std": 0.4714,
+      "target_std": 0.4714,
+      "standardized_mean_difference": 0.0
     },
     {
       "feature_name": "out_degree",
-      "source_mean": 0.5478,
-      "target_mean": 1.309,
-      "source_std": 0.4978,
-      "target_std": 19.6328,
-      "standardized_mean_difference": 0.0548
+      "source_mean": 0.6667,
+      "target_mean": 0.6667,
+      "source_std": 0.4714,
+      "target_std": 0.4714,
+      "standardized_mean_difference": 0.0
     },
     {
       "feature_name": "total_degree",
-      "source_mean": 1.0955,
-      "target_mean": 2.618,
-      "source_std": 0.3985,
-      "target_std": 19.7212,
-      "standardized_mean_difference": 0.1092
+      "source_mean": 1.3333,
+      "target_mean": 1.3333,
+      "source_std": 0.4714,
+      "target_std": 0.4714,
+      "standardized_mean_difference": 0.0
     },
     {
       "feature_name": "weighted_in_degree",
-      "source_mean": 98769.6875,
-      "target_mean": 3337536.25,
-      "source_std": 476101.5,
-      "target_std": 54183884.0,
-      "standardized_mean_difference": 0.0845
+      "source_mean": 150.0,
+      "target_mean": 100.0,
+      "source_std": 122.4745,
+      "target_std": 81.6497,
+      "standardized_mean_difference": -0.4804
     },
     {
       "feature_name": "weighted_out_degree",
-      "source_mean": 98769.6875,
-      "target_mean": 3337536.25,
-      "source_std": 440557.2812,
-      "target_std": 83225112.0,
-      "standardized_mean_difference": 0.055
+      "source_mean": 150.0,
+      "target_mean": 100.0,
+      "source_std": 122.4745,
+      "target_std": 81.6497,
+      "standardized_mean_difference": -0.4804
     },
     {
       "feature_name": "betweenness_centrality",
-      "source_mean": 0.0,
-      "target_mean": 0.0,
-      "source_std": 0.0,
-      "target_std": 0.0,
-      "standardized_mean_difference": 0.0472
+      "source_mean": 0.1667,
+      "target_mean": 0.1667,
+      "source_std": 0.2357,
+      "target_std": 0.2357,
+      "standardized_mean_difference": 0.0
     },
     {
       "feature_name": "transaction_count",
-      "source_mean": 1.0955,
-      "target_mean": 14.1563,
-      "source_std": 0.3985,
-      "target_std": 218.7519,
-      "standardized_mean_difference": 0.0844
+      "source_mean": 1.3333,
+      "target_mean": 1.3333,
+      "source_std": 0.4714,
+      "target_std": 0.4714,
+      "standardized_mean_difference": 0.0
     },
     {
       "feature_name": "total_sent",
-      "source_mean": 98769.6875,
-      "target_mean": 3337536.25,
-      "source_std": 440557.2812,
-      "target_std": 83225112.0,
-      "standardized_mean_difference": 0.055
+      "source_mean": 150.0,
+      "target_mean": 100.0,
+      "source_std": 122.4745,
+      "target_std": 81.6497,
+      "standardized_mean_difference": -0.4804
     },
     {
       "feature_name": "total_received",
-      "source_mean": 98769.6875,
-      "target_mean": 3337536.25,
-      "source_std": 476101.5,
-      "target_std": 54183884.0,
-      "standardized_mean_difference": 0.0845
+      "source_mean": 150.0,
+      "target_mean": 100.0,
+      "source_std": 122.4745,
+      "target_std": 81.6497,
+      "standardized_mean_difference": -0.4804
     },
     {
       "feature_name": "net_flow",
-      "source_mean": 0.0002,
-      "target_mean": 0.0154,
-      "source_std": 663528.4375,
-      "target_std": 99141808.0,
+      "source_mean": 0.0,
+      "target_mean": 0.0,
+      "source_std": 212.132,
+      "target_std": 141.4214,
       "standardized_mean_difference": 0.0
     },
     {
       "feature_name": "average_transaction_amount",
-      "source_mean": 170033.2344,
-      "target_mean": 943563.0,
-      "source_std": 543985.75,
-      "target_std": 18971770.0,
-      "standardized_mean_difference": 0.0576
+      "source_mean": 225.0,
+      "target_mean": 150.0,
+      "source_std": 61.2372,
+      "target_std": 40.8248,
+      "standardized_mean_difference": -1.4412
     },
     {
       "feature_name": "maximum_transaction_amount",
-      "source_mean": 184080.125,
-      "target_mean": 4103530.0,
-      "source_std": 605755.0,
-      "target_std": 56376288.0,
-      "standardized_mean_difference": 0.0983
+      "source_mean": 250.0,
+      "target_mean": 166.6667,
+      "source_std": 70.7107,
+      "target_std": 47.1405,
+      "standardized_mean_difference": -1.3868
     },
     {
       "feature_name": "unique_receivers",
-      "source_mean": 0.5478,
-      "target_mean": 1.309,
-      "source_std": 0.4978,
-      "target_std": 19.6328,
-      "standardized_mean_difference": 0.0548
+      "source_mean": 0.6667,
+      "target_mean": 0.6667,
+      "source_std": 0.4714,
+      "target_std": 0.4714,
+      "standardized_mean_difference": 0.0
     },
     {
       "feature_name": "unique_senders",
-      "source_mean": 0.5478,
-      "target_mean": 1.309,
-      "source_std": 0.7149,
-      "target_std": 1.4454,
-      "standardized_mean_difference": 0.6676
+      "source_mean": 0.6667,
+      "target_mean": 0.6667,
+      "source_std": 0.4714,
+      "target_std": 0.4714,
+      "standardized_mean_difference": 0.0
     },
     {
       "feature_name": "transactions_per_day",
-      "source_mean": 0.9862,
-      "target_mean": 2.1021,
-      "source_std": 0.1994,
-      "target_std": 21.8719,
-      "standardized_mean_difference": 0.0721
+      "source_mean": 1.3333,
+      "target_mean": 1.3333,
+      "source_std": 0.4714,
+      "target_std": 0.4714,
+      "standardized_mean_difference": 0.0
     },
     {
       "feature_name": "transactions_per_week",
-      "source_mean": 6.9036,
-      "target_mean": 14.7147,
-      "source_std": 1.3959,
-      "target_std": 153.1033,
-      "standardized_mean_difference": 0.0721
+      "source_mean": 9.3333,
+      "target_mean": 9.3333,
+      "source_std": 3.2998,
+      "target_std": 3.2998,
+      "standardized_mean_difference": 0.0
     },
     {
       "feature_name": "average_time_between_transactions",
-      "source_mean": 27945.0605,
-      "target_mean": 68266.7422,
-      "source_std": 138032.2656,
-      "target_std": 107455.2734,
-      "standardized_mean_difference": 0.326
+      "source_mean": 1200.0,
+      "target_mean": 1200.0,
+      "source_std": 1697.0563,
+      "target_std": 1697.0563,
+      "standardized_mean_difference": 0.0
     },
     {
       "feature_name": "minimum_time_between_transactions",
-      "source_mean": 24112.2285,
-      "target_mean": 23680.916,
-      "source_std": 131163.0,
-      "target_std": 89021.75,
-      "standardized_mean_difference": -0.0038
+      "source_mean": 1200.0,
+      "target_mean": 1200.0,
+      "source_std": 1697.0563,
+      "target_std": 1697.0563,
+      "standardized_mean_difference": 0.0
     },
     {
       "feature_name": "maximum_time_between_transactions",
-      "source_mean": 32269.5879,
-      "target_mean": 168289.0938,
-      "source_std": 155299.375,
-      "target_std": 172374.8281,
-      "standardized_mean_difference": 0.8291
+      "source_mean": 1200.0,
+      "target_mean": 1200.0,
+      "source_std": 1697.0563,
+      "target_std": 1697.0563,
+      "standardized_mean_difference": 0.0
     },
     {
       "feature_name": "egonet_node_count",
       "source_mean": 1.0,
-      "target_mean": 1.0751,
+      "target_mean": 1.0,
       "source_std": 0.0,
-      "target_std": 2.6507,
-      "standardized_mean_difference": 0.0401
+      "target_std": 0.0,
+      "standardized_mean_difference": 0.0
     },
     {
       "feature_name": "egonet_edge_count",
       "source_mean": 0.0,
-      "target_mean": 0.1179,
+      "target_mean": 0.0,
       "source_std": 0.0,
-      "target_std": 4.0723,
-      "standardized_mean_difference": 0.0409
+      "target_std": 0.0,
+      "standardized_mean_difference": 0.0
     },
     {
       "feature_name": "egonet_density",
       "source_mean": 0.0,
-      "target_mean": 0.0128,
+      "target_mean": 0.0,
       "source_std": 0.0,
-      "target_std": 0.0787,
-      "standardized_mean_difference": 0.2297
+      "target_std": 0.0,
+      "standardized_mean_difference": 0.0
     },
     {
       "feature_name": "circular_flow_indicator",
       "source_mean": 0.0,
-      "target_mean": 0.0011,
+      "target_mean": 0.0,
       "source_std": 0.0,
-      "target_std": 0.0299,
-      "standardized_mean_difference": 0.0534
+      "target_std": 0.0,
+      "standardized_mean_difference": 0.0
     }
   ],
   "reproducibility_manifest": {
-    "source_dataset_id": "e8d9c7b6-a5f4-4e3d-b2c1-a09876543210",
-    "target_dataset_id": "03fb9ab0-4f42-4404-9d76-723fd4d8753e",
-    "source_entities": 547686,
-    "target_entities": 49992,
+    "source_dataset_id": "paysim_test",
+    "target_dataset_id": "ibm_test",
+    "source_entities": 3,
+    "target_entities": 3,
     "source_split_label": "research-split",
     "target_split_label": "research-split",
     "random_state": 42,
-    "n_bootstraps": 500,
+    "n_bootstraps": 50,
     "feature_count": 23,
     "feature_names": [
       "in_degree",

@@ -48,10 +48,12 @@ class ExperimentTransferResult(BaseModel):
     """Transfer metrics for one experiment configuration (E0-E5)."""
     experiment_label: str = Field(..., description="Experiment configuration (e.g. 'E0', 'E1', 'E4', 'E5')")
     status: str = Field(default="success", description="Status: 'success', 'error', or 'unsupported'")
+    supported: bool = Field(default=True, description="Whether experiment configuration is supported for cross-dataset transfer")
     error: Optional[str] = Field(None, description="Detailed explanation if status is 'error' or 'unsupported'")
     method: str = Field(..., description="Model method description")
     feature_groups: List[str] = Field(..., description="Feature groups included")
     feature_count: int = Field(..., description="Total feature dimensions used")
+
 
     source_pr_auc: Optional[float] = Field(None, description="Same-protocol source PR-AUC")
     source_pr_auc_ci: Optional[BootstrapCI] = Field(None, description="Source PR-AUC 95% Bootstrap CI")
