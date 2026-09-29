@@ -17,6 +17,26 @@ logger = get_logger(__name__)
 router = APIRouter(prefix="/transactions", tags=["Transactions"])
 
 
+@router.get(
+    "",
+    status_code=status.HTTP_200_OK,
+    summary="Transactions Service Info",
+    description="Returns transaction service status and supported currency labels.",
+)
+@router.get(
+    "/",
+    include_in_schema=False,
+)
+async def get_transactions_info():
+    """Return transaction service info."""
+    return {
+        "status": "active",
+        "service": "transactions",
+        "supported_currencies": sorted(list(SUPPORTED_CURRENCIES)),
+        "default_currency": DEFAULT_CURRENCY,
+    }
+
+
 @router.post(
     "/upload",
     response_model=TransactionUploadResponse,

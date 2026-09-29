@@ -65,7 +65,7 @@ export function Table<T extends Record<string, any>>({
     <div className={`relative w-full border border-hairline bg-surface ${className}`}>
       {/* Scrollable table container */}
       <div ref={containerRef} className="w-full overflow-x-auto">
-        <table className="w-full border-collapse text-left text-sm font-sans">
+        <table className="w-full border-collapse text-left text-sm">
           <thead>
             <tr className="border-b border-hairline bg-surface-raised/70 select-none">
               {columns.map((col, colIdx) => {
@@ -146,7 +146,7 @@ export function Table<T extends Record<string, any>>({
                         : col.align === "center"
                         ? "text-center"
                         : "text-left";
-                    const fontClass = col.mono ? "font-mono" : "font-sans";
+                    const fontClass = col.mono ? "font-mono" : "";
 
                     return (
                       <td

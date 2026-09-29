@@ -24,6 +24,26 @@ logger = get_logger(__name__)
 router = APIRouter(prefix="/anomalies", tags=["Anomaly Detection (Machine Learning)"])
 
 
+@router.get(
+    "",
+    status_code=status.HTTP_200_OK,
+    summary="Anomaly Detection Service Info",
+    description="Returns anomaly detection service status and model info.",
+)
+@router.get(
+    "/",
+    include_in_schema=False,
+)
+async def get_anomalies_info():
+    """Return anomaly detection service info."""
+    return {
+        "status": "active",
+        "service": "anomalies",
+        "model_type": "Isolation Forest",
+        "feature_groups": ["graph", "behavioral", "temporal"],
+    }
+
+
 @router.post(
     "/{dataset_id}/train",
     response_model=AnomalyTrainResponse,

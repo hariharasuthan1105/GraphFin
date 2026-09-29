@@ -38,6 +38,9 @@ data/raw/PS_*.csv
 # Exclude raw/large files over 50MB; whitelist small committable research artifacts (<50MB)
 data/research/*.csv
 !data/research/README.md
+!data/research/ibm_aml_medium_5k.csv
+!data/research/ibm_aml_medium_5k_labels.csv
+!data/research/ibm_aml_large_50k.csv
 !data/research/ibm_aml_large_50k_labels.csv
 !data/research/paysim_labels.csv
 !data/research/paysim_transactions.csv

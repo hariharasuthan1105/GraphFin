@@ -11,6 +11,25 @@ router = APIRouter(prefix="/graph", tags=["Graph Analysis"])
 
 
 @router.get(
+    "",
+    status_code=status.HTTP_200_OK,
+    summary="Graph Analysis Service Info",
+    description="Returns graph analysis service status and information.",
+)
+@router.get(
+    "/",
+    include_in_schema=False,
+)
+async def get_graph_info():
+    """Return graph analysis service status."""
+    return {
+        "status": "active",
+        "service": "graph",
+        "supported_metrics": ["degree", "weighted_volume", "betweenness_centrality", "page_rank"],
+    }
+
+
+@router.get(
     "/{dataset_id}/summary",
     response_model=GraphSummaryResponse,
     summary="Transaction Graph Network Summary",

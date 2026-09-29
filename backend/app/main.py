@@ -74,6 +74,12 @@ app.add_middleware(
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
 
+@app.get("/health", tags=["Health"], summary="Service Health Check")
+async def root_health():
+    """Return backend health status at root /health path."""
+    return {"status": "healthy", "service": "financial-anomaly-detection-api"}
+
+
 @app.get("/", include_in_schema=False)
 async def root_redirect():
     """Redirect root path to interactive Swagger documentation."""

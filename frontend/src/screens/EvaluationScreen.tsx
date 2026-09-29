@@ -223,18 +223,18 @@ const OfficialResearchView: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-8 max-w-[1040px] mx-auto text-left">
+    <div className="space-y-8 max-w-[1040px] mx-auto text-left research-font">
       {/* Page header */}
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="text-xl font-sans font-medium text-text-primary flex items-center gap-2">
-            <span>Research Evaluation</span>
+          <h1 className="text-2xl font-serif font-semibold text-text-primary flex items-center gap-2">
+            <span>Research Evaluation & Paper Report</span>
             <span className="px-2 py-0.5 bg-blue-500/10 text-blue-400 border border-blue-500/25 rounded text-[11px] font-mono uppercase tracking-wider font-semibold">
               Official Locked Benchmark
             </span>
           </h1>
-          <p className="text-sm font-sans text-text-secondary mt-1">
-            Finalized benchmark results — IBM AML HI-Small subsamples, E0–E4 experiments,
+          <p className="text-sm text-text-secondary mt-1 leading-relaxed">
+            Finalized benchmark research results — IBM AML HI-Small subsamples, E0–E4 experiments,
             held-out evaluation. Loaded from locked static output.
           </p>
         </div>
@@ -246,14 +246,14 @@ const OfficialResearchView: React.FC = () => {
       {/* ── Research Tier Selector (5K vs 50K) ── */}
       <div className="flex items-center justify-between p-3 bg-surface border border-hairline rounded">
         <div className="flex items-center gap-3">
-          <span className="text-xs font-sans text-text-secondary font-medium">
+          <span className="text-xs text-text-secondary font-medium">
             Active Research Benchmark Tier:
           </span>
           <div className="flex items-center bg-surface-raised border border-hairline rounded p-0.5">
             <button
               type="button"
               onClick={() => setResearchTier("medium_real")}
-              className={`px-3 py-1.5 text-xs font-sans rounded transition-colors flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 text-xs rounded transition-colors flex items-center gap-1.5 ${
                 researchTier === "medium_real"
                   ? "bg-accent-primary text-white font-medium shadow-sm"
                   : "text-text-secondary hover:text-text-primary hover:bg-surface"
@@ -265,7 +265,7 @@ const OfficialResearchView: React.FC = () => {
             <button
               type="button"
               onClick={() => setResearchTier("large_real")}
-              className={`px-3 py-1.5 text-xs font-sans rounded transition-colors flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 text-xs rounded transition-colors flex items-center gap-1.5 ${
                 researchTier === "large_real"
                   ? "bg-accent-primary text-white font-medium shadow-sm"
                   : "text-text-secondary hover:text-text-primary hover:bg-surface"
@@ -281,38 +281,38 @@ const OfficialResearchView: React.FC = () => {
         </div>
       </div>
 
-      {/* ── Research Summary Card ── */}
+      {/* ── Research Summary Card (Abstract & Report Metadata) ── */}
       <div className="p-5 bg-surface border border-hairline rounded space-y-4">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-sans uppercase tracking-wider text-text-tertiary font-medium">
-            Research Summary
+          <span className="text-xs uppercase tracking-wider text-text-tertiary font-medium">
+            Research Abstract & Summary
           </span>
           <Badge variant="normal">Held-out evaluation</Badge>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-3 text-xs font-sans">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-3 text-sm">
           <div>
-            <span className="text-text-tertiary block">Dataset</span>
+            <span className="text-text-tertiary block text-xs">Dataset</span>
             <span className="text-text-primary">IBM AML HI-Small (Kaggle, IBM AMLSim / AMLworld-generated)</span>
           </div>
           <div>
-            <span className="text-text-tertiary block">Evaluation tiers</span>
+            <span className="text-text-tertiary block text-xs">Evaluation tiers</span>
             <span className="text-text-primary">5,000 accounts / 49,992 accounts (stratified subsamples)</span>
           </div>
           <div>
-            <span className="text-text-tertiary block">Ground-truth labels</span>
+            <span className="text-text-tertiary block text-xs">Ground-truth labels</span>
             <span className="text-text-primary">Real Is-Laundering ground truth aggregated to account level (any involvement rule)</span>
           </div>
           <div>
-            <span className="text-text-tertiary block">Experiments</span>
+            <span className="text-text-tertiary block text-xs">Experiments</span>
             <span className="text-text-primary">E0 (graph / statistical baseline) through E4 (full GraphFin)</span>
           </div>
           <div>
-            <span className="text-text-tertiary block">Evaluation protocol</span>
+            <span className="text-text-tertiary block text-xs">Evaluation protocol</span>
             <span className="text-text-primary">70/30 stratified entity-level held-out split</span>
           </div>
           <div>
-            <span className="text-text-tertiary block">Primary metric</span>
+            <span className="text-text-tertiary block text-xs">Primary metric</span>
             <span className="text-text-primary">
               PR-AUC — chosen due to severe class imbalance
               (~0.4–0.5% positive prevalence at both tiers)
@@ -320,10 +320,10 @@ const OfficialResearchView: React.FC = () => {
           </div>
         </div>
 
-        {/* Robustness placeholder note */}
+        {/* Robustness note */}
         <div className="pt-3 border-t border-hairline">
-          <p className="text-xs font-sans text-text-secondary leading-relaxed">
-            <span className="font-medium text-text-primary">Note: </span>
+          <p className="text-sm text-text-secondary leading-relaxed">
+            <span className="font-semibold text-text-primary">Methodology & Discussion Note: </span>
             Cross-scale feature-group comparison based on a single stratified split
             (random_state=42). A multi-seed robustness check is in progress to confirm
             whether observed differences between feature groups are stable or attributable
@@ -332,7 +332,7 @@ const OfficialResearchView: React.FC = () => {
             between experiments as conclusive until that check is complete.
           </p>
           {FINDING_STATEMENT !== null && (
-            <p className="text-xs font-sans text-text-primary font-medium mt-2 pt-2 border-t border-hairline">
+            <p className="text-sm text-text-primary font-medium mt-2 pt-2 border-t border-hairline">
               <span className="text-text-tertiary">Finding: </span>
               {FINDING_STATEMENT}
             </p>
@@ -346,41 +346,53 @@ const OfficialResearchView: React.FC = () => {
           <span className="px-1.5 py-0.5 text-[10px] font-mono font-bold tracking-wider bg-amber-500/15 text-amber-400 rounded border border-amber-500/30">
             SAMPLE SIZE CAUTION
           </span>
-          <span className="text-xs font-sans font-medium text-text-primary">
+          <span className="text-sm font-semibold text-text-primary">
             Real Ground-Truth Labels · Small Positive Sample Size in Held-Out Test Partition
           </span>
         </div>
-        <p className="text-xs font-sans text-text-secondary leading-relaxed">
+        <p className="text-sm text-text-secondary leading-relaxed">
           Ground-truth labels are real <span className="font-mono text-text-primary">Is-Laundering</span>-derived
           classifications aggregated to the account level via the documented &ldquo;any involvement&rdquo; rule (not synthetic labels).
           Due to extreme real-world class imbalance (~0.4–0.5% positive prevalence), the held-out test partition contains
           a small absolute number of positive cases: 6 positives at 5,000 accounts and 75 positives at 49,992 accounts.
         </p>
-        <p className="text-[11px] font-sans text-text-tertiary leading-relaxed">
+        <p className="text-xs text-text-tertiary leading-relaxed">
           The caution concerns sample size (single-split evaluation, pending multi-seed verification), not label authenticity.
           Observed performance differences between feature groups should not be considered conclusive until multi-seed
           robustness checks confirm cross-split stability.
         </p>
       </div>
 
-      {/* ── Research Question ── */}
-      <div className="p-4 bg-surface border border-hairline rounded space-y-1.5">
-        <span className="text-xs font-sans uppercase tracking-wider text-text-tertiary font-medium block">
-          Research Question
+      {/* ── Research Questions (RQ1, RQ2, RQ3) ── */}
+      <div className="p-5 bg-surface border border-hairline rounded space-y-3">
+        <span className="text-xs uppercase tracking-wider text-text-tertiary font-medium block">
+          Research Questions (RQ1, RQ2, RQ3)
         </span>
-        <p className="text-sm font-sans text-text-primary font-normal italic">
+        <p className="text-base text-text-primary italic leading-relaxed">
           &ldquo;Does enriching graph-based transaction representations with behavioral and temporal
           information improve anomaly detection compared with the existing graph/statistical approach?&rdquo;
         </p>
-        <p className="text-[11px] font-sans text-text-secondary">
+
+        <div className="space-y-2.5 pt-2 border-t border-hairline text-sm leading-relaxed text-text-secondary">
+          <p>
+            <strong className="text-text-primary font-semibold">RQ1 (Representation Efficacy):</strong> Does combining behavioral features with graph topological embeddings increase precision-recall AUC compared to pure topological or statistical baselines (E0 vs E2)?
+          </p>
+          <p>
+            <strong className="text-text-primary font-semibold">RQ2 (Temporal Feature Dynamics):</strong> What is the marginal contribution of temporal burstiness and transaction frequency features in isolating evasive financial anomalies (E2 vs E3/E4)?
+          </p>
+          <p>
+            <strong className="text-text-primary font-semibold">RQ3 (Scale Generalization):</strong> How stable are graph-behavioral-temporal feature gains when scaling from 5K to 50K account transaction graphs under extreme class imbalance?
+          </p>
+        </div>
+        <p className="text-xs text-text-tertiary pt-1">
           Empirical measurements below provide evaluation evidence without preconceived winner designations.
         </p>
       </div>
 
       {/* ── Methodology Pipeline ── */}
-      <div className="p-4 bg-surface border border-hairline rounded space-y-3">
+      <div className="p-5 bg-surface border border-hairline rounded space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-sans uppercase tracking-wider text-text-tertiary font-medium">
+          <span className="text-xs uppercase tracking-wider text-text-tertiary font-medium">
             Pipeline Methodology Flow
           </span>
           <span className="text-[11px] font-mono text-text-tertiary">
@@ -408,23 +420,27 @@ const OfficialResearchView: React.FC = () => {
             </React.Fragment>
           ))}
         </div>
+        <p className="text-xs text-text-tertiary leading-relaxed pt-1">
+          Methodology description: Transaction streams are constructed into directed weighted graph topologies.
+          Entity-level features (PageRank, degree, behavioral volume ratios, and temporal burstiness) are calculated per node and ingested into an unsupervised Isolation Forest model evaluated on stratified held-out test splits.
+        </p>
       </div>
 
       {/* Loading / error states */}
       {isLoading && (
-        <div className="py-10 text-center text-sm font-sans text-text-tertiary">
+        <div className="py-10 text-center text-sm text-text-tertiary">
           Loading locked research results…
         </div>
       )}
       {loadError && (
-        <div className="p-3 bg-[#2D1619] border border-[#521A1F] rounded text-xs font-sans text-status-suspicious">
+        <div className="p-3 bg-[#2D1619] border border-[#521A1F] rounded text-xs text-status-suspicious">
           {loadError}
         </div>
       )}
 
       {!isLoading && !loadError && tierExperiments.length > 0 && (
         <>
-          {/* ── Charts ── */}
+          {/* ── Research Charts Section & Figure Captions ── */}
           <ResearchChartsSection
             experiments={allExperiments}
             activeTierDatasetId={activeTierDatasetId}
@@ -432,14 +448,14 @@ const OfficialResearchView: React.FC = () => {
             onSelectExp={setSelectedExpLabel}
           />
 
-          {/* ── Dense results table ── */}
+          {/* ── Results Table & Explanations ── */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-sans font-medium text-text-primary flex items-center gap-2">
-                <span>Held-out Evaluation Results</span>
+              <h2 className="text-base font-serif font-semibold text-text-primary flex items-center gap-2">
+                <span>Results Table: Held-out Evaluation</span>
                 <Badge variant="normal">Publication grade</Badge>
               </h2>
-              <span className="text-xs font-sans text-text-tertiary">
+              <span className="text-xs text-text-tertiary">
                 {tierShort} tier · {tierLabel} · random_state=42
               </span>
             </div>
@@ -448,10 +464,10 @@ const OfficialResearchView: React.FC = () => {
               data={tierExperiments}
               emptyMessage="No results found for this tier."
             />
-            <p className="text-[11px] font-sans text-text-tertiary leading-relaxed">
-              Results are read from the locked static file{" "}
+            <p className="text-xs text-text-tertiary leading-relaxed">
+              Research Explanation: Results are read from the locked static file{" "}
               <span className="font-mono">final_e0_e4_comparison.json</span> and do not
-              reflect any live backend state. TP/FP/TN/FN counts are at the
+              reflect any live backend state. TP/FP/TN/FN counts are measured at the
               contamination-rate threshold; AUC metrics are threshold-independent.
             </p>
           </div>
@@ -708,18 +724,18 @@ const CustomEvaluationView: React.FC = () => {
   const experimentsList = comparison?.experiments?.filter((e) => e.status === "success") || [];
 
   return (
-    <div className="space-y-8 max-w-[1040px] mx-auto text-left">
+    <div className="space-y-8 max-w-[1040px] mx-auto text-left research-font">
       {/* Page header */}
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="text-xl font-sans font-medium text-text-primary flex items-center gap-2">
-            <span>Custom Evaluation</span>
+          <h1 className="text-2xl font-serif font-semibold text-text-primary flex items-center gap-2">
+            <span>Custom Evaluation & Live Report</span>
             <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 rounded text-[11px] font-mono uppercase tracking-wider font-semibold">
               Live Custom Mode
             </span>
           </h1>
-          <p className="text-sm font-sans text-text-secondary mt-1">
-            Custom Evaluation — live results on your uploaded data. Not part of the official locked research benchmark.
+          <p className="text-sm text-text-secondary mt-1">
+            Custom Evaluation — live research results on your uploaded data. Not part of the official locked research benchmark.
           </p>
         </div>
 

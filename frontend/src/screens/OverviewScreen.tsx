@@ -118,12 +118,12 @@ export const OverviewScreen: React.FC = () => {
   if (!datasetId) {
     return (
       <div className="max-w-[960px] mx-auto py-12 text-left space-y-8">
-        {/* Editorial Display Headline (EB Garamond) */}
+        {/* Editorial Display Headline (Times New Roman) */}
         <div className="space-y-3">
-          <h1 className="text-3xl md:text-4xl font-display font-normal text-text-primary tracking-tight">
+          <h1 className="text-3xl md:text-4xl font-serif font-normal text-text-primary tracking-tight">
             Financial integrity, measured.
           </h1>
-          <p className="text-sm font-sans text-text-secondary max-w-xl leading-relaxed">
+          <p className="text-base research-font text-text-secondary max-w-xl leading-relaxed">
             Research-grade graph topology and unsupervised machine learning for financial
             transaction networks. Select an active dataset or upload a new transaction CSV
             to begin analysis.
@@ -182,12 +182,12 @@ export const OverviewScreen: React.FC = () => {
 
   return (
     <div className="space-y-8 max-w-[1040px] mx-auto text-left">
-      {/* Editorial Display Headline (EB Garamond) */}
+      {/* Editorial Display Headline (Times New Roman) */}
       <div className="space-y-2">
-        <h1 className="text-3xl md:text-4xl font-display font-normal text-text-primary tracking-tight">
+        <h1 className="text-3xl md:text-4xl font-serif font-normal text-text-primary tracking-tight">
           Financial integrity, measured.
         </h1>
-        <p className="text-sm font-sans text-text-secondary max-w-2xl leading-relaxed">
+        <p className="text-base research-font text-text-secondary max-w-2xl leading-relaxed">
           {graphSummary && txSummary ? (
             <>
               Analyzing{" "}

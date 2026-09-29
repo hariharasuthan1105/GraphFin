@@ -19,6 +19,26 @@ logger = get_logger(__name__)
 router = APIRouter(prefix="/evaluation", tags=["Research Evaluation & Comparison"])
 
 
+@router.get(
+    "",
+    status_code=status.HTTP_200_OK,
+    summary="Evaluation Service Info",
+    description="Returns research evaluation service status and primary metrics.",
+)
+@router.get(
+    "/",
+    include_in_schema=False,
+)
+async def get_evaluation_info():
+    """Return evaluation service info."""
+    return {
+        "status": "active",
+        "service": "evaluation",
+        "primary_metric": "PR-AUC",
+        "evaluation_modes": ["in_sample", "held_out"],
+    }
+
+
 @router.post(
     "/transfer",
     response_model=TransferExperimentResponse,

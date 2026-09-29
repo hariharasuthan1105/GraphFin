@@ -91,3 +91,33 @@ html, body {
 ::-webkit-scrollbar-thumb:hover {
   background: #5A6672;
 }
+
+/* Research/Paper-style Times New Roman typography */
+.research-font,
+.research-content {
+  font-family: "Times New Roman", Times, serif;
+}
+
+.research-font p,
+.research-font h1,
+.research-font h2,
+.research-font h3,
+.research-font h4,
+.research-font h5,
+.research-font h6,
+.research-font td,
+.research-font th,
+.research-font table,
+.research-font caption,
+.research-font .figure-caption,
+.research-font .research-text {
+  font-family: "Times New Roman", Times, serif;
+}
+
+/* Retain monospace for code, numbers, and technical identifiers */
+.research-font code,
+.research-font pre,
+.research-font .font-mono {
+  font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+}
+

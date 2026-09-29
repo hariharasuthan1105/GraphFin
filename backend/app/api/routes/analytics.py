@@ -13,6 +13,26 @@ logger = get_logger(__name__)
 router = APIRouter(prefix="/analytics", tags=["Analytics & Features"])
 
 
+@router.get(
+    "",
+    status_code=status.HTTP_200_OK,
+    summary="Analytics Service Info",
+    description="Returns feature analytics service info and feature count.",
+)
+@router.get(
+    "/",
+    include_in_schema=False,
+)
+async def get_analytics_info():
+    """Return analytics service info."""
+    return {
+        "status": "active",
+        "service": "analytics",
+        "feature_count": len(FEATURE_NAMES),
+        "features": FEATURE_NAMES,
+    }
+
+
 class FeatureSchemaResponse(BaseModel):
     feature_count: int
     features: List[str]

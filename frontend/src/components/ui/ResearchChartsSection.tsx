@@ -216,18 +216,18 @@ export const ResearchChartsSection: React.FC<Props> = ({
     ? "5K" : "50K";
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 research-font">
       {/* ── Chart 1: PR-AUC grouped bar, 5K vs 50K ── */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-sans font-medium text-text-primary">
+          <h3 className="text-base font-serif font-semibold text-text-primary">
             PR-AUC by Experiment
           </h3>
-          <span className="text-xs font-sans text-text-tertiary">
+          <span className="text-xs text-text-tertiary">
             Primary metric — area under precision-recall curve
           </span>
         </div>
-        <div className="p-4 bg-surface border border-hairline rounded">
+        <div className="p-4 bg-surface border border-hairline rounded space-y-2">
           <div className="h-56 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={prAucData} margin={{ top: 8, right: 16, bottom: 4, left: 0 }} barGap={2} barCategoryGap="30%">
@@ -241,20 +241,23 @@ export const ResearchChartsSection: React.FC<Props> = ({
               </BarChart>
             </ResponsiveContainer>
           </div>
+          <p className="figure-caption text-xs text-text-tertiary italic border-t border-hairline/60 pt-2 text-center">
+            Figure 1: PR-AUC precision-recall performance comparison across 5K and 50K account datasets for baseline (E0) through full GraphFin (E4).
+          </p>
         </div>
       </div>
 
       {/* ── Chart 2: ROC-AUC grouped bar, 5K vs 50K ── */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-sans font-medium text-text-primary">
+          <h3 className="text-base font-serif font-semibold text-text-primary">
             ROC-AUC by Experiment
           </h3>
-          <span className="text-xs font-sans text-text-tertiary">
+          <span className="text-xs text-text-tertiary">
             Ranking discrimination — area under ROC curve
           </span>
         </div>
-        <div className="p-4 bg-surface border border-hairline rounded">
+        <div className="p-4 bg-surface border border-hairline rounded space-y-2">
           <div className="h-56 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={rocAucData} margin={{ top: 8, right: 16, bottom: 4, left: 0 }} barGap={2} barCategoryGap="30%">
@@ -268,20 +271,23 @@ export const ResearchChartsSection: React.FC<Props> = ({
               </BarChart>
             </ResponsiveContainer>
           </div>
+          <p className="figure-caption text-xs text-text-tertiary italic border-t border-hairline/60 pt-2 text-center">
+            Figure 2: Area under the Receiver Operating Characteristic curve (ROC-AUC) assessing ranking discrimination across ablation variants.
+          </p>
         </div>
       </div>
 
       {/* ── Chart 3: F1 Score grouped bar, 5K vs 50K ── */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-sans font-medium text-text-primary">
+          <h3 className="text-base font-serif font-semibold text-text-primary">
             F1 Score by Experiment
           </h3>
-          <span className="text-xs font-sans text-text-tertiary">
+          <span className="text-xs text-text-tertiary">
             Harmonic mean of precision and recall (5K vs 50K accounts)
           </span>
         </div>
-        <div className="p-4 bg-surface border border-hairline rounded">
+        <div className="p-4 bg-surface border border-hairline rounded space-y-2">
           <div className="h-56 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={f1Data} margin={{ top: 8, right: 16, bottom: 4, left: 0 }} barGap={2} barCategoryGap="30%">
@@ -295,20 +301,23 @@ export const ResearchChartsSection: React.FC<Props> = ({
               </BarChart>
             </ResponsiveContainer>
           </div>
+          <p className="figure-caption text-xs text-text-tertiary italic border-t border-hairline/60 pt-2 text-center">
+            Figure 3: F1 score metric evaluation comparing entity-level detection accuracy at contamination-rate decision boundary.
+          </p>
         </div>
       </div>
 
       {/* ── Chart 4: Feature Count by Experiment ── */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-sans font-medium text-text-primary">
+          <h3 className="text-base font-serif font-semibold text-text-primary">
             Feature Count by Experiment
           </h3>
-          <span className="text-xs font-sans text-text-tertiary">
+          <span className="text-xs text-text-tertiary">
             Input feature dimensions across ablation configurations (E0–E4)
           </span>
         </div>
-        <div className="p-4 bg-surface border border-hairline rounded">
+        <div className="p-4 bg-surface border border-hairline rounded space-y-2">
           <div className="h-56 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={featureCountData} margin={{ top: 8, right: 16, bottom: 4, left: 0 }} barCategoryGap="35%">
@@ -324,20 +333,23 @@ export const ResearchChartsSection: React.FC<Props> = ({
               </BarChart>
             </ResponsiveContainer>
           </div>
+          <p className="figure-caption text-xs text-text-tertiary italic border-t border-hairline/60 pt-2 text-center">
+            Figure 4: Feature space dimensionality across experimental configurations (E0: 6 baseline graph features, E4: 19 combined graph-behavioral-temporal features).
+          </p>
         </div>
       </div>
 
       {/* ── Chart 5: Precision / Recall / F1 per active tier ── */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-sans font-medium text-text-primary">
+          <h3 className="text-base font-serif font-semibold text-text-primary">
             Precision / Recall / F1 — {tierLabel} tier
           </h3>
-          <span className="text-xs font-sans text-text-tertiary">
+          <span className="text-xs text-text-tertiary">
             Threshold-dependent at contamination-rate decision boundary
           </span>
         </div>
-        <div className="p-4 bg-surface border border-hairline rounded">
+        <div className="p-4 bg-surface border border-hairline rounded space-y-2">
           <div className="h-56 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={precRecData} margin={{ top: 8, right: 16, bottom: 4, left: 0 }} barGap={2} barCategoryGap="28%">
@@ -352,16 +364,19 @@ export const ResearchChartsSection: React.FC<Props> = ({
               </BarChart>
             </ResponsiveContainer>
           </div>
+          <p className="figure-caption text-xs text-text-tertiary italic border-t border-hairline/60 pt-2 text-center">
+            Figure 5: Detailed Precision, Recall, and F1 trade-offs measured for the currently selected research tier ({tierLabel}).
+          </p>
         </div>
       </div>
 
-      {/* ── Chart 4: Single-experiment confusion matrix ── */}
+      {/* ── Chart 6: Single-experiment confusion matrix ── */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-sans font-medium text-text-primary">
+          <h3 className="text-base font-serif font-semibold text-text-primary">
             Confusion Matrix — focused experiment
           </h3>
-          <span className="text-xs font-sans text-text-tertiary">
+          <span className="text-xs text-text-tertiary">
             {tierLabel} tier · click an experiment row in the table to focus
           </span>
         </div>
@@ -384,47 +399,47 @@ export const ResearchChartsSection: React.FC<Props> = ({
         </div>
 
         {selectedExp ? (
-          <div className="p-4 bg-surface border border-hairline rounded">
+          <div className="p-4 bg-surface border border-hairline rounded space-y-3">
             <div className="flex items-start gap-8 flex-wrap">
               {/* 2×2 confusion matrix */}
               <div>
-                <span className="text-[11px] font-sans text-text-tertiary block mb-2">
+                <span className="text-xs font-serif text-text-tertiary block mb-2">
                   {EXP_DISPLAY[selectedExp.experiment_label] ?? selectedExp.experiment_label}
                 </span>
                 <div className="inline-grid gap-1" style={{ gridTemplateColumns: "7rem 6rem 6rem" }}>
                   {/* Header row */}
                   <div />
-                  <div className="text-center text-xs font-sans text-text-secondary pb-1 font-medium">{TERMINOLOGY.PREDICTED_POSITIVE}</div>
-                  <div className="text-center text-xs font-sans text-text-secondary pb-1 font-medium">{TERMINOLOGY.PREDICTED_NEGATIVE}</div>
+                  <div className="text-center text-xs text-text-secondary pb-1 font-medium">{TERMINOLOGY.PREDICTED_POSITIVE}</div>
+                  <div className="text-center text-xs text-text-secondary pb-1 font-medium">{TERMINOLOGY.PREDICTED_NEGATIVE}</div>
                   {/* Actual Positive row */}
-                  <div className="text-xs font-sans text-text-secondary pr-2 flex items-center font-medium">
+                  <div className="text-xs text-text-secondary pr-2 flex items-center font-medium">
                     {TERMINOLOGY.ACTUAL_POSITIVE}
                   </div>
                   <div className="p-3 bg-surface-raised border border-hairline text-center rounded">
-                    <span className="text-[10px] font-sans text-text-tertiary block">{TERMINOLOGY.TP}</span>
+                    <span className="text-[10px] text-text-tertiary block">{TERMINOLOGY.TP}</span>
                     <span className="text-xl font-mono font-medium text-status-normal">{selectedExp.tp}</span>
                   </div>
                   <div className="p-3 bg-surface-raised border border-hairline text-center rounded">
-                    <span className="text-[10px] font-sans text-text-tertiary block">{TERMINOLOGY.FN}</span>
+                    <span className="text-[10px] text-text-tertiary block">{TERMINOLOGY.FN}</span>
                     <span className="text-xl font-mono font-medium text-status-suspicious">{selectedExp.fn}</span>
                   </div>
                   {/* Actual Negative row */}
-                  <div className="text-xs font-sans text-text-secondary pr-2 flex items-center font-medium">
+                  <div className="text-xs text-text-secondary pr-2 flex items-center font-medium">
                     {TERMINOLOGY.ACTUAL_NEGATIVE}
                   </div>
                   <div className="p-3 bg-surface-raised border border-hairline text-center rounded">
-                    <span className="text-[10px] font-sans text-text-tertiary block">{TERMINOLOGY.FP}</span>
+                    <span className="text-[10px] text-text-tertiary block">{TERMINOLOGY.FP}</span>
                     <span className="text-xl font-mono font-medium text-status-warning">{selectedExp.fp}</span>
                   </div>
                   <div className="p-3 bg-surface-raised border border-hairline text-center rounded">
-                    <span className="text-[10px] font-sans text-text-tertiary block">{TERMINOLOGY.TN}</span>
+                    <span className="text-[10px] text-text-tertiary block">{TERMINOLOGY.TN}</span>
                     <span className="text-xl font-mono font-medium text-text-primary">{selectedExp.tn}</span>
                   </div>
                 </div>
               </div>
 
               {/* Metrics sidebar */}
-              <div className="space-y-2 text-xs font-sans">
+              <div className="space-y-2 text-xs">
                 <div className="grid grid-cols-2 gap-x-6 gap-y-2">
                   {[
                     { label: "PR-AUC",    value: selectedExp.pr_auc },
@@ -451,9 +466,12 @@ export const ResearchChartsSection: React.FC<Props> = ({
                 </div>
               </div>
             </div>
+            <p className="figure-caption text-xs text-text-tertiary italic border-t border-hairline/60 pt-2 text-center">
+              Figure 6: Entity-level confusion matrix and performance statistics for focused experiment ({selectedExp.experiment_label}).
+            </p>
           </div>
         ) : (
-          <div className="p-4 bg-surface border border-hairline rounded text-xs font-sans text-text-tertiary">
+          <div className="p-4 bg-surface border border-hairline rounded text-xs text-text-tertiary">
             Select an experiment above to view its confusion matrix.
           </div>
         )}

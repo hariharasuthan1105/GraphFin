@@ -34,7 +34,9 @@ export default {
     fontFamily: {
       sans: ['"Inter"', '"IBM Plex Sans"', "system-ui", "-apple-system", "sans-serif"],
       mono: ['"IBM Plex Mono"', "ui-monospace", "SFMono-Regular", "monospace"],
-      display: ['"EB Garamond"', "Georgia", "serif"],
+      serif: ['"Times New Roman"', "Times", "serif"],
+      display: ['"Times New Roman"', "Times", "serif"],
+      research: ['"Times New Roman"', "Times", "serif"],
       stat: ['"Public Sans"', '"IBM Plex Sans"', "sans-serif"],
       section: ['"IBM Plex Sans"', "sans-serif"],
     },

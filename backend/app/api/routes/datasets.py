@@ -65,6 +65,32 @@ class LockedDatasetInfo(BaseModel):
 
 
 @router.get(
+    "",
+    status_code=status.HTTP_200_OK,
+    summary="List Registered and Locked Datasets",
+    description="Returns metadata for all registered datasets in the active registry.",
+)
+@router.get(
+    "/",
+    include_in_schema=False,
+)
+async def list_all_datasets():
+    """List registered datasets."""
+    registered = [
+        {
+            "dataset_id": ds_id,
+            "transaction_count": len(store.transactions_df),
+            "currency": dataset_registry.get_currency(ds_id),
+        }
+        for ds_id, store in dataset_registry._datasets.items()
+    ]
+    return {
+        "status": "success",
+        "datasets": registered,
+    }
+
+
+@router.get(
     "/locked",
     response_model=List[LockedDatasetInfo],
     status_code=status.HTTP_200_OK,
