@@ -2,7 +2,8 @@
 Dataset Registry Service.
 Manages dataset-scoped runtime StateStore instances.
 """
-from typing import Dict
+from pathlib import Path
+from typing import Dict, Any, Optional
 import uuid
 import pandas as pd
 from ..core.exceptions import NotFoundException
@@ -12,9 +13,26 @@ from .state_store import StateStore
 logger = get_logger(__name__)
 
 # Supported ISO 4217 currency codes accepted at upload time.
-# All amounts are stored as-is (no conversion); currency is a display-label only.
 SUPPORTED_CURRENCIES = {"USD", "INR", "EUR", "GBP"}
 DEFAULT_CURRENCY = "USD"
+
+# PaySim Dataset Metadata
+PAYSIM_DATASET_ID = "paysim"
+PAYSIM_UUID_ALIAS = "e8d9c7b6-a5f4-4e3d-b2c1-a09876543210"
+
+PAYSIM_METADATA: Dict[str, Any] = {
+    "id": "paysim",
+    "name": "PaySim",
+    "display_name": "Research — PaySim",
+    "source_type": "raw_transaction",
+    "entity_level": "account",
+    "paper_reportable": False,
+    "betweenness_strategy": {
+        "method": "approximate",
+        "k": 100,
+        "random_state": 42,
+    },
+}
 
 
 class DatasetRegistry:
@@ -56,11 +74,66 @@ class DatasetRegistry:
         )
         return dataset_id
 
+    def load_paysim(self) -> StateStore:
+        """
+        Load the PaySim research dataset into memory from disk.
+        Registers both 'paysim' and its legacy UUID alias.
+        """
+        if PAYSIM_DATASET_ID in self._datasets:
+            return self._datasets[PAYSIM_DATASET_ID]
+
+        from ..core.config import settings
+        tx_path = settings.DATA_DIR / "research" / "paysim_transactions.csv"
+        lbl_path = settings.DATA_DIR / "research" / "paysim_labels.csv"
+
+        if not tx_path.exists():
+            # Try raw file conversion as fallback
+            raw_path = settings.DATA_RAW_DIR / "PS_20174392719_1491204439457_log.csv"
+            if raw_path.exists():
+                from .paysim_adapter import load_paysim_raw
+                logger.info(f"Converting raw PaySim dataset from {raw_path}...")
+                df = load_paysim_raw(raw_path)
+            else:
+                raise NotFoundException(f"PaySim dataset transaction file not found at {tx_path}")
+        else:
+            logger.info(f"Loading PaySim transactions from {tx_path}...")
+            df = pd.read_csv(tx_path)
+
+
+        store = StateStore()
+        store.load_transactions(df)
+
+        self._datasets[PAYSIM_DATASET_ID] = store
+        self._datasets[PAYSIM_UUID_ALIAS] = store
+        self._currencies[PAYSIM_DATASET_ID] = "USD"
+        self._currencies[PAYSIM_UUID_ALIAS] = "USD"
+
+        # Load ground-truth labels if available
+        if lbl_path.exists():
+            try:
+                from .label_registry import label_registry
+                lbl_bytes = lbl_path.read_bytes()
+                label_registry.store_labels_from_csv(PAYSIM_DATASET_ID, lbl_bytes)
+                label_registry.store_labels_from_csv(PAYSIM_UUID_ALIAS, lbl_bytes)
+                logger.info(f"Loaded PaySim ground-truth labels from {lbl_path}")
+            except Exception as e:
+                logger.warning(f"Could not load PaySim ground-truth labels: {e}")
+
+        logger.info(
+            f"PaySim dataset successfully registered (ID='{PAYSIM_DATASET_ID}') "
+            f"with {len(df)} transactions and {len(store.feature_service.user_features)} accounts."
+        )
+        return store
+
     def get(self, dataset_id: str) -> StateStore:
         """
         Return the StateStore for the specified dataset_id,
         or raise NotFoundException (404) if the id does not exist.
         """
+        # Alias resolution for PaySim
+        if dataset_id in (PAYSIM_DATASET_ID, PAYSIM_UUID_ALIAS):
+            return self.load_paysim()
+
         store = self._datasets.get(dataset_id)
         if store is None:
             try:
@@ -71,8 +144,6 @@ class DatasetRegistry:
                     store = StateStore()
                     store.load_transactions(df)
                     self._datasets[dataset_id] = store
-                    # Currency not persisted to disk in this iteration —
-                    # datasets reloaded from CSV fall back to USD (the IBM AML default).
                     if dataset_id not in self._currencies:
                         self._currencies[dataset_id] = DEFAULT_CURRENCY
                     return store
@@ -83,11 +154,15 @@ class DatasetRegistry:
             raise NotFoundException(f"Dataset '{dataset_id}' not found.")
         return store
 
+    def is_loaded(self, dataset_id: str) -> bool:
+        """Check if dataset is loaded into memory without triggering auto-load."""
+        if dataset_id == PAYSIM_UUID_ALIAS:
+            dataset_id = PAYSIM_DATASET_ID
+        return dataset_id in self._datasets
+
     def get_currency(self, dataset_id: str) -> str:
         """
         Return the ISO 4217 currency code stored for this dataset.
-        Defaults to USD for any dataset not found in the currency map
-        (e.g. datasets created before this feature, or reloaded from disk).
         """
         return self._currencies.get(dataset_id, DEFAULT_CURRENCY)
 
@@ -107,3 +182,4 @@ class DatasetRegistry:
 
 
 dataset_registry = DatasetRegistry()
+

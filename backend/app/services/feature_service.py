@@ -45,6 +45,43 @@ TEMPORAL_FEATURES: List[str] = FEATURE_NAMES[14:19]
 EGONET_FEATURES: List[str] = FEATURE_NAMES[19:23]
 CANONICAL_TRANSFER_FEATURES: List[str] = FEATURE_NAMES[:19]
 
+# Forbidden dataset-specific leakage columns that must never exist in features
+FORBIDDEN_LEAKAGE_FEATURES: set = {
+    "oldbalanceOrg",
+    "newbalanceOrig",
+    "oldbalanceDest",
+    "newbalanceDest",
+    "isFlaggedFraud",
+    "type",
+    "step",
+}
+
+
+def validate_19_feature_schema(feature_names: List[str]) -> bool:
+    """
+    Explicitly validate the canonical 19-feature schema order, names, and leakage safety.
+    Fails loudly if schema order or names deviate, or if forbidden dataset-specific fields are present.
+    """
+    if len(feature_names) < 19:
+        raise ValueError(
+            f"Feature schema validation failed: Expected at least 19 canonical features, got {len(feature_names)}."
+        )
+
+    extracted_19 = feature_names[:19]
+    if extracted_19 != CANONICAL_TRANSFER_FEATURES:
+        raise ValueError(
+            f"Feature schema validation failed! Feature names/order mismatch:\n"
+            f"Expected: {CANONICAL_TRANSFER_FEATURES}\n"
+            f"Actual  : {extracted_19}"
+        )
+
+    for fn in feature_names:
+        if fn in FORBIDDEN_LEAKAGE_FEATURES:
+            raise ValueError(
+                f"Feature schema validation failed! Detected dataset-specific leakage feature: '{fn}'"
+            )
+
+    return True
 
 
 class FeatureService:
@@ -54,6 +91,9 @@ class FeatureService:
         self.graph_service = graph_service
         self.user_features: Dict[str, UserFeatures] = {}
         self._feature_matrix_cache: Optional[Tuple[List[str], np.ndarray, List[str]]] = None
+        # Validate canonical schema on instantiation
+        validate_19_feature_schema(FEATURE_NAMES)
+
 
     def extract_features(self, transactions_df: pd.DataFrame) -> Dict[str, UserFeatures]:
         """

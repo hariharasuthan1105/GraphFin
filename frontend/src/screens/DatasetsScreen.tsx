@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from "react";
 import { api } from "../api/client";
 import {
   useApp,
+  PAYSIM_DATASET_ID,
+  isPaySimDataset,
 } from "../context/AppContext";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
@@ -35,8 +37,19 @@ export const DatasetsScreen: React.FC = () => {
   const [selectedCurrency, setSelectedCurrency] = useState("USD");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Locked datasets: fetched dynamically from backend so we can show an honest
-  // empty state on fresh checkouts where the research CSVs haven't been loaded.
+  const [paySimState, setPaySimState] = useState<{
+    isLoaded: boolean;
+    isLoading: boolean;
+    transactions: number;
+    users: number;
+  }>({
+    isLoaded: false,
+    isLoading: false,
+    transactions: 0,
+    users: 0,
+  });
+
+  // Locked datasets: fetched dynamically from backend
   const [lockedDatasets, setLockedDatasets] = useState<Array<{
     dataset_id: string;
     tier: string;
@@ -44,7 +57,7 @@ export const DatasetsScreen: React.FC = () => {
     transactions: number;
     users: number;
     currency: string;
-  }> | null>(null); // null = still loading, [] = empty (no datasets available)
+  }> | null>(null);
   const [lockedDatasetsError, setLockedDatasetsError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -55,7 +68,23 @@ export const DatasetsScreen: React.FC = () => {
         setLockedDatasets([]);
         setLockedDatasetsError("Could not reach backend to check research dataset availability.");
       });
-  }, []);
+
+    api
+      .getAllDatasets()
+      .then((res) => {
+        const sec = res.secondary_datasets?.find((d) => d.id === "paysim");
+        if (sec) {
+          setPaySimState({
+            isLoaded: sec.is_loaded,
+            isLoading: false,
+            transactions: sec.transactions,
+            users: sec.users,
+          });
+        }
+      })
+      .catch(() => {});
+  }, [datasetId]);
+
 
   const handleFileUpload = async (file: File, currencyOverride?: string) => {
     setIsUploading(true);
@@ -425,6 +454,81 @@ export const DatasetsScreen: React.FC = () => {
           </div>
         )}
       </Card>
+
+      {/* Research / Secondary Dataset (PaySim) */}
+      <Card variant="surface" className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-sm font-sans font-medium text-text-primary flex items-center gap-2">
+              <span>Research / Secondary Dataset</span>
+              <span className="px-1.5 py-0.2 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded text-[10px] font-mono uppercase tracking-wider">
+                Pending Evaluation
+              </span>
+            </h2>
+            <p className="text-xs font-sans text-text-secondary mt-0.5">
+              PaySim synthetic mobile money transactions dataset used for cross-dataset model transfer and generalization testing.
+            </p>
+          </div>
+        </div>
+
+        <div className="border border-hairline rounded p-4 bg-surface-raised/30 flex items-center justify-between">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-amber-400" />
+              <span className="text-xs font-sans font-medium text-text-primary">
+                Research — PaySim
+              </span>
+              <span className="text-[10px] font-mono text-text-tertiary px-1.5 py-0.5 bg-surface border border-hairline rounded">
+                raw_transaction · account level
+              </span>
+            </div>
+            <div className="text-[11px] font-mono text-text-tertiary pl-4">
+              {paySimState.isLoading ? (
+                <span className="text-amber-400">Processing PaySim dataset into GraphFin pipeline...</span>
+              ) : paySimState.isLoaded ? (
+                <span>
+                  ID: <span className="text-text-secondary">paysim</span> · {paySimState.transactions.toLocaleString()} transactions · {paySimState.users.toLocaleString()} unique accounts · USD
+                </span>
+              ) : (
+                <span className="text-text-tertiary">Not yet processed into memory</span>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant={isPaySimDataset(datasetId) ? "secondary" : "primary"}
+              isLoading={paySimState.isLoading}
+              onClick={async () => {
+                if (!paySimState.isLoaded) {
+                  setPaySimState((prev) => ({ ...prev, isLoading: true }));
+                  try {
+                    const resp = await api.loadPaySim();
+                    setPaySimState({
+                      isLoaded: true,
+                      isLoading: false,
+                      transactions: resp.transactions,
+                      users: resp.users,
+                    });
+                  } catch (e) {
+                    setPaySimState((prev) => ({ ...prev, isLoading: false }));
+                  }
+                }
+                setDatasetId(PAYSIM_DATASET_ID);
+                setActiveNav("graph");
+              }}
+            >
+              {isPaySimDataset(datasetId)
+                ? "Active Dataset"
+                : paySimState.isLoaded
+                ? "Select PaySim"
+                : "Load PaySim"}
+            </Button>
+          </div>
+        </div>
+      </Card>
+
 
       {/* Manual Dataset ID Input */}
       <Card variant="surface" className="space-y-3">

@@ -41,15 +41,6 @@ _LOCKED_DATASET_IDS = {
         "is_paper_reportable": True,
         "run_quality_tier": "paper_reportable",
     },
-    "e8d9c7b6-a5f4-4e3d-b2c1-a09876543210": {
-        "label": "Research — PaySim Financial Transactions Benchmark",
-        "tier": "paysim_real",
-        "transactions": 130306,
-        "users": 157750,
-        "currency": "USD",
-        "is_paper_reportable": True,
-        "run_quality_tier": "paper_reportable",
-    },
 }
 
 
@@ -67,7 +58,7 @@ class LockedDatasetInfo(BaseModel):
 @router.get(
     "",
     status_code=status.HTTP_200_OK,
-    summary="List Registered and Locked Datasets",
+    summary="List Registered, Locked, and Secondary Research Datasets",
     description="Returns metadata for all registered datasets in the active registry.",
 )
 @router.get(
@@ -75,7 +66,7 @@ class LockedDatasetInfo(BaseModel):
     include_in_schema=False,
 )
 async def list_all_datasets():
-    """List registered datasets."""
+    """List registered datasets, locked benchmark datasets, and secondary research datasets."""
     registered = [
         {
             "dataset_id": ds_id,
@@ -84,9 +75,62 @@ async def list_all_datasets():
         }
         for ds_id, store in dataset_registry._datasets.items()
     ]
+
+    is_paysim_loaded = dataset_registry.is_loaded("paysim")
+    paysim_tx = 0
+    paysim_users = 0
+    if is_paysim_loaded:
+        try:
+            store = dataset_registry.get("paysim")
+            paysim_tx = len(store.transactions_df)
+            paysim_users = len(store.feature_service.user_features)
+        except Exception:
+            pass
+
+    secondary_datasets = [
+        {
+            "id": "paysim",
+            "name": "PaySim",
+            "display_name": "Research — PaySim [PENDING EVALUATION]",
+            "source_type": "raw_transaction",
+            "entity_level": "account",
+            "paper_reportable": False,
+            "is_locked": False,
+            "is_loaded": is_paysim_loaded,
+            "transactions": paysim_tx,
+            "users": paysim_users,
+            "currency": "USD",
+            "status": "loaded" if is_paysim_loaded else "not_processed",
+        }
+    ]
+
     return {
         "status": "success",
         "datasets": registered,
+        "secondary_datasets": secondary_datasets,
+    }
+
+
+@router.post(
+    "/paysim/load",
+    status_code=status.HTTP_200_OK,
+    summary="Load PaySim Research Dataset",
+    description="Loads the PaySim synthetic transaction dataset into memory and computes feature metrics.",
+)
+async def load_paysim_dataset():
+    """Explicitly trigger PaySim dataset loading into registry."""
+    logger.info("Triggering PaySim dataset load into memory...")
+    store = dataset_registry.load_paysim()
+    n_tx = len(store.transactions_df)
+    n_users = len(store.feature_service.user_features)
+    return {
+        "status": "success",
+        "dataset_id": "paysim",
+        "name": "PaySim",
+        "display_name": "Research — PaySim [PENDING EVALUATION]",
+        "transactions": n_tx,
+        "users": n_users,
+        "currency": "USD",
     }
 
 
@@ -112,10 +156,9 @@ async def list_locked_datasets() -> List[LockedDatasetInfo]:
             dataset_registry.get(ds_id)  # raises NotFoundException if not registered
             available.append(LockedDatasetInfo(dataset_id=ds_id, **meta))
         except Exception:
-            # Dataset not present in registry — silently skip it.
-            # This is the expected state on a fresh checkout.
             pass
     return available
+
 
 
 

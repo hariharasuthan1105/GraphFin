@@ -27,9 +27,18 @@ export const RESEARCH_TIER_LABELS: Record<ResearchTier, string> = {
   large_real: "Research — 49,992 accounts (IBM AML HI-Small subsample)",
 };
 
+export const PAYSIM_DATASET_ID = "paysim";
+export const PAYSIM_UUID_ALIAS = "e8d9c7b6-a5f4-4e3d-b2c1-a09876543210";
+export const PAYSIM_LABEL = "Research — PaySim [PENDING EVALUATION]";
+
 export const isOfficialResearchDataset = (id: string): boolean => {
   return id === RESEARCH_TIER_IDS.medium_real || id === RESEARCH_TIER_IDS.large_real;
 };
+
+export const isPaySimDataset = (id: string): boolean => {
+  return id === PAYSIM_DATASET_ID || id === PAYSIM_UUID_ALIAS;
+};
+
 
 export interface DatasetHistoryItem {
   id: string;

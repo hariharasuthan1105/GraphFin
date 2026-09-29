@@ -99,6 +99,39 @@ export const api = {
   getDatasetStatus: (datasetId: string): Promise<{ dataset_id: string; status: string }> =>
     request<{ dataset_id: string; status: string }>(`/transactions/${datasetId}/status`),
 
+  // All Datasets & PaySim
+  getAllDatasets: (): Promise<{
+    status: string;
+    datasets: Array<{ dataset_id: string; transaction_count: number; currency: string }>;
+    secondary_datasets?: Array<{
+      id: string;
+      name: string;
+      display_name: string;
+      source_type: string;
+      entity_level: string;
+      paper_reportable: boolean;
+      is_locked: boolean;
+      is_loaded: boolean;
+      transactions: number;
+      users: number;
+      currency: string;
+      status: string;
+    }>;
+  }> => request("/datasets"),
+
+  loadPaySim: (): Promise<{
+    status: string;
+    dataset_id: string;
+    name: string;
+    display_name: string;
+    transactions: number;
+    users: number;
+    currency: string;
+  }> =>
+    request("/datasets/paysim/load", {
+      method: "POST",
+    }),
+
   // Locked research datasets
   getLockedDatasets: (): Promise<Array<{
     dataset_id: string;
@@ -116,6 +149,7 @@ export const api = {
       users: number;
       currency: string;
     }>>("/datasets/locked"),
+
 
   // Graph
   getGraphSummary: (datasetId: string): Promise<GraphSummaryResponse> =>
