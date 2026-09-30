@@ -9,7 +9,7 @@
     "03fb9ab0-4f42-4404-9d76-723fd4d8753e": "Sampled betweenness centrality (Brandes with k=500, random_state=42)"
   },
   "paysim_account_label_rule": "Account-involvement rule: An account is labeled positive (1) if it appears as sender or receiver in at least one transaction where isFraud == 1; negative (0) otherwise.",
-  "timestamp": "2026-09-30T16:38:56.207240+00:00",
+  "timestamp": "2026-09-30T16:52:34.038017+00:00",
   "experiments": [
     {
       "experiment_label": "E0",
