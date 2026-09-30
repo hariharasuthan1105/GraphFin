@@ -138,7 +138,7 @@ def generate_transfer_results_summary(
                 rel_deg_str = "N/A (degenerate)"
                 status_str = "degenerate (equivalent to random ranking)"
             else:
-                rel_deg_str = f"{rel_deg * 100:.2f}%" if rel_deg is not None else "N/A"
+                rel_deg_str = f"{rel_deg * 100:+.2f}%" if rel_deg is not None else "N/A"
                 status_str = "valid"
 
             # Low power flag
