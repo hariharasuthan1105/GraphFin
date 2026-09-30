@@ -66,7 +66,7 @@ const MainLayout: React.FC = () => {
         {isBackendConnected === false && (
           <div className="bg-[#2D1619] border-b border-[#521A1F] px-6 py-2 flex items-center justify-between text-xs font-sans text-status-suspicious select-none">
             <span>
-              FastAPI backend is unreachable at port 8000. Start backend server or check network connection.
+              Backend unreachable ({import.meta.env.VITE_API_URL || "graphfin.onrender.com"}). Check network or wait for cold-start.
             </span>
             <button
               onClick={() => checkBackendHealth()}

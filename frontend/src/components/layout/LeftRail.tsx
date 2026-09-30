@@ -1,6 +1,8 @@
 import React from "react";
 import { useApp, NavItem } from "../../context/AppContext";
 
+const BACKEND_HOST = (import.meta.env.VITE_API_URL || "http://localhost:8000").replace(/\/api\/v1$/, "").replace(/^https?:\/\//, "");
+
 interface NavOption {
   id: NavItem;
   label: string;
@@ -85,8 +87,8 @@ export const LeftRail: React.FC = () => {
               : "Checking backend..."}
           </span>
         </div>
-        <span className="font-mono text-[11px] text-text-tertiary">
-          :8000
+        <span className="font-mono text-[11px] text-text-tertiary truncate max-w-[120px]" title={BACKEND_HOST}>
+          {BACKEND_HOST.length > 18 ? BACKEND_HOST.substring(0, 18) + "…" : BACKEND_HOST}
         </span>
       </div>
     </aside>
