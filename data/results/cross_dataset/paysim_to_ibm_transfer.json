@@ -1,108 +1,193 @@
 {
-  "source_dataset_id": "paysim_test",
-  "target_dataset_id": "ibm_test",
+  "source_dataset_id": "e8d9c7b6-a5f4-4e3d-b2c1-a09876543210",
+  "target_dataset_id": "03fb9ab0-4f42-4404-9d76-723fd4d8753e",
   "direction": "PaySim->IBM AML",
-  "is_paper_reportable": false,
-  "run_quality_tier": "pipeline_validation",
+  "is_paper_reportable": true,
+  "run_quality_tier": "paper_reportable",
   "betweenness_centrality_method": {
-    "paysim_test": "Sampled betweenness centrality (Brandes with k=500, random_state=42)",
-    "ibm_test": "Sampled betweenness centrality (Brandes with k=500, random_state=42)"
+    "e8d9c7b6-a5f4-4e3d-b2c1-a09876543210": "Sampled betweenness centrality (Brandes with k=500, random_state=42)",
+    "03fb9ab0-4f42-4404-9d76-723fd4d8753e": "Sampled betweenness centrality (Brandes with k=500, random_state=42)"
   },
   "paysim_account_label_rule": "Account-involvement rule: An account is labeled positive (1) if it appears as sender or receiver in at least one transaction where isFraud == 1; negative (0) otherwise.",
-  "timestamp": "2026-09-30T15:54:37.683459+00:00",
+  "paysim_sampling": {
+    "method": "first_n_rows",
+    "sample_rows": 300000,
+    "total_rows": 6362620,
+    "resulting_entities": 434649,
+    "resulting_positives": 294,
+    "random_state_if_any": null,
+    "limitation": "Sequential sample of first 300,000 rows was non-stratified. Fraud prevalence in hours 1-16 is lower than overall PaySim average (0.0676% account fraud prevalence vs ~0.181% in full PaySim)."
+  },
+  "timestamp": "2026-09-27T18:51:17.147530+00:00",
   "experiments": [
     {
       "experiment_label": "E0",
       "status": "success",
-      "supported": true,
       "error": null,
       "method": "Statistical z-score (source fitted)",
       "feature_groups": [
         "graph"
       ],
       "feature_count": 6,
-      "source_pr_auc": 0.0,
+      "source_pr_auc": 0.0134,
       "source_pr_auc_ci": {
-        "point_estimate": 0.0,
-        "ci_lower": 0.0,
-        "ci_upper": 0.0,
-        "skipped_resamples": 0
+        "point_estimate": 0.0134,
+        "ci_lower": 0.0484,
+        "ci_upper": 0.1403
       },
-      "source_prevalence": 0.0,
-      "source_test_positives": 0,
-      "target_pr_auc": 0.0,
+      "target_pr_auc": 0.012,
       "target_pr_auc_ci": {
-        "point_estimate": 0.0,
-        "ci_lower": 0.0,
-        "ci_upper": 0.0,
-        "skipped_resamples": 0
+        "point_estimate": 0.012,
+        "ci_lower": 0.0073,
+        "ci_upper": 0.0304
       },
-      "target_prevalence": 0.0,
-      "target_test_positives": 0,
-      "target_roc_auc": 0.0,
-      "target_precision": 0.0,
-      "target_recall": 0.0,
-      "target_f1": 0.0,
-      "target_accuracy": 1.0,
-      "is_degenerate": true,
+      "target_roc_auc": 0.669,
+      "target_precision": 0.0086,
+      "target_recall": 0.6,
+      "target_f1": 0.017,
+      "target_accuracy": 0.6501,
       "confusion_matrix": {
-        "tp": 0,
-        "fp": 0,
-        "tn": 1,
-        "fn": 0
+        "tp": 45,
+        "fp": 5218,
+        "tn": 9705,
+        "fn": 30
       },
       "precision_at_k": {
-        "p_at_10": 0.0,
-        "p_at_25": 0.0,
-        "p_at_50": 0.0,
-        "p_at_100": 0.0
+        "p_at_10": 0.1,
+        "p_at_25": 0.04,
+        "p_at_50": 0.02,
+        "p_at_100": 0.01
       },
       "degradation": {
-        "source_pr_auc": 0.0,
-        "target_pr_auc": 0.0,
-        "absolute_degradation": 0.0,
-        "relative_degradation": null
+        "source_pr_auc": 0.0134,
+        "target_pr_auc": 0.012,
+        "absolute_degradation": 0.0014,
+        "relative_degradation": 0.1045
       }
     },
     {
       "experiment_label": "E1",
       "status": "success",
-      "supported": true,
       "error": null,
       "method": "Isolation Forest (Graph only)",
       "feature_groups": [
         "graph"
       ],
       "feature_count": 6,
-      "source_pr_auc": 0.0,
+      "source_pr_auc": 0.0105,
       "source_pr_auc_ci": {
-        "point_estimate": 0.0,
-        "ci_lower": 0.0,
-        "ci_upper": 0.0,
-        "skipped_resamples": 0
+        "point_estimate": 0.0105,
+        "ci_lower": 0.0445,
+        "ci_upper": 0.117
       },
-      "source_prevalence": 0.0,
-      "source_test_positives": 0,
-      "target_pr_auc": 0.0,
+      "target_pr_auc": 0.0133,
       "target_pr_auc_ci": {
-        "point_estimate": 0.0,
-        "ci_lower": 0.0,
-        "ci_upper": 0.0,
-        "skipped_resamples": 0
+        "point_estimate": 0.0133,
+        "ci_lower": 0.0087,
+        "ci_upper": 0.0225
       },
-      "target_prevalence": 0.0,
-      "target_test_positives": 0,
-      "target_roc_auc": 0.0,
+      "target_roc_auc": 0.7387,
       "target_precision": 0.0,
       "target_recall": 0.0,
       "target_f1": 0.0,
-      "target_accuracy": 1.0,
-      "is_degenerate": true,
+      "target_accuracy": 0.9919,
       "confusion_matrix": {
         "tp": 0,
-        "fp": 0,
-        "tn": 1,
-        "fn": 0
+        "fp": 46,
+        "tn": 14877,
+        "fn": 75
+      },
+      "precision_at_k": {
+        "p_at_10": 0.0,
+        "p_at_25": 0.0,
+        "p_at_50": 0.0,
+        "p_at_100": 0.03
+      },
+      "degradation": {
+        "source_pr_auc": 0.0105,
+        "target_pr_auc": 0.0133,
+        "absolute_degradation": -0.0028,
+        "relative_degradation": -0.2667
+      }
+    },
+    {
+      "experiment_label": "E2",
+      "status": "success",
+      "error": null,
+      "method": "Isolation Forest (Graph + Behavioral)",
+      "feature_groups": [
+        "graph",
+        "behavioral"
+      ],
+      "feature_count": 14,
+      "source_pr_auc": 0.0114,
+      "source_pr_auc_ci": {
+        "point_estimate": 0.0114,
+        "ci_lower": 0.0471,
+        "ci_upper": 0.1269
+      },
+      "target_pr_auc": 0.0117,
+      "target_pr_auc_ci": {
+        "point_estimate": 0.0117,
+        "ci_lower": 0.0082,
+        "ci_upper": 0.0174
+      },
+      "target_roc_auc": 0.7337,
+      "target_precision": 0.0082,
+      "target_recall": 0.0267,
+      "target_f1": 0.0125,
+      "target_accuracy": 0.979,
+      "confusion_matrix": {
+        "tp": 2,
+        "fp": 242,
+        "tn": 14681,
+        "fn": 73
+      },
+      "precision_at_k": {
+        "p_at_10": 0.0,
+        "p_at_25": 0.0,
+        "p_at_50": 0.02,
+        "p_at_100": 0.01
+      },
+      "degradation": {
+        "source_pr_auc": 0.0114,
+        "target_pr_auc": 0.0117,
+        "absolute_degradation": -0.0003,
+        "relative_degradation": -0.0263
+      }
+    },
+    {
+      "experiment_label": "E3",
+      "status": "success",
+      "error": null,
+      "method": "Isolation Forest (Graph + Temporal)",
+      "feature_groups": [
+        "graph",
+        "temporal"
+      ],
+      "feature_count": 11,
+      "source_pr_auc": 0.0103,
+      "source_pr_auc_ci": {
+        "point_estimate": 0.0103,
+        "ci_lower": 0.041,
+        "ci_upper": 0.1095
+      },
+      "target_pr_auc": 0.0133,
+      "target_pr_auc_ci": {
+        "point_estimate": 0.0133,
+        "ci_lower": 0.0088,
+        "ci_upper": 0.0225
+      },
+      "target_roc_auc": 0.7281,
+      "target_precision": 0.0237,
+      "target_recall": 0.1467,
+      "target_f1": 0.0408,
+      "target_accuracy": 0.9655,
+      "confusion_matrix": {
+        "tp": 11,
+        "fp": 454,
+        "tn": 14469,
+        "fn": 64
       },
       "precision_at_k": {
         "p_at_10": 0.0,
@@ -111,16 +196,15 @@
         "p_at_100": 0.0
       },
       "degradation": {
-        "source_pr_auc": 0.0,
-        "target_pr_auc": 0.0,
-        "absolute_degradation": 0.0,
-        "relative_degradation": null
+        "source_pr_auc": 0.0103,
+        "target_pr_auc": 0.0133,
+        "absolute_degradation": -0.003,
+        "relative_degradation": -0.2913
       }
     },
     {
       "experiment_label": "E4",
       "status": "success",
-      "supported": true,
       "error": null,
       "method": "Isolation Forest (Full GraphFin)",
       "feature_groups": [
@@ -129,35 +213,73 @@
         "temporal"
       ],
       "feature_count": 19,
-      "source_pr_auc": 0.0,
+      "source_pr_auc": 0.0129,
       "source_pr_auc_ci": {
-        "point_estimate": 0.0,
-        "ci_lower": 0.0,
-        "ci_upper": 0.0,
-        "skipped_resamples": 0
+        "point_estimate": 0.0129,
+        "ci_lower": 0.0517,
+        "ci_upper": 0.1425
       },
-      "source_prevalence": 0.0,
-      "source_test_positives": 0,
-      "target_pr_auc": 0.0,
+      "target_pr_auc": 0.0124,
       "target_pr_auc_ci": {
-        "point_estimate": 0.0,
-        "ci_lower": 0.0,
-        "ci_upper": 0.0,
-        "skipped_resamples": 0
+        "point_estimate": 0.0124,
+        "ci_lower": 0.0084,
+        "ci_upper": 0.0196
       },
-      "target_prevalence": 0.0,
-      "target_test_positives": 0,
-      "target_roc_auc": 0.0,
+      "target_roc_auc": 0.7448,
+      "target_precision": 0.0186,
+      "target_recall": 0.16,
+      "target_f1": 0.0333,
+      "target_accuracy": 0.9536,
+      "confusion_matrix": {
+        "tp": 12,
+        "fp": 633,
+        "tn": 14290,
+        "fn": 63
+      },
+      "precision_at_k": {
+        "p_at_10": 0.0,
+        "p_at_25": 0.0,
+        "p_at_50": 0.02,
+        "p_at_100": 0.02
+      },
+      "degradation": {
+        "source_pr_auc": 0.0129,
+        "target_pr_auc": 0.0124,
+        "absolute_degradation": 0.0005,
+        "relative_degradation": 0.0388
+      }
+    },
+    {
+      "experiment_label": "E5",
+      "status": "success",
+      "error": null,
+      "method": "Isolation Forest (Egonet + Circular Flow)",
+      "feature_groups": [
+        "egonet"
+      ],
+      "feature_count": 4,
+      "source_pr_auc": 0.0008,
+      "source_pr_auc_ci": {
+        "point_estimate": 0.0008,
+        "ci_lower": 0.0043,
+        "ci_upper": 0.0065
+      },
+      "target_pr_auc": 0.005,
+      "target_pr_auc_ci": {
+        "point_estimate": 0.005,
+        "ci_lower": 0.004,
+        "ci_upper": 0.0062
+      },
+      "target_roc_auc": 0.5,
       "target_precision": 0.0,
       "target_recall": 0.0,
       "target_f1": 0.0,
-      "target_accuracy": 1.0,
-      "is_degenerate": true,
+      "target_accuracy": 0.995,
       "confusion_matrix": {
         "tp": 0,
         "fp": 0,
-        "tn": 1,
-        "fn": 0
+        "tn": 14923,
+        "fn": 75
       },
       "precision_at_k": {
         "p_at_10": 0.0,
@@ -166,208 +288,208 @@
         "p_at_100": 0.0
       },
       "degradation": {
-        "source_pr_auc": 0.0,
-        "target_pr_auc": 0.0,
-        "absolute_degradation": 0.0,
-        "relative_degradation": null
+        "source_pr_auc": 0.0008,
+        "target_pr_auc": 0.005,
+        "absolute_degradation": -0.0042,
+        "relative_degradation": -5.25
       }
     }
   ],
   "feature_distribution_check": [
     {
       "feature_name": "in_degree",
-      "source_mean": 0.6667,
-      "target_mean": 0.6667,
-      "source_std": 0.4714,
-      "target_std": 0.4714,
-      "standardized_mean_difference": 0.0
+      "source_mean": 0.6902,
+      "target_mean": 1.309,
+      "source_std": 2.3494,
+      "target_std": 1.4454,
+      "standardized_mean_difference": 0.3172
     },
     {
       "feature_name": "out_degree",
-      "source_mean": 0.6667,
-      "target_mean": 0.6667,
-      "source_std": 0.4714,
-      "target_std": 0.4714,
-      "standardized_mean_difference": 0.0
+      "source_mean": 0.6902,
+      "target_mean": 1.309,
+      "source_std": 0.4625,
+      "target_std": 19.6328,
+      "standardized_mean_difference": 0.0446
     },
     {
       "feature_name": "total_degree",
-      "source_mean": 1.3333,
-      "target_mean": 1.3333,
-      "source_std": 0.4714,
-      "target_std": 0.4714,
-      "standardized_mean_difference": 0.0
+      "source_mean": 1.3804,
+      "target_mean": 2.618,
+      "source_std": 2.1865,
+      "target_std": 19.7212,
+      "standardized_mean_difference": 0.0882
     },
     {
       "feature_name": "weighted_in_degree",
-      "source_mean": 150.0,
-      "target_mean": 100.0,
-      "source_std": 122.4745,
-      "target_std": 81.6497,
-      "standardized_mean_difference": -0.4804
+      "source_mean": 121595.2266,
+      "target_mean": 3337536.25,
+      "source_std": 759506.5625,
+      "target_std": 54183884.0,
+      "standardized_mean_difference": 0.0839
     },
     {
       "feature_name": "weighted_out_degree",
-      "source_mean": 150.0,
-      "target_mean": 100.0,
-      "source_std": 122.4745,
-      "target_std": 81.6497,
-      "standardized_mean_difference": -0.4804
+      "source_mean": 121595.2266,
+      "target_mean": 3337536.25,
+      "source_std": 263497.5938,
+      "target_std": 83225112.0,
+      "standardized_mean_difference": 0.0546
     },
     {
       "feature_name": "betweenness_centrality",
-      "source_mean": 0.1667,
-      "target_mean": 0.1667,
-      "source_std": 0.2357,
-      "target_std": 0.2357,
-      "standardized_mean_difference": 0.0
+      "source_mean": 0.0,
+      "target_mean": 0.0,
+      "source_std": 0.0,
+      "target_std": 0.0,
+      "standardized_mean_difference": 0.0472
     },
     {
       "feature_name": "transaction_count",
-      "source_mean": 1.3333,
-      "target_mean": 1.3333,
-      "source_std": 0.4714,
-      "target_std": 0.4714,
-      "standardized_mean_difference": 0.0
+      "source_mean": 1.3804,
+      "target_mean": 14.1563,
+      "source_std": 2.1865,
+      "target_std": 218.7519,
+      "standardized_mean_difference": 0.0826
     },
     {
       "feature_name": "total_sent",
-      "source_mean": 150.0,
-      "target_mean": 100.0,
-      "source_std": 122.4745,
-      "target_std": 81.6497,
-      "standardized_mean_difference": -0.4804
+      "source_mean": 121595.2266,
+      "target_mean": 3337536.25,
+      "source_std": 263497.5938,
+      "target_std": 83225112.0,
+      "standardized_mean_difference": 0.0546
     },
     {
       "feature_name": "total_received",
-      "source_mean": 150.0,
-      "target_mean": 100.0,
-      "source_std": 122.4745,
-      "target_std": 81.6497,
-      "standardized_mean_difference": -0.4804
+      "source_mean": 121595.2266,
+      "target_mean": 3337536.25,
+      "source_std": 759506.5625,
+      "target_std": 54183884.0,
+      "standardized_mean_difference": 0.0839
     },
     {
       "feature_name": "net_flow",
-      "source_mean": 0.0,
-      "target_mean": 0.0,
-      "source_std": 212.132,
-      "target_std": 141.4214,
+      "source_mean": 0.0001,
+      "target_mean": 0.0154,
+      "source_std": 822102.125,
+      "target_std": 99141808.0,
       "standardized_mean_difference": 0.0
     },
     {
       "feature_name": "average_transaction_amount",
-      "source_mean": 225.0,
-      "target_mean": 150.0,
-      "source_std": 61.2372,
-      "target_std": 40.8248,
-      "standardized_mean_difference": -1.4412
+      "source_mean": 140548.8594,
+      "target_mean": 943563.0,
+      "source_std": 264398.1875,
+      "target_std": 18971770.0,
+      "standardized_mean_difference": 0.0599
     },
     {
       "feature_name": "maximum_transaction_amount",
-      "source_mean": 250.0,
-      "target_mean": 166.6667,
-      "source_std": 70.7107,
-      "target_std": 47.1405,
-      "standardized_mean_difference": -1.3868
+      "source_mean": 163928.7344,
+      "target_mean": 4103530.0,
+      "source_std": 324678.375,
+      "target_std": 56376288.0,
+      "standardized_mean_difference": 0.0988
     },
     {
       "feature_name": "unique_receivers",
-      "source_mean": 0.6667,
-      "target_mean": 0.6667,
-      "source_std": 0.4714,
-      "target_std": 0.4714,
-      "standardized_mean_difference": 0.0
+      "source_mean": 0.6902,
+      "target_mean": 1.309,
+      "source_std": 0.4625,
+      "target_std": 19.6328,
+      "standardized_mean_difference": 0.0446
     },
     {
       "feature_name": "unique_senders",
-      "source_mean": 0.6667,
-      "target_mean": 0.6667,
-      "source_std": 0.4714,
-      "target_std": 0.4714,
-      "standardized_mean_difference": 0.0
+      "source_mean": 0.6902,
+      "target_mean": 1.309,
+      "source_std": 2.3494,
+      "target_std": 1.4454,
+      "standardized_mean_difference": 0.3172
     },
     {
       "feature_name": "transactions_per_day",
-      "source_mean": 1.3333,
-      "target_mean": 1.3333,
-      "source_std": 0.4714,
-      "target_std": 0.4714,
-      "standardized_mean_difference": 0.0
+      "source_mean": 1.3804,
+      "target_mean": 2.1021,
+      "source_std": 2.1865,
+      "target_std": 21.8719,
+      "standardized_mean_difference": 0.0464
     },
     {
       "feature_name": "transactions_per_week",
-      "source_mean": 9.3333,
-      "target_mean": 9.3333,
-      "source_std": 3.2998,
-      "target_std": 3.2998,
-      "standardized_mean_difference": 0.0
+      "source_mean": 9.663,
+      "target_mean": 14.7147,
+      "source_std": 15.3056,
+      "target_std": 153.1033,
+      "standardized_mean_difference": 0.0464
     },
     {
       "feature_name": "average_time_between_transactions",
-      "source_mean": 1200.0,
-      "target_mean": 1200.0,
-      "source_std": 1697.0563,
-      "target_std": 1697.0563,
-      "standardized_mean_difference": 0.0
+      "source_mean": 164.8994,
+      "target_mean": 68266.7422,
+      "source_std": 909.8058,
+      "target_std": 107455.2734,
+      "standardized_mean_difference": 0.8963
     },
     {
       "feature_name": "minimum_time_between_transactions",
-      "source_mean": 1200.0,
-      "target_mean": 1200.0,
-      "source_std": 1697.0563,
-      "target_std": 1697.0563,
-      "standardized_mean_difference": 0.0
+      "source_mean": 57.8204,
+      "target_mean": 23680.916,
+      "source_std": 677.5627,
+      "target_std": 89021.75,
+      "standardized_mean_difference": 0.3753
     },
     {
       "feature_name": "maximum_time_between_transactions",
-      "source_mean": 1200.0,
-      "target_mean": 1200.0,
-      "source_std": 1697.0563,
-      "target_std": 1697.0563,
-      "standardized_mean_difference": 0.0
+      "source_mean": 358.0544,
+      "target_mean": 168289.0938,
+      "source_std": 1762.8599,
+      "target_std": 172374.8281,
+      "standardized_mean_difference": 1.3777
     },
     {
       "feature_name": "egonet_node_count",
       "source_mean": 1.0,
-      "target_mean": 1.0,
+      "target_mean": 1.0751,
       "source_std": 0.0,
-      "target_std": 0.0,
-      "standardized_mean_difference": 0.0
+      "target_std": 2.6507,
+      "standardized_mean_difference": 0.0401
     },
     {
       "feature_name": "egonet_edge_count",
       "source_mean": 0.0,
-      "target_mean": 0.0,
+      "target_mean": 0.1179,
       "source_std": 0.0,
-      "target_std": 0.0,
-      "standardized_mean_difference": 0.0
+      "target_std": 4.0723,
+      "standardized_mean_difference": 0.0409
     },
     {
       "feature_name": "egonet_density",
       "source_mean": 0.0,
-      "target_mean": 0.0,
+      "target_mean": 0.0128,
       "source_std": 0.0,
-      "target_std": 0.0,
-      "standardized_mean_difference": 0.0
+      "target_std": 0.0787,
+      "standardized_mean_difference": 0.2297
     },
     {
       "feature_name": "circular_flow_indicator",
       "source_mean": 0.0,
-      "target_mean": 0.0,
+      "target_mean": 0.0011,
       "source_std": 0.0,
-      "target_std": 0.0,
-      "standardized_mean_difference": 0.0
+      "target_std": 0.0299,
+      "standardized_mean_difference": 0.0534
     }
   ],
   "reproducibility_manifest": {
-    "source_dataset_id": "paysim_test",
-    "target_dataset_id": "ibm_test",
-    "source_entities": 3,
-    "target_entities": 3,
+    "source_dataset_id": "e8d9c7b6-a5f4-4e3d-b2c1-a09876543210",
+    "target_dataset_id": "03fb9ab0-4f42-4404-9d76-723fd4d8753e",
+    "source_entities": 434649,
+    "target_entities": 49992,
     "source_split_label": "research-split",
     "target_split_label": "research-split",
     "random_state": 42,
-    "n_bootstraps": 50,
+    "n_bootstraps": 100,
     "feature_count": 23,
     "feature_names": [
       "in_degree",

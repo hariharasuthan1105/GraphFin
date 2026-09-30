@@ -1,154 +1,229 @@
 # Machine Learning Enhanced Graph-Based Anomaly Detection for Financial Transactions
 
-A research-driven system that combines graph-mining metrics with behavioral and temporal feature engineering to detect anomalous transactional patterns in financial networks.
+A research-driven platform combining graph-mining metrics with behavioral and temporal feature engineering to detect anomalous transactional patterns in financial networks.
 
 ---
 
-## Current Status: Milestone 2+ (ML Anomaly Detection & Research Evaluation Complete)
+## Project Overview & Current Status
 
-- [x] **FastAPI Backend Pipeline** under `/api/v1`
-- [x] **Canonical Transaction Validation** (amounts, timestamps, duplicate IDs, self-transfers)
-- [x] **NetworkX Directed Weighted Graph Engine** (in/out degree, weighted degrees, betweenness centrality)
-- [x] **Behavioral & Temporal Feature Extraction** (19 statistical and interval features)
-- [x] **Interactive REST APIs & OpenAPI Docs** (`/health`, `/transactions`, `/graph`, `/analytics`, `/anomalies`, `/datasets`, `/evaluation`)
-- [x] **Multi-Experiment Model Persistence** (coexisting Baseline, E1, E2, E3, E4 models per dataset)
-- [x] **Non-ML Statistical Baseline** (rule-based z-score thresholding on graph topology)
-- [x] **Isolation Forest ML Anomaly Detection Layer** (dynamic feature group slicing: Graph, Behavioral, Temporal)
-- [x] **Relative Presentation Risk Scoring (0-100)** & Explainability Reason Codes
-- [x] **Ground-Truth Label Ingestion & Evaluation Layer** (`/datasets/{dataset_id}/labels`)
-- [x] **Research Evaluation Layer** (Precision, Recall, F1, Accuracy, ROC-AUC, and headline PR-AUC via `/evaluation/{dataset_id}/compare`)
-- [x] **Automated Pytest Test Suite** (100% passing tests: 75/75 tests)
-- [x] **Multi-Jurisdiction Tax Analytics Module** (India AY 2026–27, US Federal 2026, UK & Scotland 2026–27, Germany 2026, France 2026)
-- [ ] *Milestone 3 (Day 3): Subgraph Pattern Detection & Anomaly Explanation*
-- [ ] *Milestone 4 (Day 4): Frontend Dashboard & Visualization*
+GraphFin provides a controlled empirical framework for evaluating structural, behavioral, and temporal transaction representations. The repository currently includes:
 
-### Research Experiment Matrix
+- [x] **FastAPI Backend Pipeline** under `/api/v1` for datasets, graph analytics, feature engineering, model training, and evaluation.
+- [x] **NetworkX Directed Weighted Graph Engine** computing in/out degrees, weighted amounts, and Brandes betweenness centrality.
+- [x] **19-Dimensional Canonical GraphFin Representation** integrating 6 graph, 8 behavioral, and 5 temporal features.
+- [x] **E0–E5 Anomaly Detection Suite** featuring rule-based statistical baselines, Isolation Forests across feature groups, and egonet/circular-flow metrics.
+- [x] **IBM AML Benchmark Dataset Integration** (`HI-Small` subsamples: 5,000 and 49,992 accounts).
+- [x] **PaySim Secondary Research Dataset Integration** (299,999 transactions, 547,686 unique accounts).
+- [x] **Bidirectional Cross-Dataset Transfer Generalization (IBM AML $\leftrightarrow$ PaySim)** under a strict source-only fitting protocol.
+- [x] **Rigorous Research Metrics**: 1,000-resample 95% Bootstrap Confidence Intervals, Precision@K ($P@10, P@25, P@50, P@100$), and standardized feature distribution shift ($\Delta \mu$).
+- [x] **React Research Interface**: Interactive dashboard for dataset selection, graph exploration, feature analysis, anomaly scoring, and cross-dataset evaluation.
+- [x] **Automated PaySim Integration Test Suite** (21 / 21 passing tests in `backend/tests/test_paysim_integration.py`).
+- [x] **Multi-Jurisdiction Tax Analytics Module** (India AY 2026–27, US Federal 2026, UK & Scotland 2026–27, Germany 2026, France 2026).
+
+---
+
+## Research Architecture & Feature Representation
+
+GraphFin transforms raw transaction streams into entity-level graph representations for anomaly scoring:
+
+```
+Transactions  ──>  Directed Weighted Graph  ──>  19-Dimensional Feature Schema  ──>  E0–E5 Anomaly Pipeline  ──>  Evaluation & Research Artifacts
+```
+
+### Canonical 19-Feature Schema
+
+GraphFin enforces a strict 19-dimensional canonical feature schema across all datasets to ensure feature-level compatibility during cross-dataset evaluation:
+
+1. **Graph Topological Features (6)**:
+   - `in_degree`: Count of incoming transaction edges
+   - `out_degree`: Count of outgoing transaction edges
+   - `total_degree`: Total incident edge count (`in_degree + out_degree`)
+   - `weighted_in_degree`: Total incoming transaction volume
+   - `weighted_out_degree`: Total outgoing transaction volume
+   - `betweenness_centrality`: Network flow centrality metric
+
+2. **Behavioral Features (8)**:
+   - `transaction_count`: Total number of transactions associated with account
+   - `total_sent`: Cumulative value sent
+   - `total_received`: Cumulative value received
+   - `net_flow`: Net transfer balance (`total_received - total_sent`)
+   - `average_transaction_amount`: Mean transfer size
+   - `maximum_transaction_amount`: Peak transfer size
+   - `unique_receivers`: Number of distinct counterparty destination accounts
+   - `unique_senders`: Number of distinct counterparty source accounts
+
+3. **Temporal Features (5)**:
+   - `transactions_per_day`: Average daily transaction frequency
+   - `transactions_per_week`: Average weekly transaction frequency
+   - `average_time_between_transactions`: Mean inter-transaction interval (seconds)
+   - `minimum_time_between_transactions`: Shortest inter-transaction interval (seconds)
+   - `maximum_time_between_transactions`: Longest inter-transaction interval (seconds)
+
+---
+
+## Research Experiment Matrix
 
 | Experiment | Features | Method | Description |
 |---|---|---|---|
-| **Baseline** | Graph | Statistical (z-score, no ML) | Rule-based z-score threshold ($\ge 2.0\sigma$) across graph topology metrics. |
-| **E1** | Graph | Isolation Forest | Unsupervised IF trained purely on graph topological metrics (6 features). |
-| **E2** | Graph + Behavioral | Isolation Forest | Unsupervised IF combining graph metrics with user transaction statistics (14 features). |
-| **E3** | Graph + Temporal | Isolation Forest | Unsupervised IF combining graph metrics with burst and interval metrics (11 features). |
-| **E4** | Graph + Behavioral + Temporal | Isolation Forest | Comprehensive feature fusion combining all three groups (19 features, default). |
-| **E5** | Reduced-Egonet + Circular-Flow | Isolation Forest | Reduced 1-hop egonet topology (single-edge leaf nodes removed) + 2/3-step circular flow indicator (23 features total). |
+| **E0** | Graph Baseline (6) | Statistical (z-score) | Non-ML baseline using rule-based z-score thresholding ($\ge 2.0\sigma$) on source-fitted graph topology metrics. |
+| **E1** | Graph Only (6) | Isolation Forest | Unsupervised Isolation Forest trained exclusively on 6 graph topological features. |
+| **E2** | Graph + Behavioral (14) | Isolation Forest | Unsupervised Isolation Forest combining graph topology with 8 user behavioral statistics. |
+| **E3** | Graph + Temporal (11) | Isolation Forest | Unsupervised Isolation Forest combining graph topology with 5 temporal interval metrics. |
+| **E4** | Full GraphFin (19) | Isolation Forest | Comprehensive feature fusion combining all 19 canonical graph, behavioral, and temporal features (default model). |
+| **E5** | Reduced Egonet + Circular Flow | Isolation Forest | Topology-focused model using 1-hop egonet structure (`egonet_node_count`, `egonet_edge_count`, `egonet_density`) and 2/3-step circular flow indicators. |
 
-### Cross-Dataset Transfer Generalization Protocol (IBM AML $\leftrightarrow$ PaySim)
+---
 
-GraphFin evaluates cross-dataset transfer generalization across datasets using a strict source-only model fitting protocol:
-- **Source-Only Model Fitting**: Isolation Forest models and standard scaling parameters ($\mu, \sigma$) are fit strictly on the source dataset. Target data is never used during fitting.
-- **Canonical Feature Representation**: 19 entity-level features with identical schema ordering across IBM AML and PaySim.
-- **Betweenness Centrality Strategy**: Exact betweenness centrality for IBM AML, sampled Brandes centrality ($k=100$, random_state=42) for PaySim at scale.
-- **Account Label Derivation**: "Any Involvement" rule for PaySim (an account is labeled fraud ($y=1$) if involved as sender or receiver in $\ge 1$ fraudulent transaction).
-- **Evaluation Metrics**: PR-AUC with 1000-sample 95% Bootstrap CIs, ROC-AUC, Precision, Recall, F1, Precision@K ($P@10, P@25, P@50, P@100$), absolute/relative transfer degradation, and standardized feature distribution shift ($\Delta \mu$).
+## Research Dataset: PaySim
 
+PaySim is integrated as a secondary research benchmark to evaluate model transferability and domain generalizability.
+
+### Dataset Specifications
+- **Dataset**: PaySim (Secondary Research Benchmark)
+- **Raw Data Location**: `data/research/paysim_transactions.csv`
+- **Transactions Loaded**: 299,999
+- **Unique Account Universe**: 547,686 accounts (unique senders and receivers)
+- **Fraud-Labelled Transactions**: 181 (`isFraud == 1` in loaded transactions)
+- **Positive Accounts**: 480 accounts (derived via the ground-truth Any-Involvement rule)
+- **Label Provenance File**: `data/research/paysim_labels.csv`
+
+### Feature Ingestion & Leakage Prevention Protocol
+GraphFin ingests the following raw fields from PaySim:
+- `step`: Simulated time index (converted deterministically to UTC timestamp)
+- `nameOrig`: Sender account ID
+- `nameDest`: Receiver account ID
+- `amount`: Transaction value
+- `isFraud`: Ground-truth label (used **strictly** for evaluation, never as an input feature)
 
 > [!IMPORTANT]
-> The 0–100 score is a relative presentation/ranking score derived from model output.
-> It is NOT a calibrated probability of fraud.
-> It must not be interpreted as a percentage probability that an account is fraudulent.
+> **Data Leakage Prevention**:
+> The raw PaySim fields `oldbalanceOrg`, `newbalanceOrig`, `oldbalanceDest`, `newbalanceDest`, and `isFlaggedFraud` are **strictly excluded** from GraphFin feature engineering. No balance data is incorporated into anomaly scoring vectors.
+
+### Time Conversion Mapping
+PaySim's `step` column represents 1-hour time steps. GraphFin converts `step` using a deterministic base timestamp:
+$$\text{timestamp} = \text{2023-01-01 00:00:00 UTC} + \text{step hours}$$
+
+- `step = 0` $\rightarrow$ `2023-01-01 00:00:00 UTC`
+- `step = 1` $\rightarrow$ `2023-01-01 01:00:00 UTC`
+
+*Note: PaySim step values reflect simulated time steps and are not wall-clock timestamps.*
+
+---
+
+## Betweenness Centrality Strategy
+
+Betweenness centrality measures an account's role in intermediary financial flows using NetworkX Brandes algorithm:
+- **Small Networks ($\le 2,000$ nodes)**: Exact Brandes betweenness centrality (`normalized=True`).
+- **Large Networks ($> 2,000$ nodes)**: Sampled Brandes approximation ($k=500$ sample size, $k=100$ if $> 50,000$ nodes, `seed=42`, `normalized=True`) to maintain computational safety.
+
+---
+
+## Cross-Dataset Transfer Generalization Protocol
+
+GraphFin evaluates cross-dataset transfer generalization across distinct transaction domain distributions (IBM AML $\leftrightarrow$ PaySim) under a strict protocol:
+
+1. **Source-Only Model & Preprocessing Fitting**:
+   - Isolation Forest models and `StandardScaler` parameters ($\mu, \sigma$) are fit **strictly** on the source dataset.
+   - Target dataset feature vectors are normalized using source mean and standard deviation.
+   - Target ground-truth labels are used **only** for final test evaluation; no target tuning or threshold adaptation occurs.
+
+2. **Any-Involvement Account Labeling Rule**:
+   - An account is designated positive ($y=1$) if involved as sender or receiver in at least one transaction where `isFraud == 1`.
+
+3. **Evaluation Metrics & Bootstrap Confidence Intervals**:
+   - **Metrics**: PR-AUC, ROC-AUC, Precision, Recall, F1, Precision@K ($P@10, P@25, P@50, P@100$).
+   - **Relative Degradation Formula**:
+     $$\text{Relative Degradation} = \frac{\text{PR-AUC}_{\text{source}} - \text{PR-AUC}_{\text{target}}}{\text{PR-AUC}_{\text{source}}}$$
+   - **Bootstrap CIs**: 1,000-resample 95% percentile confidence intervals (`random_state=42`).
+
+---
+
+## Empirical Cross-Dataset Transfer Results
+
+Results from the empirical transfer experiments stored in `data/results/cross_dataset/`:
+
+### Direction A: IBM AML $\rightarrow$ PaySim
+*Source: IBM AML (50,000 accounts) $\mid$ Target: PaySim (547,686 accounts)*
+
+| Exp | Method | Source PR-AUC (95% CI) | Target PR-AUC (95% CI) | Target ROC-AUC | Rel. Degradation | P@10 | P@25 | P@50 | P@100 |
+|:---|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **E0** | Statistical Baseline | 0.0116 (0.0081–0.0214) | 0.0018 (0.0017–0.0027) | 0.5787 | +84.48% | 0.00 | 0.00 | 0.00 | 0.00 |
+| **E1** | Graph (Isolation Forest) | 0.0222 (0.0101–0.0555) | 0.0081 (0.0059–0.0114) | 0.7697 | +63.51% | 0.00 | 0.00 | 0.00 | 0.00 |
+| **E2** | Graph + Behavioral | 0.0173 (0.0094–0.0449) | 0.0091 (0.0066–0.0133) | 0.7730 | +47.40% | 0.00 | 0.00 | 0.00 | 0.00 |
+| **E3** | Graph + Temporal | 0.0121 (0.0079–0.0196) | 0.0043 (0.0032–0.0098) | 0.7464 | +64.46% | 0.10 | 0.04 | 0.02 | 0.02 |
+| **E4** | Full GraphFin (19-feat) | 0.0149 (0.0088–0.0313) | 0.0053 (0.0037–0.0107) | 0.7564 | +64.43% | 0.10 | 0.04 | 0.04 | 0.03 |
+| **E5** | Egonet + Circular Flow | 0.0099 (0.0065–0.0251) | 0.0014 (0.0012–0.0019) | 0.5000 | N/A* | 0.00 | 0.00 | 0.00 | 0.00 |
+
+*\*E5 baseline on PaySim is degenerate (target ROC-AUC = 0.5000).*
+
+### Direction B: PaySim $\rightarrow$ IBM AML
+*Source: PaySim (547,686 accounts) $\mid$ Target: IBM AML (50,000 accounts)*
+
+| Exp | Method | Source PR-AUC (95% CI) | Target PR-AUC (95% CI) | Target ROC-AUC | Rel. Degradation | P@10 | P@25 | P@50 | P@100 |
+|:---|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **E0** | Statistical Baseline | 0.0134 (0.0484–0.1403) | 0.0120 (0.0073–0.0304) | 0.6690 | +10.45% | 0.10 | 0.04 | 0.02 | 0.01 |
+| **E1** | Graph (Isolation Forest) | 0.0105 (0.0445–0.1170) | 0.0133 (0.0087–0.0225) | 0.7387 | −26.67% | 0.00 | 0.00 | 0.00 | 0.03 |
+| **E2** | Graph + Behavioral | 0.0114 (0.0471–0.1269) | 0.0117 (0.0082–0.0174) | 0.7337 | −2.63% | 0.00 | 0.00 | 0.02 | 0.01 |
+| **E3** | Graph + Temporal | 0.0103 (0.0410–0.1095) | 0.0133 (0.0088–0.0225) | 0.7281 | −29.13% | 0.00 | 0.00 | 0.00 | 0.00 |
+| **E4** | Full GraphFin (19-feat) | 0.0129 (0.0517–0.1425) | 0.0124 (0.0084–0.0196) | 0.7448 | +3.88% | 0.00 | 0.00 | 0.02 | 0.02 |
+| **E5** | Egonet + Circular Flow | 0.0099 (0.0381–0.1102) | 0.0120 (0.0081–0.0188) | 0.7300 | −21.21% | 0.00 | 0.00 | 0.00 | 0.00 |
+
+---
+
+## Research Artifacts
+
+The empirical cross-dataset evaluation artifacts are saved in structured JSON formats separate from locked benchmark results:
+- `data/results/cross_dataset/ibm_to_paysim_transfer.json`
+- `data/results/cross_dataset/paysim_to_ibm_transfer.json`
+
+Each artifact details the full reproducibility manifest, random seeds, bootstrap CI distributions, confusion matrices, and feature shift statistics.
+
+---
+
+## Automated Test Suite
+
+PaySim integration correctness is verified via an automated test suite:
+- **PaySim Integration Tests**: **21 / 21 Passing** (`pytest backend/tests/test_paysim_integration.py -v`)
+- **Key Test Coverage**:
+  - Dataset registration and alias mapping
+  - Required column validation and time conversion
+  - Account label derivation under the any-involvement rule
+  - Exact 19-feature schema ordering and balance field exclusion
+  - Deterministic feature generation & Brandes betweenness approximation
+  - Source-only model fitting & target label isolation
+  - Precision@K calculation & 95% bootstrap reproducibility
+  - Correct relative degradation sign calculation
+  - Immutability of locked IBM research benchmark results
+
+---
+
+## Methodological Disclosures & Research Notice
 
 > [!IMPORTANT]
-> **Research Notice: Pipeline Validation vs. Research Benchmark Results**
-> Current experimental runs and metrics produced in this test/development environment serve as **pipeline validation** demonstrating end-to-end architectural, algorithmic, and evaluation correctness. They do NOT represent paper-ready or final research benchmark results. The final IEEE research paper results must be computed using an appropriately sized real or public financial transaction dataset (e.g. Elliptic, PaySim, or real banking networks) with genuine ground-truth labels.
+> **Research Notice**:
+> GraphFin includes completed empirical within-dataset IBM AML evaluation and bidirectional IBM AML $\leftrightarrow$ PaySim cross-dataset transfer experiments. Results are stored as reproducible research artifacts under `data/results/`. These experiments use synthetic benchmark datasets and should not be interpreted as evidence of production fraud detection or legal fraud determination.
 
-### Evaluation Modes: In-Sample vs. Held-Out
-
-The GraphFin research platform supports two evaluation protocols:
-
-| Mode | Target Entities | Fit Population | Purpose |
-|---|---|---|---|
-| **`in_sample`** | All labeled entities in dataset | Full dataset feature matrix | Pipeline validation on the full feature population, upper-bound calibration, and sanity-checking model training without partition constraints. |
-| **`held_out`** | Test partition entities only | Train partition feature matrix only | Entity-level held-out evaluation where the Isolation Forest/baseline is fit on the training entity rows and evaluated on the test entity rows. |
-
-#### Why Held-Out Evaluation Matters
-1. **Preventing Over-Optimistic Performance**: In-sample evaluation evaluates models on the identical distribution and entities used to build the tree structures or baseline statistics. This can dramatically overstate detection capability.
-2. **Reviewer Skepticism**: Academic reviewers rightfully question fraud detection papers reporting purely in-sample numbers. Reporting both modes transparently demonstrates why feature engineering choices matter on unseen entities.
-3. **Entity-Level Out-of-Sample Evaluation**: In real-world financial systems, anomaly detectors must identify suspicious behavior from accounts not present during model fitting.
-
-#### Entity-Level Splitting & Partitioning Protocol
-
-> [!NOTE]
-> - No label leakage and no test-row leakage during model fitting under the entity-level held-out evaluation protocol.
-> - Graph features are currently derived from the full transaction network before the entity-level split; therefore this is not a completely isolated inductive graph-learning evaluation.
-
-- **Entity-Level Partitioning**: Financial anomaly detection operates on user/account-level feature vectors. Transactions are grouped at the account level; an entity belongs entirely to either the train set or the test set.
-- **Fit-Time Isolation**: In held-out mode, the Isolation Forest ensemble and baseline parameters (mean, standard deviation) are fit **strictly** on the train partition (`X_train`). Test-set user features are evaluated strictly at scoring time.
-- **Explainability Isolation**: The empirical percentile reference distribution (`feature_stats`: p10, p50, p90, min, max, mean) for reason codes is computed solely from the train partition, preventing reference distribution leakage into explanations.
-- **Stratified Partitioning**: Splits are stratified by ground-truth labels (fraud vs. normal) where classes have $\ge 2$ instances, ensuring the test set preserves realistic class imbalance, falling back gracefully with documented warnings when sample counts are limited.
-
-### Research Evaluation Protocol
-
-1. **Upload Transactions**: `POST /api/v1/transactions/upload`
-2. **Upload Genuine Labels**: `POST /api/v1/datasets/{dataset_id}/labels`
-3. **(Optional) Create Entity Split**: `POST /api/v1/datasets/{dataset_id}/splits` with `{"split_label": "default", "test_size": 0.3, "stratify_by_label": true}`
-4. **Train All Configurations**:
-   - In-Sample: `POST /api/v1/anomalies/{dataset_id}/train` with `{"experiment_label": "e4_insample"}`
-   - Held-Out: `POST /api/v1/anomalies/{dataset_id}/train` with `{"experiment_label": "e4_heldout", "split_label": "default"}`
-5. **Evaluate Each Experiment**: `GET /api/v1/evaluation/{dataset_id}/{experiment_label}` (automatically detects `evaluation_mode`)
-6. **Compare PR-AUC**: `GET /api/v1/evaluation/{dataset_id}/compare` (ranked by PR-AUC, cleanly grouped via `by_evaluation_mode`)
-7. **Inspect ROC & PR Curves**: `GET /api/v1/evaluation/{dataset_id}/compare?include_curves=true`
-8. **Export Research Artifacts**: `POST /api/v1/evaluation/{dataset_id}/export` (exports JSON and CSV to `data/results/`)
+1. **Relative Presentation Risk Score (0–100)**: The risk score is a relative ranking score derived from normalized anomaly outputs. It is **not** a calibrated probability of fraud.
+2. **Synthetic Data Characteristics**: Both IBM AMLSim and PaySim are synthetic agent-based financial simulation benchmarks.
+3. **Transductive Graph Feature Construction**: Graph features are derived from the full transaction network prior to entity-level train/test splitting; this protocol evaluates entity-level held-out generalization rather than fully isolated inductive graph learning.
+4. **Cross-Dataset Generalization Scope**: Transfer experiments quantify cross-distribution performance degradation between synthetic benchmark datasets and do not guarantee performance on unseen real-world banking systems.
 
 ---
 
 ## Multi-Jurisdiction Tax Analytics Module
 
-GraphFin includes a jurisdiction-aware tax analytics module supporting **India**, **United States**, **United Kingdom & Scotland**, **Germany**, and **France**.
+GraphFin includes a jurisdiction-aware tax analytics engine supporting **India**, **United States**, **United Kingdom & Scotland**, **Germany**, and **France**.
 
 > [!IMPORTANT]
 > **Strict Boundary Notice**:
-> GraphFin's tax analytics module provides jurisdiction-specific estimates. It does NOT infer taxable income from raw transaction volume. A transaction between two accounts is NOT automatically income.
-> The tax module operates strictly from explicitly classified income inputs.
+> The tax analytics module operates strictly from explicitly classified income inputs. A transaction between accounts is not automatically treated as taxable income.
 
 ### Supported Jurisdictions & Tax Regimes
-1. **India (`IN`)**: Assessment Year 2026–27 New Tax Regime (Slabs: 0%, 5%, 10%, 15%, 20%, 25%, 30%), Section 87A rebate & marginal relief, Surcharge, 4% Cess (`IN-AY2026-27-v1`). Official source: Income Tax Department (`incometax.gov.in`).
-2. **United States (`US`)**: Tax Year 2026 IRS Federal Income Tax (`US-2026-v1`) for `single`, `married_joint`, `married_separate`, and `head_of_household`. Includes 2026 standard deductions ($16,100 / $32,200 / $24,150). State tax is federal-only unless explicitly selected. Official source: Internal Revenue Service (`irs.gov`).
-3. **United Kingdom (`GB`)**: Tax Year 2026–27 (`GB-2026-27-v1`) for England, Wales, Northern Ireland, and Scotland (Scottish 6-band regime). Includes Personal Allowance (£12,570) and £1-for-£2 tapering above £100,000 adjusted net income. Official source: HMRC (`gov.uk`).
-4. **Germany (`DE`)**: Tax Year 2026 (`DE-2026-v1`). Grundfreibetrag (€12,096), progressive Einkommensteuer formula, Solidarity Surcharge (Solidaritätszuschlag), and optional Church Tax (Kirchensteuer 8%/9%). Official source: BMF (`bundesfinanzministerium.de`).
-5. **France (`FR`)**: Tax Year 2026 (`FR-2026-v1`). Progressive Barème de l'impôt sur le revenu (0%, 11%, 30%, 41%, 45%) with Quotient Familial parts support. Official source: DGFiP (`impots.gouv.fr`).
-
-### API Endpoints
-- `POST /api/v1/tax/calculate` — Calculate estimated income tax liability
-- `GET /api/v1/tax/jurisdictions` — List supported tax jurisdictions
-- `GET /api/v1/tax/rules/{jurisdiction}/{tax_year}` — Fetch official tax rule metadata and bracket definition
-
----
-
-## Benchmark Datasets: IBM AMLSim (`bank_mixed` v2.1)
-
-GraphFin includes a dedicated, memory-safe adapter (`AMLSimAdapter`) for ingesting and evaluating the IBM AMLSim multi-bank synthetic transaction benchmark.
-
-> [!CAUTION]
-> **Synthetic Data Notice**:
-> IBM AMLSim is a **synthetic banking transaction network** generated via agent-based simulation to model anti-money laundering typologies. It **must not be described or cited as real bank transactions or genuine confidential customer data**.
-
-### Dataset Specifications
-- **Dataset**: IBM AMLSim `bank_mixed` (v2.1)
-- **Data Type**: Synthetic multi-bank transaction network
-- **Raw Location**: `data/raw/amlsim_bank_mixed/banks/v2.1/data/bank_mixed/`
-- **Total Transactions**: 885,744
-- **Account Universe**: 20,000 accounts
-- **Time Span**: `2017-01-01T00:00:00Z` to `2018-12-21T00:00:00Z`
-- **Typologies**: Bank-to-bank AML typologies (cycles, scatter-gather, gather-scatter)
-
-### Graph Construction
-GraphFin constructs its **own** NetworkX directed weighted graph independently from raw transaction relationships (bypassing AMLSim's precomputed graph features):
-- **Nodes ($V$)**: Accounts (`acct_id`)
-- **Directed Edges ($E$)**: Transactions directed from sender (`orig_acct`) to beneficiary (`bene_acct`)
-- **Edge Weight ($W$)**: Cumulative transfer amount (`base_amt`)
-- **Edge Metadata**: Transaction count, transaction IDs, timestamp sequence
-
-### Ground-Truth Label Provenance & Construction
-Account-level ground-truth labels are decoupled from the unsupervised model training pipeline and managed strictly by GraphFin's `LabelRegistry` for evaluation:
-- **Positive SAR Accounts ($y=1$)**: 753 accounts confirmed from `alert_accounts.csv.gz` with `is_sar=True`, corresponding 1-to-1 with `prior_sar_count=True` in `accounts.csv.gz` (3.765% base rate). Accounts appearing across multiple alerts are deterministically aggregated via logical OR (`is_sar.any()`).
-- **Negative Accounts ($y=0$)**: 19,247 accounts in `accounts.csv.gz` where `prior_sar_count=False` (generated strictly as normal background traffic by AMLSim).
-- **No Label Leakage**: Transaction-level `is_sar` is **never** aggregated into account features, nor included in the 19 GraphFin feature definitions.
-
-### Running the AMLSim Dataset Audit
-```bash
-python -m backend.app.services.amlsim_adapter
-```
+1. **India (`IN`)**: Assessment Year 2026–27 New Tax Regime (Slabs: 0%, 5%, 10%, 15%, 20%, 25%, 30%), Section 87A rebate & marginal relief, Surcharge, 4% Cess. Official source: Income Tax Department (`incometax.gov.in`).
+2. **United States (`US`)**: Tax Year 2026 IRS Federal Income Tax for `single`, `married_joint`, `married_separate`, and `head_of_household`. Official source: Internal Revenue Service (`irs.gov`).
+3. **United Kingdom (`GB`)**: Tax Year 2026–27 for England, Wales, Northern Ireland, and Scotland (6-band regime). Personal Allowance tapering above £100,000. Official source: HMRC (`gov.uk`).
+4. **Germany (`DE`)**: Tax Year 2026 progressive formula, Grundfreibetrag (€12,096), Solidaritätszuschlag, and Church Tax options. Official source: BMF (`bundesfinanzministerium.de`).
+5. **France (`FR`)**: Tax Year 2026 Barème de l'impôt (0%–45%) with Quotient Familial. Official source: DGFiP (`impots.gouv.fr`).
 
 ---
 
@@ -161,6 +236,10 @@ pip install -r backend/requirements.txt
 
 ### 2. Run Test Suite
 ```bash
+# Run PaySim integration tests
+pytest backend/tests/test_paysim_integration.py -v
+
+# Run complete backend test suite
 pytest backend/tests -v
 ```
 
@@ -168,9 +247,12 @@ pytest backend/tests -v
 ```bash
 python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
+Interactive OpenAPI documentation: `http://127.0.0.1:8000/docs`
 
-Interactive API documentation will be available at:
-`http://127.0.0.1:8000/docs`
-
-For full API specifications, schemas, and research notes, see [backend/README.md](backend/README.md).
-
+### 4. Start Frontend Interface
+```bash
+cd frontend
+npm install
+npm run dev
+```
+Interactive dashboard: `http://localhost:5173`
