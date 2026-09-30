@@ -96,7 +96,7 @@ export const TopBar: React.FC = () => {
     currentBadgeStyle = "bg-blue-500/10 text-blue-400 border-blue-500/20";
   } else if (isCurrentPaySim) {
     currentDisplay = PAYSIM_LABEL;
-    currentBadge = "Pending Eval";
+    currentBadge = "Research";
     currentBadgeStyle = "bg-amber-500/10 text-amber-400 border-amber-500/20";
   } else {
     const matched = customDatasets.find((d) => d.id === datasetId);
@@ -334,7 +334,7 @@ export const TopBar: React.FC = () => {
         ) : isCurrentPaySim ? (
           <span className="text-text-tertiary font-sans text-[11px] flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-            PaySim · pending cross-dataset evaluation
+            PaySim · secondary research dataset
           </span>
         ) : (
           <span className="text-text-tertiary font-sans text-[11px] flex items-center gap-1.5">

@@ -311,6 +311,12 @@ export const api = {
       method: "POST",
     }),
 
+  getTransferArtifacts: (): Promise<{
+    status: string;
+    ibm_to_paysim: any;
+    paysim_to_ibm: any;
+  }> => request("/evaluation/transfer/artifacts"),
+
   // Real-Time Streaming Simulation
   startStream: (datasetId: string, payload: StreamStartRequest): Promise<StreamStateResponse> =>
     request<StreamStateResponse>(`/stream/${datasetId}/start`, {

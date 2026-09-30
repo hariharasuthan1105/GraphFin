@@ -462,7 +462,7 @@ export const DatasetsScreen: React.FC = () => {
             <h2 className="text-sm font-sans font-medium text-text-primary flex items-center gap-2">
               <span>Research / Secondary Dataset</span>
               <span className="px-1.5 py-0.2 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded text-[10px] font-mono uppercase tracking-wider">
-                Pending Evaluation
+                Research
               </span>
             </h2>
             <p className="text-xs font-sans text-text-secondary mt-0.5">

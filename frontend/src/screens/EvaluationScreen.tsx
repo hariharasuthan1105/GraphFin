@@ -1150,6 +1150,192 @@ const CustomEvaluationView: React.FC = () => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+// CROSS-DATASET TRANSFER EVALUATION VIEW (IBM AML ↔ PAYSIM)
+// ─────────────────────────────────────────────────────────────────────────────
+const CrossDatasetTransferView: React.FC = () => {
+  const [dataA, setDataA] = useState<any>(null);
+  const [dataB, setDataB] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setIsLoading(true);
+    setError(null);
+    api
+      .getTransferArtifacts()
+      .then((res) => {
+        setDataA(res.ibm_to_paysim);
+        setDataB(res.paysim_to_ibm);
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        setError(err.message || "Could not load transfer artifacts.");
+        setIsLoading(false);
+      });
+  }, []);
+
+  const renderTransferTable = (transferData: any, title: string, subtitle: string) => {
+    if (!transferData || !transferData.experiments) {
+      return (
+        <div className="p-4 bg-surface border border-hairline rounded text-xs text-text-tertiary">
+          Transfer experiment artifacts unavailable.
+        </div>
+      );
+    }
+
+    const transferCols: Column<any>[] = [
+      {
+        key: "experiment_label",
+        header: "Experiment",
+        render: (row) => (
+          <div>
+            <span className="font-sans text-text-primary font-medium text-xs block">
+              {row.experiment_label} — {row.method}
+            </span>
+            <span className="font-mono text-[10px] text-text-tertiary">
+              {row.feature_count} features ({row.feature_groups?.join(" + ")})
+            </span>
+          </div>
+        ),
+      },
+      {
+        key: "source_pr_auc",
+        header: "Source PR-AUC (95% CI)",
+        align: "right",
+        mono: true,
+        render: (row) => (
+          <div>
+            <span className="font-mono text-text-primary font-medium">
+              {row.source_pr_auc !== undefined ? row.source_pr_auc.toFixed(4) : "—"}
+            </span>
+            {row.source_pr_auc_ci && (
+              <span className="text-[10px] font-mono text-text-tertiary block">
+                [{row.source_pr_auc_ci.ci_lower.toFixed(4)} - {row.source_pr_auc_ci.ci_upper.toFixed(4)}]
+              </span>
+            )}
+          </div>
+        ),
+      },
+      {
+        key: "target_pr_auc",
+        header: "Target PR-AUC (95% CI)",
+        align: "right",
+        mono: true,
+        render: (row) => (
+          <div>
+            <span className="font-mono text-emerald-400 font-semibold">
+              {row.target_pr_auc !== undefined ? row.target_pr_auc.toFixed(4) : "—"}
+            </span>
+            {row.target_pr_auc_ci && (
+              <span className="text-[10px] font-mono text-text-tertiary block">
+                [{row.target_pr_auc_ci.ci_lower.toFixed(4)} - {row.target_pr_auc_ci.ci_upper.toFixed(4)}]
+              </span>
+            )}
+          </div>
+        ),
+      },
+      {
+        key: "p_at_10",
+        header: "P@10",
+        align: "right",
+        mono: true,
+        render: (row) => (row.precision_at_k?.p_at_10 !== undefined ? row.precision_at_k.p_at_10.toFixed(2) : "—"),
+      },
+      {
+        key: "p_at_25",
+        header: "P@25",
+        align: "right",
+        mono: true,
+        render: (row) => (row.precision_at_k?.p_at_25 !== undefined ? row.precision_at_k.p_at_25.toFixed(2) : "—"),
+      },
+      {
+        key: "p_at_50",
+        header: "P@50",
+        align: "right",
+        mono: true,
+        render: (row) => (row.precision_at_k?.p_at_50 !== undefined ? row.precision_at_k.p_at_50.toFixed(2) : "—"),
+      },
+      {
+        key: "p_at_100",
+        header: "P@100",
+        align: "right",
+        mono: true,
+        render: (row) => (row.precision_at_k?.p_at_100 !== undefined ? row.precision_at_k.p_at_100.toFixed(2) : "—"),
+      },
+      {
+        key: "relative_degradation",
+        header: "Rel. Degradation",
+        align: "right",
+        mono: true,
+        render: (row) => {
+          const src = row.source_pr_auc || row.degradation?.source_pr_auc;
+          const tgt = row.target_pr_auc || row.degradation?.target_pr_auc;
+          let relDeg: number | null = row.degradation?.relative_degradation ?? null;
+          if (relDeg === null && src && src > 0 && tgt !== undefined) {
+            relDeg = (src - tgt) / src;
+          }
+          if (relDeg === null || relDeg === undefined) return <span className="text-text-tertiary">—</span>;
+          const pct = (relDeg * 100).toFixed(2);
+          const formatted = relDeg >= 0 ? `+${pct}%` : `${pct}%`;
+          return (
+            <span className={`font-mono ${relDeg > 0 ? "text-amber-400" : "text-emerald-400"}`}>
+              {formatted}
+            </span>
+          );
+        },
+      },
+    ];
+
+    return (
+      <div className="p-5 bg-surface border border-hairline rounded space-y-3 text-left">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-sans font-medium text-text-primary flex items-center gap-2">
+              <span>{title}</span>
+              <Badge variant="normal">Cross-Dataset</Badge>
+            </h3>
+            <p className="text-xs text-text-secondary mt-0.5">{subtitle}</p>
+          </div>
+          <span className="text-[11px] font-mono text-text-tertiary">
+            N=1000 Bootstrap Resamples · 95% CI
+          </span>
+        </div>
+
+        <Table columns={transferCols} data={transferData.experiments} emptyMessage="No transfer data available." />
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-6 max-w-[1040px] mx-auto text-left research-font">
+      <div className="flex items-end justify-between">
+        <div>
+          <h1 className="text-2xl font-serif font-semibold text-text-primary flex items-center gap-2">
+            <span>Cross-Dataset Transfer Evaluation</span>
+            <span className="px-2 py-0.5 bg-amber-500/10 text-amber-400 border border-amber-500/25 rounded text-[11px] font-mono uppercase tracking-wider font-semibold">
+              Generalization Test
+            </span>
+          </h1>
+          <p className="text-sm text-text-secondary mt-1 leading-relaxed">
+            Source-only fitted Isolation Forest models transferred directly to target dataset. Zero target label leakage during fitting.
+          </p>
+        </div>
+      </div>
+
+      {isLoading && <div className="py-8 text-center text-sm text-text-tertiary">Loading cross-dataset transfer artifacts...</div>}
+      {error && <div className="p-3 bg-red-950/80 border border-red-800 rounded text-xs text-red-200">{error}</div>}
+
+      {!isLoading && !error && (
+        <>
+          {renderTransferTable(dataA, "Direction A: IBM AML 50K → PaySim", "Source model trained on IBM AML 50K (353K txs, 50K accounts) and evaluated on PaySim (300K txs, 547K accounts).")}
+          {renderTransferTable(dataB, "Direction B: PaySim → IBM AML 50K", "Source model trained on PaySim (300K txs, 547K accounts) and evaluated on IBM AML 50K (353K txs, 50K accounts).")}
+        </>
+      )}
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // MAIN UNIFIED EVALUATION SCREEN ROUTER
 // ─────────────────────────────────────────────────────────────────────────────
 export const EvaluationScreen: React.FC = () => {
@@ -1161,18 +1347,39 @@ export const EvaluationScreen: React.FC = () => {
     datasetHistory,
   } = useApp();
 
+  const [activeTab, setActiveTab] = useState<"official" | "transfer" | "custom">(() => {
+    if (datasetId === "paysim" || datasetId === "e8d9c7b6-a5f4-4e3d-b2c1-a09876543210") {
+      return "transfer";
+    }
+    return isOfficialResearchDataset(datasetId) ? "official" : "custom";
+  });
+
+  useEffect(() => {
+    if (datasetId === "paysim" || datasetId === "e8d9c7b6-a5f4-4e3d-b2c1-a09876543210") {
+      setActiveTab("transfer");
+    } else if (isOfficialResearchDataset(datasetId)) {
+      setActiveTab("official");
+    } else {
+      setActiveTab("custom");
+    }
+  }, [datasetId]);
+
   const handleSwitchToOfficial = () => {
+    setActiveTab("official");
     const tierId = RESEARCH_TIER_IDS[researchTier] || RESEARCH_TIER_IDS.large_real;
     setDatasetId(tierId);
   };
 
+  const handleSwitchToTransfer = () => {
+    setActiveTab("transfer");
+  };
+
   const handleSwitchToCustom = () => {
-    // If current is official research, switch to the most recent custom dataset if available
+    setActiveTab("custom");
     const custom = datasetHistory.find((d) => !isOfficialResearchDataset(d.id));
     if (custom) {
       setDatasetId(custom.id);
     } else {
-      // If no custom dataset uploaded yet, set a custom session placeholder
       setDatasetId("custom-session");
     }
   };
@@ -1191,16 +1398,16 @@ export const EvaluationScreen: React.FC = () => {
               type="button"
               onClick={handleSwitchToOfficial}
               className={`px-3.5 py-1.5 rounded text-xs font-sans font-medium transition-all flex items-center gap-2 ${
-                isOfficialResearch
+                activeTab === "official"
                   ? "bg-accent-primary text-white shadow-sm"
                   : "text-text-secondary hover:text-text-primary hover:bg-surface"
               }`}
             >
-              <span className={`w-2 h-2 rounded-full ${isOfficialResearch ? "bg-white" : "bg-blue-400"}`} />
-              <span>Official Research Results</span>
+              <span className={`w-2 h-2 rounded-full ${activeTab === "official" ? "bg-white" : "bg-blue-400"}`} />
+              <span>Official Research</span>
               <span
                 className={`px-1.5 py-0.2 rounded text-[10px] font-mono uppercase tracking-wider ${
-                  isOfficialResearch ? "bg-white/20 text-white" : "bg-blue-500/10 text-blue-400"
+                  activeTab === "official" ? "bg-white/20 text-white" : "bg-blue-500/10 text-blue-400"
                 }`}
               >
                 Locked
@@ -1209,18 +1416,38 @@ export const EvaluationScreen: React.FC = () => {
 
             <button
               type="button"
+              onClick={handleSwitchToTransfer}
+              className={`px-3.5 py-1.5 rounded text-xs font-sans font-medium transition-all flex items-center gap-2 ${
+                activeTab === "transfer"
+                  ? "bg-amber-600 text-white shadow-sm"
+                  : "text-text-secondary hover:text-text-primary hover:bg-surface"
+              }`}
+            >
+              <span className={`w-2 h-2 rounded-full ${activeTab === "transfer" ? "bg-white" : "bg-amber-400"}`} />
+              <span>Cross-Dataset Transfer</span>
+              <span
+                className={`px-1.5 py-0.2 rounded text-[10px] font-mono uppercase tracking-wider ${
+                  activeTab === "transfer" ? "bg-white/20 text-white" : "bg-amber-500/10 text-amber-400"
+                }`}
+              >
+                IBM ↔ PaySim
+              </span>
+            </button>
+
+            <button
+              type="button"
               onClick={handleSwitchToCustom}
               className={`px-3.5 py-1.5 rounded text-xs font-sans font-medium transition-all flex items-center gap-2 ${
-                !isOfficialResearch
+                activeTab === "custom"
                   ? "bg-emerald-600 text-white shadow-sm"
                   : "text-text-secondary hover:text-text-primary hover:bg-surface"
               }`}
             >
-              <span className={`w-2 h-2 rounded-full ${!isOfficialResearch ? "bg-white" : "bg-emerald-400"}`} />
+              <span className={`w-2 h-2 rounded-full ${activeTab === "custom" ? "bg-white" : "bg-emerald-400"}`} />
               <span>Custom Evaluation</span>
               <span
                 className={`px-1.5 py-0.2 rounded text-[10px] font-mono uppercase tracking-wider ${
-                  !isOfficialResearch ? "bg-white/20 text-white" : "bg-emerald-500/10 text-emerald-400"
+                  activeTab === "custom" ? "bg-white/20 text-white" : "bg-emerald-500/10 text-emerald-400"
                 }`}
               >
                 Live
@@ -1230,15 +1457,23 @@ export const EvaluationScreen: React.FC = () => {
         </div>
 
         <div className="text-xs font-mono text-text-tertiary flex items-center gap-2">
-          {isOfficialResearch ? (
-            <span>Benchmark: {researchTier === "medium_real" ? "5,000" : "49,992"} accounts (Frozen)</span>
+          {activeTab === "official" ? (
+            <span>Benchmark: {researchTier === "medium_real" ? "5,000" : "49,992"} accounts</span>
+          ) : activeTab === "transfer" ? (
+            <span>Cross-Dataset Transfer (IBM AML ↔ PaySim)</span>
           ) : (
             <span>Dataset: {truncateId(datasetId, 8, 6)}</span>
           )}
         </div>
       </div>
 
-      {isOfficialResearch ? <OfficialResearchView /> : <CustomEvaluationView />}
+      {activeTab === "official" ? (
+        <OfficialResearchView />
+      ) : activeTab === "transfer" ? (
+        <CrossDatasetTransferView />
+      ) : (
+        <CustomEvaluationView />
+      )}
     </div>
   );
 };

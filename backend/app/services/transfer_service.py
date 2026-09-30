@@ -525,21 +525,22 @@ class TransferService:
             },
         )
 
-        # Export result to data/results/cross_dataset/
-        try:
-            out_dir = settings.DATA_DIR / "results" / "cross_dataset"
-            out_dir.mkdir(parents=True, exist_ok=True)
-            canonical_filename = (
-                "ibm_to_paysim_transfer.json"
-                if "ibm" in src_label.lower()
-                else "paysim_to_ibm_transfer.json"
-            )
-            out_file = out_dir / canonical_filename
-            with open(out_file, "w", encoding="utf-8") as f:
-                json.dump(response.model_dump(), f, indent=2)
-            logger.info(f"Exported cross-dataset transfer result to {out_file}")
-        except Exception as e:
-            logger.warning(f"Could not export transfer result to disk: {e}")
+        # Export result to data/results/cross_dataset/ (only for full research runs, not unit tests)
+        if "test" not in src_id.lower() and "test" not in tgt_id.lower():
+            try:
+                out_dir = settings.DATA_DIR / "results" / "cross_dataset"
+                out_dir.mkdir(parents=True, exist_ok=True)
+                canonical_filename = (
+                    "ibm_to_paysim_transfer.json"
+                    if "ibm" in src_label.lower()
+                    else "paysim_to_ibm_transfer.json"
+                )
+                out_file = out_dir / canonical_filename
+                with open(out_file, "w", encoding="utf-8") as f:
+                    json.dump(response.model_dump(), f, indent=2)
+                logger.info(f"Exported cross-dataset transfer result to {out_file}")
+            except Exception as e:
+                logger.warning(f"Could not export transfer result to disk: {e}")
 
         return response
 

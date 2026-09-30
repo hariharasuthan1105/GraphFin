@@ -91,7 +91,7 @@ async def list_all_datasets():
         {
             "id": "paysim",
             "name": "PaySim",
-            "display_name": "Research — PaySim [PENDING EVALUATION]",
+            "display_name": "Research — PaySim",
             "source_type": "raw_transaction",
             "entity_level": "account",
             "paper_reportable": False,
@@ -127,7 +127,7 @@ async def load_paysim_dataset():
         "status": "success",
         "dataset_id": "paysim",
         "name": "PaySim",
-        "display_name": "Research — PaySim [PENDING EVALUATION]",
+        "display_name": "Research — PaySim",
         "transactions": n_tx,
         "users": n_users,
         "currency": "USD",

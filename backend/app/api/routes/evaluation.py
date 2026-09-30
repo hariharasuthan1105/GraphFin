@@ -59,6 +59,31 @@ async def evaluate_cross_dataset_transfer(
 
 
 @router.get(
+    "/transfer/artifacts",
+    status_code=status.HTTP_200_OK,
+    summary="Get Stored Cross-Dataset Transfer Evaluation Artifacts",
+    description="Returns pre-computed transfer evaluation JSON artifacts for IBM -> PaySim and PaySim -> IBM.",
+)
+async def get_transfer_artifacts():
+    """Retrieve pre-computed cross-dataset transfer result artifacts."""
+    import json
+    from ...core.config import settings
+
+    out_dir = settings.DATA_DIR / "results" / "cross_dataset"
+    a_path = out_dir / "ibm_to_paysim_transfer.json"
+    b_path = out_dir / "paysim_to_ibm_transfer.json"
+
+    res_a = json.loads(a_path.read_text()) if a_path.exists() else None
+    res_b = json.loads(b_path.read_text()) if b_path.exists() else None
+
+    return {
+        "status": "success",
+        "ibm_to_paysim": res_a,
+        "paysim_to_ibm": res_b,
+    }
+
+
+@router.get(
     "/{dataset_id}/compare",
     response_model=EvaluationComparisonResponse,
     status_code=status.HTTP_200_OK,
