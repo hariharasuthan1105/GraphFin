@@ -192,80 +192,105 @@ class FeatureService:
             if col in struct_df.columns:
                 struct_df[col] = struct_df[col].astype(int)
 
-        features_dict: Dict[str, UserFeatures] = {}
-        for uid in sorted_users:
-            u_str = str(uid)
-            u_row = u_df.loc[u_str]
-            s_row = struct_df.loc[u_str] if u_str in struct_df.index else {}
-            e_row = ego_df.loc[u_str] if u_str in ego_df.index else {}
+        # Vectorized Feature Matrix Construction
+        matrix = np.column_stack([
+            struct_df.get("in_degree", pd.Series(0, index=sorted_users)).reindex(sorted_users).fillna(0).values,
+            struct_df.get("out_degree", pd.Series(0, index=sorted_users)).reindex(sorted_users).fillna(0).values,
+            struct_df.get("total_degree", pd.Series(0, index=sorted_users)).reindex(sorted_users).fillna(0).values,
+            struct_df.get("weighted_in_degree", pd.Series(0.0, index=sorted_users)).reindex(sorted_users).fillna(0.0).round(2).values,
+            struct_df.get("weighted_out_degree", pd.Series(0.0, index=sorted_users)).reindex(sorted_users).fillna(0.0).round(2).values,
+            struct_df.get("betweenness_centrality", pd.Series(0.0, index=sorted_users)).reindex(sorted_users).fillna(0.0).values,
+            u_df["tx_count"].values,
+            u_df["total_sent"].round(2).values,
+            u_df["total_received"].round(2).values,
+            u_df["net_flow"].round(2).values,
+            u_df["avg_amount"].round(2).values,
+            u_df["max_amount"].round(2).values,
+            u_df["unique_receivers"].values,
+            u_df["unique_senders"].values,
+            u_df["tx_per_day"].round(4).values,
+            u_df["tx_per_week"].round(4).values,
+            np.where(u_df["tx_count"] > 1, u_df["avg_delta"].round(2), 0.0),
+            np.where(u_df["tx_count"] > 1, u_df["min_delta"].round(2), 0.0),
+            np.where(u_df["tx_count"] > 1, u_df["max_delta"].round(2), 0.0),
+            ego_df.get("egonet_node_count", pd.Series(0.0, index=sorted_users)).reindex(sorted_users).fillna(0.0).values,
+            ego_df.get("egonet_edge_count", pd.Series(0.0, index=sorted_users)).reindex(sorted_users).fillna(0.0).values,
+            ego_df.get("egonet_density", pd.Series(0.0, index=sorted_users)).reindex(sorted_users).fillna(0.0).round(6).values,
+            ego_df.get("circular_flow_indicator", pd.Series(0.0, index=sorted_users)).reindex(sorted_users).fillna(0.0).round(6).values,
+        ]).astype(np.float32)
 
-            in_deg = int(s_row.get("in_degree", 0))
-            out_deg = int(s_row.get("out_degree", 0))
-            tot_deg = int(s_row.get("total_degree", 0))
-            w_in_deg = float(round(s_row.get("weighted_in_degree", 0.0), 2))
-            w_out_deg = float(round(s_row.get("weighted_out_degree", 0.0), 2))
-            bc = float(s_row.get("betweenness_centrality", 0.0))
+        matrix = np.nan_to_num(matrix, nan=0.0, posinf=0.0, neginf=0.0)
+        self._feature_matrix_cache = (sorted_users, matrix, FEATURE_NAMES)
 
-            tx_cnt = int(u_row["tx_count"])
-            tot_s = float(round(u_row["total_sent"], 2))
-            tot_r = float(round(u_row["total_received"], 2))
-            net_f = float(round(u_row["net_flow"], 2))
-            avg_a = float(round(u_row["avg_amount"], 2))
-            max_a = float(round(u_row["max_amount"], 2))
-            u_rec = int(u_row["unique_receivers"])
-            u_snd = int(u_row["unique_senders"])
+        class LazyUserFeaturesDict(dict):
+            def __init__(self, u_ids, mat):
+                super().__init__()
+                self.user_ids = u_ids
+                self.user_idx_map = {uid: i for i, uid in enumerate(u_ids)}
+                self.matrix = mat
+                self._cache = {}
 
-            t_day = float(round(u_row["tx_per_day"], 4))
-            t_wk = float(round(u_row["tx_per_week"], 4))
-            avg_t = float(round(u_row["avg_delta"] if tx_cnt > 1 else 0.0, 2))
-            min_t = float(round(u_row["min_delta"] if tx_cnt > 1 else 0.0, 2))
-            max_t = float(round(u_row["max_delta"] if tx_cnt > 1 else 0.0, 2))
+            def __len__(self):
+                return len(self.user_ids)
 
-            ego_n = float(e_row.get("egonet_node_count", 0.0))
-            ego_e = float(e_row.get("egonet_edge_count", 0.0))
-            ego_d = float(round(e_row.get("egonet_density", 0.0), 6))
-            circ_f = float(round(e_row.get("circular_flow_indicator", 0.0), 6))
+            def __contains__(self, key):
+                return str(key) in self.user_idx_map
 
-            feat_vec = [
-                float(in_deg), float(out_deg), float(tot_deg),
-                w_in_deg, w_out_deg, bc,
-                float(tx_cnt), tot_s, tot_r, net_f, avg_a, max_a,
-                float(u_rec), float(u_snd),
-                t_day, t_wk, avg_t, min_t, max_t,
-                ego_n, ego_e, ego_d, circ_f,
-            ]
+            def keys(self):
+                return self.user_ids
 
-            features_dict[u_str] = UserFeatures(
-                user_id=u_str,
-                in_degree=in_deg,
-                out_degree=out_deg,
-                total_degree=tot_deg,
-                weighted_in_degree=w_in_deg,
-                weighted_out_degree=w_out_deg,
-                betweenness_centrality=bc,
-                transaction_count=tx_cnt,
-                total_sent=tot_s,
-                total_received=tot_r,
-                net_flow=net_f,
-                average_transaction_amount=avg_a,
-                maximum_transaction_amount=max_a,
-                unique_receivers=u_rec,
-                unique_senders=u_snd,
-                transactions_per_day=t_day,
-                transactions_per_week=t_wk,
-                average_time_between_transactions=avg_t,
-                minimum_time_between_transactions=min_t,
-                maximum_time_between_transactions=max_t,
-                egonet_node_count=ego_n,
-                egonet_edge_count=ego_e,
-                egonet_density=ego_d,
-                circular_flow_indicator=circ_f,
-                feature_vector=feat_vec,
-            )
+            def __getitem__(self, key):
+                key_str = str(key)
+                if key_str in self._cache:
+                    return self._cache[key_str]
+                if key_str not in self.user_idx_map:
+                    raise KeyError(key_str)
+                idx = self.user_idx_map[key_str]
+                row = self.matrix[idx]
+                feat_vec = [float(x) for x in row]
+                uf = UserFeatures(
+                    user_id=key_str,
+                    in_degree=int(row[0]),
+                    out_degree=int(row[1]),
+                    total_degree=int(row[2]),
+                    weighted_in_degree=float(row[3]),
+                    weighted_out_degree=float(row[4]),
+                    betweenness_centrality=float(row[5]),
+                    transaction_count=int(row[6]),
+                    total_sent=float(row[7]),
+                    total_received=float(row[8]),
+                    net_flow=float(row[9]),
+                    average_transaction_amount=float(row[10]),
+                    maximum_transaction_amount=float(row[11]),
+                    unique_receivers=int(row[12]),
+                    unique_senders=int(row[13]),
+                    transactions_per_day=float(row[14]),
+                    transactions_per_week=float(row[15]),
+                    average_time_between_transactions=float(row[16]),
+                    minimum_time_between_transactions=float(row[17]),
+                    maximum_time_between_transactions=float(row[18]),
+                    egonet_node_count=float(row[19]),
+                    egonet_edge_count=float(row[20]),
+                    egonet_density=float(row[21]),
+                    circular_flow_indicator=float(row[22]),
+                    feature_vector=feat_vec,
+                )
+                self._cache[key_str] = uf
+                return uf
 
-        self.user_features = features_dict
-        self._feature_matrix_cache = None
-        logger.info(f"Feature extraction complete for {len(features_dict)} users.")
+            def get(self, key, default=None):
+                if str(key) in self:
+                    return self[str(key)]
+                return default
+
+            def values(self):
+                return [self[u] for u in self.user_ids]
+
+            def items(self):
+                return [(u, self[u]) for u in self.user_ids]
+
+        self.user_features = LazyUserFeaturesDict(sorted_users, matrix)
+        logger.info(f"Feature extraction complete for {len(sorted_users)} users.")
         return self.user_features
 
     def get_feature_matrix(self) -> Tuple[List[str], np.ndarray, List[str]]:
