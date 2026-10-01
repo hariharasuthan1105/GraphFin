@@ -43,6 +43,7 @@ data/research/*.csv
 !data/research/ibm_aml_large_50k.csv
 !data/research/ibm_aml_large_50k_labels.csv
 !data/research/paysim_labels.csv
+!data/research/paysim_account_labels.csv
 !data/research/paysim_transactions.csv
 
 # Exported Research Results (generated runs)

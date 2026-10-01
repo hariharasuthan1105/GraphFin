@@ -84,7 +84,9 @@ class DatasetRegistry:
 
         from ..core.config import settings
         tx_path = settings.DATA_DIR / "research" / "paysim_transactions.csv"
-        lbl_path = settings.DATA_DIR / "research" / "paysim_labels.csv"
+        lbl_path = settings.DATA_DIR / "research" / "paysim_account_labels.csv"
+        if not lbl_path.exists():
+            lbl_path = settings.DATA_DIR / "research" / "paysim_labels.csv"
 
         if not tx_path.exists():
             # Try raw file conversion as fallback

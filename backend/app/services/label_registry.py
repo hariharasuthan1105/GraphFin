@@ -25,6 +25,7 @@ POSITIVE_LABEL_VARIANTS: Set[str] = {
     "y",
     "fraud",
     "fraudulent",
+    "fraud-involved",
     "suspicious",
     "anomaly",
     "anomalous",
@@ -117,6 +118,9 @@ class LabelRegistry:
         user_col_target = user_id_col.strip().lower()
         label_col_target = label_col.strip().lower()
 
+        if user_col_target not in actual_cols_lower and "account" in actual_cols_lower:
+            user_col_target = "account"
+
         if user_col_target not in actual_cols_lower:
             raise ValidationException(
                 f"Missing user ID column '{user_id_col}' in uploaded label file. "
@@ -154,8 +158,9 @@ class LabelRegistry:
 
             # Check if user exists in the dataset's feature matrix
             if uid_clean not in valid_entities_set:
-                msg = f"Row {row_num}: user_id '{uid_clean}' does not exist in dataset '{dataset_id}' feature matrix."
-                rejected_errors.append(msg)
+                if len(rejected_errors) < 100:
+                    msg = f"Row {row_num}: user_id '{uid_clean}' does not exist in dataset '{dataset_id}' feature matrix."
+                    rejected_errors.append(msg)
                 continue
 
             # Parse boolean label
