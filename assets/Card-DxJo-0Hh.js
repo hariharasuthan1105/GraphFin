@@ -1,0 +1,1 @@
+import{_ as e,p as t}from"./index-CbGhiC-u.js";e();var n=t(),r=({children:e,variant:t=`surface`,noBorder:r=!1,className:i=``,...a})=>(0,n.jsx)(`div`,{className:`${t===`surface`?`bg-surface`:`bg-surface-raised`} ${r?``:`border border-hairline`} rounded p-5 text-left transition-colors ${i}`,...a,children:e});export{r as t};
