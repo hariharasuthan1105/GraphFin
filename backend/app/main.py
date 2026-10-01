@@ -37,11 +37,14 @@ async def lifespan(app: FastAPI):
             )
         except Exception as e:
             logger.warning(f"Could not preload sample transactions: {e}")
-    else:
-        logger.info(
-            f"No sample transactions found at {settings.DEFAULT_SAMPLE_CSV}. "
-            "Backend initialized with empty dataset registry."
-        )
+
+    # Preload PaySim research dataset if available
+    try:
+        logger.info("Preloading PaySim research dataset into registry...")
+        dataset_registry.load_paysim()
+        logger.info("PaySim research dataset preloaded successfully.")
+    except Exception as e:
+        logger.warning(f"Could not preload PaySim research dataset: {e}")
 
     yield
 
