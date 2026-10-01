@@ -97,7 +97,7 @@ class DatasetRegistry:
                 raise NotFoundException(f"PaySim dataset transaction file not found at {tx_path}")
         else:
             logger.info(f"Loading PaySim transactions from {tx_path} (subsample for memory safety)...")
-            df = pd.read_csv(tx_path, nrows=50000)
+            df = pd.read_csv(tx_path, nrows=10000)
 
 
         store = StateStore()
