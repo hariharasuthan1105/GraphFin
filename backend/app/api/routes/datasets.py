@@ -1,5 +1,6 @@
 from typing import List, Optional
-from fastapi import APIRouter, Body, File, Query, UploadFile, status
+from fastapi import APIRouter, BackgroundTasks, Body, File, Query, UploadFile, status
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from ...core.logging import get_logger
@@ -12,6 +13,9 @@ from ...services.dataset_registry import dataset_registry
 logger = get_logger(__name__)
 
 router = APIRouter(prefix="/datasets", tags=["Datasets, Splits & Ground-Truth Labels"])
+
+# PaySim background loading state
+_paysim_status: dict = {"state": "idle", "error": None}  # idle | loading | loaded | error
 
 
 # ---------------------------------------------------------------------------
@@ -113,24 +117,81 @@ async def list_all_datasets():
 
 @router.post(
     "/paysim/load",
-    status_code=status.HTTP_200_OK,
-    summary="Load PaySim Research Dataset",
-    description="Loads the PaySim synthetic transaction dataset into memory and computes feature metrics.",
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="Load PaySim Research Dataset (async)",
+    description=(
+        "Triggers background loading of the PaySim dataset. Returns 202 immediately. "
+        "Poll GET /datasets/paysim/status to check progress. "
+        "Returns 200 with full metadata if already loaded."
+    ),
 )
-async def load_paysim_dataset():
-    """Explicitly trigger PaySim dataset loading into registry."""
-    logger.info("Triggering PaySim dataset load into memory...")
-    store = dataset_registry.load_paysim()
-    n_tx = len(store.transactions_df)
-    n_users = len(store.feature_service.user_features)
-    return {
-        "status": "success",
+async def load_paysim_dataset(background_tasks: BackgroundTasks):
+    """Trigger PaySim loading asynchronously to avoid Render gateway timeout."""
+    global _paysim_status
+
+    # If already loaded, return synchronously with 200
+    if dataset_registry.is_loaded("paysim"):
+        store = dataset_registry.get("paysim")
+        return JSONResponse(status_code=200, content={
+            "status": "success",
+            "dataset_id": "paysim",
+            "name": "PaySim",
+            "display_name": "Research \u2014 PaySim",
+            "transactions": len(store.transactions_df),
+            "users": len(store.feature_service.user_features),
+            "currency": "USD",
+        })
+
+    # If already loading, don't double-trigger
+    if _paysim_status["state"] == "loading":
+        return JSONResponse(status_code=202, content={
+            "status": "loading",
+            "message": "PaySim dataset is currently being processed. Poll /datasets/paysim/status.",
+        })
+
+    def _do_load():
+        global _paysim_status
+        _paysim_status = {"state": "loading", "error": None}
+        try:
+            logger.info("Background: starting PaySim dataset load...")
+            dataset_registry.load_paysim()
+            _paysim_status = {"state": "loaded", "error": None}
+            logger.info("Background: PaySim dataset loaded successfully.")
+        except Exception as e:
+            _paysim_status = {"state": "error", "error": str(e)}
+            logger.error(f"Background: PaySim load failed: {e}")
+
+    _paysim_status = {"state": "loading", "error": None}
+    background_tasks.add_task(_do_load)
+    logger.info("PaySim load triggered as background task.")
+    return JSONResponse(status_code=202, content={
+        "status": "loading",
         "dataset_id": "paysim",
-        "name": "PaySim",
-        "display_name": "Research — PaySim",
-        "transactions": n_tx,
-        "users": n_users,
-        "currency": "USD",
+        "message": "PaySim dataset loading started in background. Poll /datasets/paysim/status for progress.",
+    })
+
+
+@router.get(
+    "/paysim/status",
+    status_code=status.HTTP_200_OK,
+    summary="PaySim Loading Status",
+    description="Returns the current loading state of the PaySim dataset.",
+)
+async def paysim_load_status():
+    """Return current PaySim loading state."""
+    is_loaded = dataset_registry.is_loaded("paysim")
+    if is_loaded:
+        store = dataset_registry.get("paysim")
+        return {
+            "state": "loaded",
+            "is_loaded": True,
+            "transactions": len(store.transactions_df),
+            "users": len(store.feature_service.user_features),
+        }
+    return {
+        "state": _paysim_status["state"],
+        "is_loaded": False,
+        "error": _paysim_status.get("error"),
     }
 
 

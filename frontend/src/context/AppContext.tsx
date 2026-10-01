@@ -212,7 +212,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return true;
     } catch (err: any) {
       setIsBackendConnected(false);
-      setBackendError(err?.message || "Cannot connect to FastAPI backend at port 8000.");
+      setBackendError(err?.message || "Cannot connect to FastAPI backend.");
       return false;
     }
   };

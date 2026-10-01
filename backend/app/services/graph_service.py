@@ -56,12 +56,22 @@ class GraphService:
                     G.add_edge(u, v, weight=amount, count=1, transactions=[tx_id])
 
             self.graph = G
-            # Invalidate and precompute centrality at ingest time
+            # Invalidate caches on new graph
             self._betweenness_cache = None
             self._structural_features_cache = None
             self._egonet_features_cache = None
             self._summary_cache = None
-            self.compute_betweenness_centrality()
+
+            # Eagerly precompute betweenness only for small/medium graphs.
+            # For large graphs (>10K nodes) defer to first access to avoid
+            # blocking the Render free-tier worker for minutes (causes 502).
+            if G.number_of_nodes() <= 10_000:
+                self.compute_betweenness_centrality()
+            else:
+                logger.info(
+                    f"Large graph ({G.number_of_nodes()} nodes): "
+                    "deferring betweenness centrality to first access."
+                )
 
             logger.info(
                 f"Graph constructed successfully: {G.number_of_nodes()} nodes, "
