@@ -99,11 +99,12 @@ class StateStore:
                 users=items,
             )
 
-        all_items = list(all_features.values())
-        paginated_items = all_items[offset : offset + limit]
+        import itertools
+        total_count = len(all_features)
+        paginated_items = list(itertools.islice(all_features.values(), offset, offset + limit))
 
         return UserAnalyticsResponse(
-            total_users=len(all_items),
+            total_users=total_count,
             limit=limit,
             offset=offset,
             users=paginated_items,
