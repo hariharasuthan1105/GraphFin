@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 from fastapi import APIRouter, BackgroundTasks, Body, File, Query, UploadFile, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -6,9 +6,11 @@ from pydantic import BaseModel
 from ...core.logging import get_logger
 from ...schemas.labels import DatasetLabelsSummaryResponse
 from ...schemas.split import SplitCreateRequest, SplitSummaryResponse
+from ...schemas.exploration import PaySimExplorationResponse, PaySimExplorationNotLoadedResponse
 from ...services.label_registry import label_registry
 from ...services.split_service import split_service
 from ...services.dataset_registry import dataset_registry
+from ...services.exploration_service import paysim_exploration_service
 
 logger = get_logger(__name__)
 
@@ -160,6 +162,35 @@ async def paysim_load_status():
         "is_loaded": False,
         "error": _paysim_status.get("error"),
     }
+
+
+@router.get(
+    "/paysim/exploration",
+    status_code=status.HTTP_200_OK,
+    summary="PaySim Exploration — Production 10K Slice",
+    description=(
+        "Returns descriptive statistics for the deployed PaySim production slice "
+        "(10,000 transactions, ~18,711 accounts). Includes transaction stats, account "
+        "label breakdown, network topology, temporal analysis, amount distribution, "
+        "top senders/receivers, and 19 GraphFin feature summaries. "
+        "Results are cached after first computation for performance."
+    ),
+)
+async def paysim_exploration() -> Union[PaySimExplorationResponse, PaySimExplorationNotLoadedResponse]:
+    """Return cached descriptive exploration statistics for the PaySim production slice."""
+    if not dataset_registry.is_loaded("paysim"):
+        return PaySimExplorationNotLoadedResponse()
+
+    try:
+        store = dataset_registry.get("paysim")
+        result = paysim_exploration_service.compute(store, label_registry=label_registry)
+        return result
+    except Exception as e:
+        logger.error(f"PaySim exploration failed: {e}", exc_info=True)
+        return PaySimExplorationNotLoadedResponse(
+            status="error",
+            message=f"Failed to compute exploration statistics: {str(e)}",
+        )
 
 
 @router.get(

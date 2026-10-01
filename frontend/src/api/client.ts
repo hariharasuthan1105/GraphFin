@@ -132,6 +132,9 @@ export const api = {
       method: "POST",
     }),
 
+  getPaySimExploration: (): Promise<any> =>
+    request("/datasets/paysim/exploration"),
+
   // Locked research datasets
   getLockedDatasets: (): Promise<Array<{
     dataset_id: string;

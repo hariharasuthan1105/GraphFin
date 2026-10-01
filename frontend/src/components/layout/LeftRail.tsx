@@ -11,6 +11,7 @@ interface NavOption {
 const NAV_ITEMS: NavOption[] = [
   { id: "overview", label: "Overview" },
   { id: "datasets", label: "Datasets" },
+  { id: "paysim_exploration", label: "  ↳ PaySim Exploration" },
   { id: "graph", label: "Graph" },
   { id: "features", label: "Features" },
   { id: "anomalies", label: "Anomaly Models" },

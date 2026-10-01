@@ -26,6 +26,9 @@ const EvaluationScreen = lazy(() =>
 const TaxScreen = lazy(() =>
   import("./screens/TaxScreen").then((m) => ({ default: m.TaxScreen }))
 );
+const PaySimExplorationScreen = lazy(() =>
+  import("./screens/PaySimExplorationScreen").then((m) => ({ default: m.PaySimExplorationScreen }))
+);
 
 const ScreenLoadingFallback: React.FC = () => (
   <div className="flex flex-col items-center justify-center min-h-[360px] space-y-3">
@@ -98,6 +101,7 @@ const MainLayout: React.FC = () => {
               {displayNav === "labels_splits" && <LabelsSplitScreen />}
               {displayNav === "evaluation" && <EvaluationScreen />}
               {displayNav === "tax" && <TaxScreen />}
+              {displayNav === "paysim_exploration" && <PaySimExplorationScreen />}
             </Suspense>
           </div>
         </main>

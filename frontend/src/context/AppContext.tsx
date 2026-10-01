@@ -12,7 +12,8 @@ export type NavItem =
   | "anomalies"
   | "labels_splits"
   | "evaluation"
-  | "tax";
+  | "tax"
+  | "paysim_exploration";
 
 export type ResearchTier = "medium_real" | "large_real";
 
