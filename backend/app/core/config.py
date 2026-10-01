@@ -33,15 +33,24 @@ class Settings:
     API_V1_STR: str = os.getenv("API_V1_STR", "/api/v1")
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO").upper()
 
-    # CORS
-    CORS_ORIGINS: List[str] = [
-        origin.strip()
-        for origin in os.getenv(
+    # CORS - Ensure production frontend and backend domains are always present
+    @property
+    def CORS_ORIGINS(self) -> List[str]:
+        raw_env = os.getenv(
             "CORS_ORIGINS",
             "https://hariharasuthan1105.github.io,https://graphfin.onrender.com,http://localhost:5173,http://localhost:3000,http://localhost:8000,http://127.0.0.1:5173,http://127.0.0.1:3000,http://127.0.0.1:8000",
-        ).split(",")
-        if origin.strip()
-    ]
+        )
+        origins = [o.strip() for o in raw_env.split(",") if o.strip()]
+        required_origins = [
+            "https://hariharasuthan1105.github.io",
+            "https://graphfin.onrender.com",
+            "http://localhost:5173",
+            "http://localhost:3000",
+        ]
+        for req in required_origins:
+            if req not in origins:
+                origins.append(req)
+        return origins
 
     # Directories
     ROOT_DIR: Path = PROJECT_ROOT
