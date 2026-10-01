@@ -1172,7 +1172,7 @@ const CrossDatasetTransferView: React.FC = () => {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      window.URL.revokeObjectURL(downloadUrl);
+      setTimeout(() => window.URL.revokeObjectURL(downloadUrl), 1000);
     } catch (err: any) {
       setDownloadError(err.message || "Failed to download evaluation report.");
     } finally {
