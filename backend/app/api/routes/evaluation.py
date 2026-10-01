@@ -1,5 +1,5 @@
 from typing import Optional
-from fastapi import APIRouter, Query, status
+from fastapi import APIRouter, Query, Response, status
 
 from ...core.logging import get_logger
 from ...schemas.evaluation import (
@@ -12,6 +12,7 @@ from ...schemas.transfer import (
     TransferExperimentResponse,
 )
 from ...services.evaluation_service import evaluation_service
+from ...services.report_service import report_service
 from ...services.transfer_service import transfer_service
 
 logger = get_logger(__name__)
@@ -81,6 +82,29 @@ async def get_transfer_artifacts():
         "ibm_to_paysim": res_a,
         "paysim_to_ibm": res_b,
     }
+
+
+@router.get(
+    "/paysim/report",
+    status_code=status.HTTP_200_OK,
+    summary="Download PaySim Cross-Dataset Evaluation Report",
+    description=(
+        "Generates and downloads a publication-grade PDF research evaluation report "
+        "for the cross-dataset transfer experiments between IBM AML 50K and PaySim. "
+        "Loads existing stored research artifacts without re-running experiments or mutating data."
+    ),
+)
+async def download_paysim_evaluation_report():
+    """Download cross-dataset transfer evaluation report PDF."""
+    content, media_type, filename = report_service.generate_paysim_transfer_report()
+    return Response(
+        content=content,
+        media_type=media_type,
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Access-Control-Expose-Headers": "Content-Disposition",
+        },
+    )
 
 
 @router.get(

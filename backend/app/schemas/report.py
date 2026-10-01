@@ -6,7 +6,7 @@ class ReportGenerateRequest(BaseModel):
     """Request payload for exporting evaluation results to PDF, Word (DOCX), or CSV."""
     source: str = Field(
         ...,
-        description="'official' for locked benchmark research results, or 'custom' for user-uploaded dataset evaluation.",
+        description="'official' for locked benchmark research results, 'custom' for user-uploaded dataset evaluation, or 'paysim_transfer' for cross-dataset evaluation.",
     )
     format: str = Field(
         ...,

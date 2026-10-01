@@ -320,6 +320,36 @@ export const api = {
     paysim_to_ibm: any;
   }> => request("/evaluation/transfer/artifacts"),
 
+  downloadPaysimEvaluationReport: async (): Promise<{ blob: Blob; filename: string }> => {
+    const url = `${API_PREFIX}/evaluation/paysim/report`;
+    const response = await fetch(url, {
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      let msg = `HTTP error ${response.status}`;
+      try {
+        const errJson = await response.json();
+        msg = errJson.detail || errJson.message || msg;
+      } catch {
+        // ignore
+      }
+      throw new Error(msg);
+    }
+
+    const disposition = response.headers.get("Content-Disposition");
+    let filename = "graphfin_paysim_cross_dataset_evaluation.pdf";
+    if (disposition) {
+      const match = disposition.match(/filename="?([^"]+)"?/);
+      if (match && match[1]) {
+        filename = match[1];
+      }
+    }
+
+    const blob = await response.blob();
+    return { blob, filename };
+  },
+
   // Real-Time Streaming Simulation
   startStream: (datasetId: string, payload: StreamStartRequest): Promise<StreamStateResponse> =>
     request<StreamStateResponse>(`/stream/${datasetId}/start`, {

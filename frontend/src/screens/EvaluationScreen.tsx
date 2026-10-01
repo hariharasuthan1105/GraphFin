@@ -1157,6 +1157,28 @@ const CrossDatasetTransferView: React.FC = () => {
   const [dataB, setDataB] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+
+  const handleDownloadReport = async () => {
+    setIsDownloading(true);
+    setDownloadError(null);
+    try {
+      const { blob, filename } = await api.downloadPaysimEvaluationReport();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (err: any) {
+      setDownloadError(err.message || "Failed to download evaluation report.");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   useEffect(() => {
     setIsLoading(true);
@@ -1308,7 +1330,7 @@ const CrossDatasetTransferView: React.FC = () => {
 
   return (
     <div className="space-y-6 max-w-[1040px] mx-auto text-left research-font">
-      <div className="flex items-end justify-between">
+      <div className="flex items-start md:items-end justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-serif font-semibold text-text-primary flex items-center gap-2">
             <span>Cross-Dataset Transfer Evaluation</span>
@@ -1319,6 +1341,42 @@ const CrossDatasetTransferView: React.FC = () => {
           <p className="text-sm text-text-secondary mt-1 leading-relaxed">
             Source-only fitted Isolation Forest models transferred directly to target dataset. Zero target label leakage during fitting.
           </p>
+        </div>
+        <div className="flex flex-col items-end gap-1">
+          <button
+            type="button"
+            onClick={handleDownloadReport}
+            disabled={isDownloading}
+            className={`px-3 py-1.5 text-xs font-sans rounded border transition-colors flex items-center gap-2 ${
+              isDownloading
+                ? "bg-surface-raised border-hairline text-text-tertiary cursor-not-allowed"
+                : "border-hairline bg-surface hover:bg-surface-raised text-text-secondary hover:text-text-primary"
+            }`}
+            title="Download PaySim cross-dataset evaluation research report"
+          >
+            {isDownloading ? (
+              <>
+                <svg className="animate-spin h-3.5 w-3.5 text-accent-primary" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                <span>Generating Report…</span>
+              </>
+            ) : (
+              <>
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                <span>Download Evaluation Report</span>
+                <span className="px-1.5 py-0.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded text-[9px] font-mono font-semibold">
+                  PDF
+                </span>
+              </>
+            )}
+          </button>
+          {downloadError && (
+            <span className="text-[11px] text-red-400 font-sans mt-0.5">{downloadError}</span>
+          )}
         </div>
       </div>
 
