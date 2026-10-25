@@ -1,0 +1,62 @@
+{
+  "all_byte_equal": true,
+  "comparisons": {
+    "features.npy": {
+      "byte_equal": true,
+      "original_sha256": "79eb276f492423888523faa7c48a1a1fd0e48fb583d0341b2bd67f95b82e8baf",
+      "replay_sha256": "79eb276f492423888523faa7c48a1a1fd0e48fb583d0341b2bd67f95b82e8baf"
+    },
+    "population.json": {
+      "byte_equal": true,
+      "original_sha256": "4ba382aef9ce679f86d53b3210188966c9f7055c478d11df2ff34bf54f301d7f",
+      "replay_sha256": "4ba382aef9ce679f86d53b3210188966c9f7055c478d11df2ff34bf54f301d7f"
+    },
+    "results.json": {
+      "byte_equal": true,
+      "original_sha256": "61903637de8fdb592771b555ad35f14aab5e0153b563fd93bee7b992173dc271",
+      "replay_sha256": "61903637de8fdb592771b555ad35f14aab5e0153b563fd93bee7b992173dc271"
+    },
+    "split-123-model-42/scores.json": {
+      "byte_equal": true,
+      "original_sha256": "97453985268c291ffe1ae0388d879e01b1d707bac2591452e126a675f5a4859d",
+      "replay_sha256": "97453985268c291ffe1ae0388d879e01b1d707bac2591452e126a675f5a4859d"
+    },
+    "split-2024-model-42/scores.json": {
+      "byte_equal": true,
+      "original_sha256": "509f00d158e16e996db8ff73dc0a643d7646ac2019903e533baa981ec348428f",
+      "replay_sha256": "509f00d158e16e996db8ff73dc0a643d7646ac2019903e533baa981ec348428f"
+    },
+    "split-42-model-42/scores.json": {
+      "byte_equal": true,
+      "original_sha256": "1b195002a40fb641916a726588f45ee45de715bf56e2d8e43bea590efee8c4b2",
+      "replay_sha256": "1b195002a40fb641916a726588f45ee45de715bf56e2d8e43bea590efee8c4b2"
+    },
+    "split-555-model-42/scores.json": {
+      "byte_equal": true,
+      "original_sha256": "db5d84fde2db27b08ceb9e3f77ab4c1b69c7ff97dfe14df214cfe50623d2a34d",
+      "replay_sha256": "db5d84fde2db27b08ceb9e3f77ab4c1b69c7ff97dfe14df214cfe50623d2a34d"
+    },
+    "split-7-model-42/scores.json": {
+      "byte_equal": true,
+      "original_sha256": "c0a9624683e8951815553b8c4e1c340e5a4152b42443901b965bf04b5331d6e7",
+      "replay_sha256": "c0a9624683e8951815553b8c4e1c340e5a4152b42443901b965bf04b5331d6e7"
+    },
+    "split-99-model-42/scores.json": {
+      "byte_equal": true,
+      "original_sha256": "30e9c3d2f0f4832bc7a392d82f86a3547dee8636a01d7131b231464081e586a8",
+      "replay_sha256": "30e9c3d2f0f4832bc7a392d82f86a3547dee8636a01d7131b231464081e586a8"
+    },
+    "splits.json": {
+      "byte_equal": true,
+      "original_sha256": "dfd45f46fa0b2a9cb5cd21c6ecff14c7ee541412884abb71c2d905c136e23e7d",
+      "replay_sha256": "dfd45f46fa0b2a9cb5cd21c6ecff14c7ee541412884abb71c2d905c136e23e7d"
+    },
+    "summary.json": {
+      "byte_equal": true,
+      "original_sha256": "8d8822641a90712b9f9e87e8744eda49a885a357f006e09b7114103802163104",
+      "replay_sha256": "8d8822641a90712b9f9e87e8744eda49a885a357f006e09b7114103802163104"
+    }
+  },
+  "excluded": "runtime, memory, run identity and feature-manifest identity; model serialization not claimed identical",
+  "tolerance": 0
+}

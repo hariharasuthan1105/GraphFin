@@ -1,0 +1,46 @@
+{
+  "project_title": "Machine Learning Enhanced Graph-Based Anomaly Detection for Financial Transactions",
+  "version": "phase6a-explanation-diagnostics-v1",
+  "wall_budget_seconds": 1800,
+  "parent_protocol_sha256": "508a84edfc7eef3cf2a9b99d7b776533c49d742ef5215d18ce59a4e46ec6daff",
+  "phase5g_manifest_sha256": "97db89c06b906a228adabf8cbafd130f30b6bb4e6244d1790b0aaad6279094b3",
+  "phase5h_manifest_sha256": "cc17a7ebd2ba50f559c244a14fca38f59d9624b08e4515a50c7a587df5cffe53",
+  "matching": {
+    "version": "same-account-decimal-caliper-two-controls-v1",
+    "control_seed": 3902,
+    "controls_per_intervention": 2,
+    "absolute_amount_fraction_tolerance": "0.01",
+    "relative_amount_tolerance": "0.10",
+    "enumeration_limit": 10000,
+    "same_omission_allowed": false,
+    "count_and_evidence_fraction": "exact; same account and historical incident denominator",
+    "selection": "Enumerate all count-matched subsets under the bound; filter all budgets and both monetary calipers; order by SHA256(seed, context, structured identity, control IDs); select first two distinct sets",
+    "insufficient_controls": "unmatched; no tolerance relaxation or single-control substitution",
+    "context": "Identical history hash, cutoff, time kind, population, account, model and canonical19 schema"
+  },
+  "budget": {
+    "max_count": 2,
+    "max_fraction": 0.5,
+    "max_amount_fraction": 0.5,
+    "min_retained": 1,
+    "max_interventions": 2
+  },
+  "split_seed": 42,
+  "model_seed": 42,
+  "graph_seed": 42,
+  "cohort_seed": 1901,
+  "synthetic_seed": 3903,
+  "cohort": "All six Phase5G accounts, unchanged; no labels or outcome selection",
+  "methods": {
+    "D": "Maximum count among same eligible pool",
+    "E": "Two distinct strict matched random omissions separately per available A-D anchor",
+    "ties": "Ascending family, string candidate key, sorted IDs",
+    "B": "First lexicographically eligible whole temporal block",
+    "A": "First lexicographically eligible whole counterparty group",
+    "C": "Maximum Decimal amount among all eligible whole counterparty and temporal groups"
+  },
+  "scope": "One explanation per method/account; common original cutoff, count<=2, count fraction<=0.5, amount fraction<=0.5, retain>=1. No ranking or labels",
+  "stability": "Fixed selection/matching replay; uncached reference/replay first account per score stratum; reverse all event rows; independently increase one hash-selected incident amount by 1% for each of the same three representatives, in memory only",
+  "feasibility": "First new scenario plus full-reference and replay; project remaining unique work with 2x measured allowance. Stop incomplete if above remaining 1800s; never shrink cohort",
+  "projection": "Same 5K graph and eligible mix; cold unique scenarios, measured versus projected kept distinct"
+}

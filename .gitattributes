@@ -1,0 +1,5 @@
+# Supplied historical/data/frontend bytes are authoritative; no checkout EOL conversion.
+data/** -text
+frontend/** -text
+*.csv -text
+*.py text eol=lf

@@ -78,6 +78,7 @@ class LabelRegistry:
         self._labels: Dict[str, Dict[str, bool]] = {}
         # Key: dataset_id -> DatasetLabelsSummaryResponse
         self._summaries: Dict[str, DatasetLabelsSummaryResponse] = {}
+        self._identities = {}
 
     def store_labels_from_csv(
         self,
@@ -218,6 +219,8 @@ class LabelRegistry:
         )
 
         self._labels[dataset_id] = matched_labels
+        from .research_identity import label_identity
+        self._identities[dataset_id] = label_identity(csv_content)
         self._summaries[dataset_id] = summary
 
         try:
@@ -288,8 +291,29 @@ class LabelRegistry:
             )
         return self._summaries[dataset_id]
 
+    def get_identity(self, dataset_id: str) -> dict:
+        """Original uploaded bytes, not a reserialized matched subset."""
+        labels = self.get_labels(dataset_id)
+        if dataset_id not in self._identities:
+            import hashlib, json
+            digest = hashlib.sha256(json.dumps(sorted(labels.items())).encode()).hexdigest()
+            return {"label_set_id": "in-memory:" + digest, "sha256": digest,
+                    "provenance_status": "unverified_in_memory", "definition": "No original label bytes available"}
+        return dict(self._identities[dataset_id])
+
+    def require_research_identity(self, dataset_id, selected=None, acknowledge=False):
+        identity = self.get_identity(dataset_id)
+        if selected is not None and selected != identity["label_set_id"]:
+            raise ValidationException("Requested label-set identity does not match loaded labels.")
+        if identity["provenance_status"] == "unresolved_conflict" and not (
+            selected == identity["label_set_id"] and acknowledge
+        ):
+            raise ValidationException("PaySim provenance unresolved: explicitly select the loaded label_set_id and acknowledge the conflict, or use the v2 configured runner.")
+        return identity
+
     def clear(self) -> None:
         """Clear all stored labels (used by tests)."""
+        self._identities.clear()
         self._labels.clear()
         self._summaries.clear()
         logger.info("Label registry cleared.")

@@ -284,6 +284,8 @@ def test_locked_research_artifacts_remain_untouched_after_chart_rendering():
     """
     Test 3: Confirm no locked research artifacts were modified by chart generation.
     """
-    assert get_file_hash(LOCKED_JSON).lower() == "e16e2d5948b66f0cde493fadf43e1491fee219b582faa6a38eabfe53be786ad2"
-    assert get_file_hash(LOCKED_CSV).lower() == "ba89012faf612cfe96d9e5049a869c40596894d167d37bb26a1581d976efa40a"
+    # Exact supplied-ZIP bytes, versioned separately from legacy CRLF equivalence.
+    from backend.app.services.artifact_integrity import protected_sha
+    assert get_file_hash(LOCKED_JSON).lower() == protected_sha("data/results/final_e0_e4_comparison.json")
+    assert get_file_hash(LOCKED_CSV).lower() == protected_sha("data/results/final_e0_e4_comparison.csv")
 

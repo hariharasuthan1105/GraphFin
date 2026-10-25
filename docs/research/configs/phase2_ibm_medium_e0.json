@@ -1,0 +1,27 @@
+{
+  "source": {
+    "dataset_id": "ibm-medium-supplied-file-v1",
+    "family": "ibm",
+    "transactions": "../../../data/research/ibm_aml_medium_5k.csv",
+    "transactions_sha256": "622d421b8ba1463ac0acc423f77fbf8a5c5604e5d2b1ea07b80e13dfb5a0a3f2",
+    "labels": "../../../data/research/ibm_aml_medium_5k_labels.csv",
+    "labels_sha256": "2a417d2c2c92a8f8cd4c135f3a2e66a5feba6fcfc67cfd9b2e5b5da215a154c1",
+    "label_set_id": "ibm-medium-retained-involvement-v1",
+    "label_definition": "OR of retained-transaction laundering involvement, as declared by converter; original raw evidence absent",
+    "provenance_status": "declared_not_independently_verified",
+    "row_limit": null
+  },
+  "experiment": "E0",
+  "baseline_version": "e0-source-signed-zero-v2",
+  "split_seed": 42,
+  "model_seed": 17,
+  "bootstrap_seed": 123,
+  "test_size": 0.3,
+  "stratify": true,
+  "n_estimators": 100,
+  "max_samples": "auto",
+  "contamination": 0.005,
+  "n_bootstraps": 100,
+  "z_threshold": 2.0,
+  "preprocessing": "canonical-positive-nonself-float32-v1"
+}

@@ -92,6 +92,8 @@ class ResearchRunner:
         random_state: int = 42,
         output_path: Optional[str] = None,
         split_label: Optional[str] = None,
+        label_set_id: Optional[str] = None,
+        acknowledge_unresolved_labels: bool = False,
     ) -> Dict[str, Any]:
         """
         Execute the complete 5-experiment benchmark for a dataset.
@@ -174,6 +176,7 @@ class ResearchRunner:
 
         labels = label_registry.get_labels(dataset_id)
         label_summary = label_registry.get_summary(dataset_id)
+        label_identity = label_registry.require_research_identity(dataset_id, label_set_id, acknowledge_unresolved_labels)
 
         # 4. Label Coverage & Protocol Validation
         matched_uids = set(labels.keys()).intersection(set(user_ids))
@@ -267,6 +270,12 @@ class ResearchRunner:
             pos_prev = label_summary.prevalence_rate
 
         run_manifest: Dict[str, Any] = {
+            "protocol": "legacy-runner-with-identity-v2",
+            "label_identity": label_identity,
+            "implementations": {e: anomaly_service.get_model_metadata(dataset_id, e, split_label=clean_split).model_dump() for e in CANONICAL_EXPERIMENT_LABELS},
+            "split_seed": split_obj.random_state if split_obj else None,
+            "model_seed": random_state,
+            "replay_note": "Use research_protocol for input-checksummed replay and saved unrounded held-out scores.",
             "dataset_id": dataset_id,
             "transaction_count": len(store.transactions_df),
             "unique_user_count": len(user_ids),
@@ -308,7 +317,11 @@ class ResearchRunner:
             run_manifest["stratification_warning"] = split_obj.warning
 
         # 8. Save Output JSON
-        target_json = Path(output_path) if output_path else (results_dir / f"{dataset_id}_research_run.json")
+        from uuid import uuid4
+        from .artifact_integrity import guard_output
+        target_json = Path(output_path) if output_path else (results_dir / "v2" / "legacy_runner" / uuid4().hex / "run.json")
+        guard_output(target_json)
+        guard_output(target_json.with_suffix(".csv"))
         target_json.parent.mkdir(parents=True, exist_ok=True)
         with open(target_json, "w", encoding="utf-8") as f:
             json.dump(run_manifest, f, indent=2)

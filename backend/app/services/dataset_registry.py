@@ -21,6 +21,9 @@ PAYSIM_DATASET_ID = "paysim"
 PAYSIM_UUID_ALIAS = "e8d9c7b6-a5f4-4e3d-b2c1-a09876543210"
 
 PAYSIM_METADATA: Dict[str, Any] = {
+    "population_kind": "production_demo_prefix_10000_transactions",
+    "research_population": "separate_explicit_full_file_configuration_required",
+    "label_provenance_status": "unresolved_conflict",
     "id": "paysim",
     "name": "PaySim",
     "display_name": "Research — PaySim",

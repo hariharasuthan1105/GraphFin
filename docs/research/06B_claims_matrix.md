@@ -1,0 +1,42 @@
+# Phase 6B — Scientific claims matrix
+
+**Machine Learning Enhanced Graph-Based Anomaly Detection for Financial Transactions**
+
+Status is assigned to the exact claim in each row, not to the existence of code. Tests establish implementation behavior; controlled outcomes establish only the stated empirical scope. References L1–L10 are verified in `06B_related_work_comparison.md`.
+
+## Evidence keys
+
+All paths are repository-relative. `S` = `backend/app/services/`; `R` = `backend/app/research/`; `V` = `data/results/v2/`.
+
+- **B5/B50**: `V/phase5-baselines-5k-v1/` and `V/phase5-baselines-50k-v1/`; `results.json`, `manifest.json`, and `split-<seed>-model-42/scores.json`.
+- **F5/F50**: `V/phase5-features-5k-v1/` and `V/phase5-features-50k-v1/`; `manifest.json`, `population.json`, `splits.json` and saved feature matrix.
+- **C6B**: `V/phase6b-consolidation-v1/`; `per_seed_metrics.json`, `summary.json`, `verification.json`, `manifest.json`.
+- **P5**: `docs/research/configs/phase5_protocol_v1.json`, SHA256 `508a84edfc7eef3cf2a9b99d7b776533c49d742ef5215d18ce59a4e46ec6daff`.
+- **H**: `docs/research/05H_evidence_specificity_revision.md` and the pilot/replay/verification paths it records.
+- **A6**: `V/phase6a-explanations-v1-pilot-v2/`; manifest SHA256 `b7a88eea435bbcce29881e6c06a01d5cf6579dadd26d051ff88ce2630ca6069e`; `V/phase6a-verification-v1/verification.json` and `final_review.json`.
+- **T**: current disposable test logs `../../work/phase6b-tests/phase2-9n5s3295/{pytest.log,results.xml,command.txt}` (relative to repository root).
+
+## Claims and decisions
+
+| Claim | Supporting code | Experiment | Result artifact | Literature | Evidence quality | Remaining limitations | Status |
+|---|---|---|---|---|---|---|---|
+| GraphFin implements graph-based entity anomaly detection with reproducible held-out account scoring. | `S/graph_service.py`, `S/feature_service.py`, `R/benchmark/runner.py` | Six splits on each IBM tier; seven score arrays per split | F5/F50, B5/B50, C6B | L1–L3 | Strong for this implementation and supplied populations; 84 metric rows independently recalculated | Transductive graph; retrospective involvement labels; no real-bank validation | **Supported within declared scope** |
+| Adding behavioral/temporal features consistently improves detection. | `S/feature_service.py`, `R/benchmark/runner.py` | E1 vs E2/E3/E4 on identical per-seed IDs | B5/B50, C6B | L1, L5 | Controlled feature-group comparison, but nonmonotone outcomes | Highest mean differs by tier; correlated/redundant features; fixed model seed | **Unsupported as a general improvement** |
+| GraphFin describes feature-group sensitivity and split variability. | Same plus `R/benchmark/metrics.py` | Six split outcomes per method/tier | C6B per-seed metrics | L8, L9 | Directly observed variation and retrieval tradeoffs | No independent dataset replication or model-seed study | **Supported descriptively** |
+| Larger networks cause lower accuracy or establish a scaling law. | `S/feature_service.py`, `R/benchmark/runner.py` | 5K vs 49,992 active accounts | F5/F50, B5/B50 | L2–L5 | Observational two-tier contrast only | Composition, time coverage, positives and prevalence change jointly | **Unsupported causally; partial as a size-associated observation** |
+| Baseline results are robust across random seeds in general. | `R/benchmark/runner.py`, `S/research_protocol.py` | Six split seeds; fixed model/centrality seed 42 | B5/B50; 5K replay; C6B | L8, L9 | Split sensitivity measured; replay verified | Overlapping splits, six/75 positives, no model-seed independence; 50K full replay absent | **Partially supported**, only deterministic replay and observed split variation |
+| Cross-dataset transfer performance is validated without target-label tuning. | `S/transfer_service.py`, `backend/tests/test_transfer_experiment.py` | Historical IBM↔PaySim runs; source-only implementation tests | `data/results/cross_dataset/ibm_to_paysim_transfer.json`, `paysim_to_ibm_transfer.json`; Phase 1 audit | L8, L9 | Code-level restrictions useful; archival metrics not confirmatory | Missing historical processed IBM input; conflicting PaySim labels; legacy alias behavior | **Unsupported performance claim**; source-only design is an implementation fact |
+| Historical evidence omissions satisfy explicit financial-history constraints. | `R/interventions/intervention_engine.py`, `historical_evidence.py`; `R/explanation_validation/diagnostics.py` | Phase 3 tests; Phase 6A available outputs | A6 and prior verification | L6, L7 | 13 valid A–D and 20 control records; exact event IDs and budget checks | Validity only under declared count/amount/cutoff assumptions; monetary normalization unverified | **Supported for available outputs** |
+| CREST detects model sensitivity to evidence beyond identical/no-change scoring. | `R/crest/frozen_scorer.py`, `R/feasibility_gate/raw_scoring.py`, `R/explanation_validation/diagnostics.py` | Bounded Phase 5G/H and 6A pilots | H, A6 | L6, L7 | Nonzero frozen-model responses reproduced | Small selected cohort; sampled centrality; response is not fraud relevance or causality | **Supported as a diagnostic**, not detector superiority |
+| CREST yields superior anomaly rankings. | `R/crest/runner.py` and Phase 5H code | Full Phase 5 E6 incomplete; Phase 5H six-account pilot | `V/phase5-interventions-v1/` has no completion manifest; H | L1, L7 | No complete performance comparison | Ten full-array rank displacements are not accuracy gains; no adequate evaluation | **Unsupported; STOP RANKING EXTENSION** |
+| Explanations are available and valid for all accounts. | `R/explanation_validation/diagnostics.py` | Six fixed eligible pilot accounts | A6 | L6, L7 | Explicit denominator: any A–D explanation 4/6, counterparty 1/6 | Two accounts unavailable; five distinct structured scenarios despite thirteen records | **Partially supported**, validity yes, universal availability no |
+| CREST has greater fidelity than comparable simple heuristics. | `R/explanation_validation/diagnostics.py` | A/B vs amount/count C/D with count/money compatibility | A6; twelve compatible direct pairs | L7 | All twelve differences exactly zero | Three incompatible comparisons excluded; repeated evidence; one split/model | **Unsupported** |
+| Explanation stability is established. | `diagnostics.py` selection/shadow functions; Phase 6A verifier | Fixed replay; three representatives; reverse rows; one 1% amount change each | A6 verification | L6, L7 | Fixed replay exact; seven available structured row-order observations unchanged | Random controls changed under row reversal; amount selector changes one evidence set; perturbed-control fidelity not recomputed | **Partially supported**, determinism is stronger than perturbation evidence |
+| CREST is computationally practical for broad coverage. | `R/interventions/optimized_recomputation.py`, `R/feasibility_gate/focal_features.py` | Phase 5R/G/H timing; Phase 6A eight fresh scenario vectors | H, A6 runtime records | L1–L5 | Measured small-pilot timing; global centrality dominates | Projected 250-account cold work 2,688.998 s before overhead exceeds 1,800 s; projection not measurement | **Unsupported for meaningful broad coverage**; small offline diagnostic feasible |
+| Research artifacts are auditable and original bytes are preserved. | `S/artifact_integrity.py`, `S/research_identity.py`, `S/research_protocol.py` | Manifest/hash verification, metric reconstruction, safe tests | C6B; `V/phase6b-verification-v1/final_review.json`; T | L8, L9 | 87 protected files plus 612 pre-phase snapshot files; 77 current tests | Byte identity cannot establish upstream truth; local test logs must accompany release | **Supported for verified artifacts**, not provenance completeness |
+
+## Claim-writing rules
+
+Use “AP varied substantially across six stratified splits of supplied IBM subsets,” not “robust across datasets.” Use “observed score change under a valid omission,” not “identified the cause of money laundering.” Use “four of six selected accounts had an available explanation,” not “high explanation coverage.” Describe E5 as the **GraphFin four-feature egonet heuristic**, not a full reproduction of L1.
+
+No ranking improvements, confidence intervals across independent populations, expert validation, independent preregistration or complete original E6 benchmark are established. Failed, incomplete and negative experiments remain part of the evidence record. Phase 6B does not repair those gaps by changing the interpretation of old results.

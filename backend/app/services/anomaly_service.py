@@ -180,8 +180,7 @@ class AnomalyService:
         if split_label:
             clean_split = split_label.strip()
             split_path = self.models_dir / f"{dataset_id}__{clean_exp}__{clean_split}.joblib"
-            if split_path.exists():
-                return split_path
+            return split_path
         path = self.models_dir / f"{dataset_id}__{clean_exp}.joblib"
         # Backward-compatibility check for legacy un-suffixed default model
         if not path.exists() and clean_exp == "default":
@@ -319,6 +318,7 @@ class AnomalyService:
 
         # 9. Assemble ModelMetadata
         metadata = ModelMetadata(
+            implementation_id="isolation-forest-raw-features-v1",
             model_type="IsolationForest",
             method="Isolation Forest",
             sklearn_version=sklearn.__version__,
@@ -346,7 +346,7 @@ class AnomalyService:
             "model": model,
             "metadata": metadata.model_dump(),
             "train_scores": train_scores,
-            "user_ids": fit_user_ids,
+            "user_ids": list(fit_user_ids),
             "col_indices": col_indices,
             "dataset_id": dataset_id,
             "experiment_label": exp_label,
@@ -428,50 +428,35 @@ class AnomalyService:
     def _load_artifact(
         self, dataset_id: str, experiment_label: str = "default", split_label: Optional[str] = None
     ) -> Dict[str, Any]:
-        """
-        Load model artifact for (dataset_id, experiment_label) from cache or disk.
-        Supports split_label scoping to avoid cross-split model overwrites.
-        Raises ModelNotTrainedException if not found.
-        """
+        """Fail closed for explicit splits, including cached artifact metadata."""
         clean_exp = (experiment_label or "default").strip()
-        clean_split = split_label.strip() if split_label else None
-
-        if clean_split:
-            split_key = (dataset_id, clean_exp, clean_split)
-            if split_key in self._cache:
-                return self._cache[split_key]
-            split_path = self.models_dir / f"{dataset_id}__{clean_exp}__{clean_split}.joblib"
-            if split_path.exists():
-                try:
-                    artifact = joblib.load(split_path)
-                    self._cache[split_key] = artifact
-                    return artifact
-                except Exception as e:
-                    logger.warning(f"Failed to load split artifact {split_path}: {e}")
-
-        base_key = (dataset_id, clean_exp, None)
-        if base_key in self._cache:
-            return self._cache[base_key]
-
+        clean_split = (split_label or "").strip() or None
+        key = (dataset_id, clean_exp, clean_split)
         model_path = self._get_model_path(dataset_id, clean_exp, clean_split)
-        if not model_path.exists():
-            raise ModelNotTrainedException(
-                f"No anomaly detection model has been trained yet for dataset '{dataset_id}' "
-                f"under experiment '{clean_exp}'. "
-                f"Please train a model first via POST /api/v1/anomalies/{dataset_id}/train."
-            )
-
         try:
-            artifact = joblib.load(model_path)
-            if artifact.get("dataset_id") != dataset_id:
-                raise ModelNotTrainedException(
-                    f"Model artifact at {model_path} does not match dataset '{dataset_id}'."
-                )
-            self._cache[base_key] = artifact
-            if clean_split:
-                self._cache[(dataset_id, clean_exp, clean_split)] = artifact
+            artifact = self._cache.get(key)
+            if artifact is None:
+                if not model_path.exists():
+                    raise ModelNotTrainedException(
+                        f"No anomaly detection model has been trained yet. Model missing for dataset='{dataset_id}', experiment='{clean_exp}', "
+                        f"split='{clean_split}'. Explicit splits never use an unsplit fallback."
+                    )
+                artifact = joblib.load(model_path)
+            metadata = artifact.get("metadata", {})
+            for field, expected in (("dataset_id", dataset_id), ("experiment_label", clean_exp)):
+                legacy_default = "default" if field == "experiment_label" and not clean_split else None
+                if artifact.get(field, legacy_default) != expected or (field in metadata and metadata[field] != expected):
+                    raise ModelNotTrainedException(f"Model {field} mismatch: expected '{expected}'.")
+            if clean_split and any(
+                obj.get("split_label") != clean_split or obj.get("dataset_id") != dataset_id
+                or obj.get("experiment_label") != clean_exp for obj in (artifact, metadata)
+            ):
+                raise ModelNotTrainedException(f"Model metadata does not match requested split '{clean_split}'.")
+            self._cache[key] = artifact
             return artifact
         except Exception as e:
+            self._cache.pop(key, None)
+            self.invalidate_scored_cache(dataset_id, clean_exp)
             if isinstance(e, ModelNotTrainedException):
                 raise
             logger.error(

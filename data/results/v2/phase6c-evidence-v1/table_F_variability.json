@@ -1,0 +1,126 @@
+[
+  {
+    "fixed_model_seed": 42,
+    "mean_ap": 0.037993347923045456,
+    "mean_precision_at_k": {
+      "10": 0.05,
+      "100": 0.011666666666666667,
+      "25": 0.02,
+      "50": 0.013333333333333334
+    },
+    "method": "E1",
+    "runs": 6,
+    "sample_sd_ap": 0.03575477341268181,
+    "tier": "5k",
+    "variation": "split"
+  },
+  {
+    "fixed_model_seed": 42,
+    "mean_ap": 0.09591008819466751,
+    "mean_precision_at_k": {
+      "10": 0.05,
+      "100": 0.011666666666666667,
+      "25": 0.02666666666666667,
+      "50": 0.013333333333333334
+    },
+    "method": "E4",
+    "runs": 6,
+    "sample_sd_ap": 0.09680487566099444,
+    "tier": "5k",
+    "variation": "split"
+  },
+  {
+    "fixed_model_seed": 42,
+    "mean_ap": 0.024210177302990847,
+    "mean_precision_at_k": {
+      "10": 0.1,
+      "100": 0.03166666666666667,
+      "25": 0.06,
+      "50": 0.043333333333333335
+    },
+    "method": "E1",
+    "runs": 6,
+    "sample_sd_ap": 0.011158108734347295,
+    "tier": "50k",
+    "variation": "split"
+  },
+  {
+    "fixed_model_seed": 42,
+    "mean_ap": 0.023494247388793747,
+    "mean_precision_at_k": {
+      "10": 0.11666666666666667,
+      "100": 0.016666666666666666,
+      "25": 0.06,
+      "50": 0.03
+    },
+    "method": "E4",
+    "runs": 6,
+    "sample_sd_ap": 0.012678152713315578,
+    "tier": "50k",
+    "variation": "split"
+  },
+  {
+    "maximum_ap": 0.1835639620492086,
+    "mean_ap": 0.09934472052396605,
+    "method": "E1",
+    "minimum_ap": 0.057130037676304354,
+    "model_seeds": [
+      13,
+      42,
+      101
+    ],
+    "runs": 3,
+    "sample_sd_ap": 0.07293607831764105,
+    "split_seed": 42,
+    "tier": "5k",
+    "variation": "model"
+  },
+  {
+    "maximum_ap": 0.19454523425133932,
+    "mean_ap": 0.19072683056179396,
+    "method": "E4",
+    "minimum_ap": 0.18881741749379458,
+    "model_seeds": [
+      13,
+      42,
+      101
+    ],
+    "runs": 3,
+    "sample_sd_ap": 0.003306834603796429,
+    "split_seed": 42,
+    "tier": "5k",
+    "variation": "model"
+  },
+  {
+    "maximum_ap": 0.022242242689584614,
+    "mean_ap": 0.017713267094351056,
+    "method": "E1",
+    "minimum_ap": 0.015136387908546762,
+    "model_seeds": [
+      13,
+      42,
+      101
+    ],
+    "runs": 3,
+    "sample_sd_ap": 0.0039346287418357,
+    "split_seed": 42,
+    "tier": "50k",
+    "variation": "model"
+  },
+  {
+    "maximum_ap": 0.018849610452701046,
+    "mean_ap": 0.015868022259555557,
+    "method": "E4",
+    "minimum_ap": 0.013860435604196546,
+    "model_seeds": [
+      13,
+      42,
+      101
+    ],
+    "runs": 3,
+    "sample_sd_ap": 0.0026333392610799872,
+    "split_seed": 42,
+    "tier": "50k",
+    "variation": "model"
+  }
+]

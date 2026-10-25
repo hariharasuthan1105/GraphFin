@@ -1,0 +1,12 @@
+transaction_id,sender_id,receiver_id,amount,step
+t1,A,B,10,1
+t2,B,A,12,1
+t3,A,C,7,3
+t4,A,C,7,3
+t5,D,A,8,5
+t6,A,E,11,7
+t7,E,D,5,8
+t8,X,Y,4,2
+t9,Y,X,6,4
+t10,F,A,9,9
+t11,A,F,2,12

@@ -12,6 +12,12 @@ class BootstrapCI(BaseModel):
     ci_lower: float = Field(..., description="2.5th percentile lower confidence bound")
     ci_upper: float = Field(..., description="97.5th percentile upper confidence bound")
     skipped_resamples: int = Field(0, description="Number of resamples skipped due to zero positives")
+    statistic_version: str = "legacy-unspecified"
+    point_defined: bool = True
+    interval_defined: bool = True
+    valid_resamples: int = 0
+    requested_resamples: int = 0
+    undefined_reason: Optional[str] = None
 
 
 class PrecisionAtK(BaseModel):
@@ -47,6 +53,7 @@ class FeatureDistributionSummary(BaseModel):
 class ExperimentTransferResult(BaseModel):
     """Transfer metrics for one experiment configuration (E0-E5)."""
     experiment_label: str = Field(..., description="Experiment configuration (e.g. 'E0', 'E1', 'E4', 'E5')")
+    implementation: Dict[str, Any] = Field(default_factory=dict)
     status: str = Field(default="success", description="Status: 'success', 'error', or 'unsupported'")
     supported: bool = Field(default=True, description="Whether experiment configuration is supported for cross-dataset transfer")
     error: Optional[str] = Field(None, description="Detailed explanation if status is 'error' or 'unsupported'")
@@ -88,6 +95,10 @@ class TransferExperimentRequest(BaseModel):
     target_split_label: Optional[str] = Field("research-split", description="Target dataset split partition")
     random_state: int = Field(42, description="Random seed for bootstrap resampling")
     n_bootstraps: int = Field(1000, description="Number of bootstrap iterations for confidence intervals")
+    model_seed: int = 42
+    source_label_set_id: Optional[str] = None
+    target_label_set_id: Optional[str] = None
+    acknowledge_unresolved_labels: bool = False
 
 
 class TransferExperimentResponse(BaseModel):

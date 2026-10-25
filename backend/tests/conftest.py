@@ -2,22 +2,41 @@
 Pytest configuration and fixtures.
 """
 import pytest
+from pathlib import Path
+
+
+def pytest_sessionstart(session):
+    root = Path(__file__).resolve().parents[2]
+    marker = root / ".graphfin-test-sandbox"
+    if not marker.exists() or marker.read_text().strip() != str(root.resolve()):
+        raise pytest.UsageError("Tests delete model/split state. Run backend/scripts/verify_phase2.py with a scratch directory outside this repository.")
+
 from fastapi.testclient import TestClient
 from backend.app.main import app
 from backend.app.services.dataset_registry import dataset_registry
 from backend.app.services.anomaly_service import anomaly_service
 from backend.app.services.label_registry import label_registry
+from backend.app.services.split_service import split_service
+from backend.app.core.config import settings
 
 
 from backend.app.services.stream_simulator import stream_simulator
 
 
 @pytest.fixture(autouse=True)
-def reset_state():
+def reset_state(tmp_path, monkeypatch):
     """Reset the in-memory dataset registry, anomaly models, labels, and stream simulator before each test."""
+    # Disk-restored labels/splits must not leak from one test into another.
+    # Keep persistence functional within each test, in its own disposable directory.
+    processed = tmp_path / "processed"
+    processed.mkdir()
+    monkeypatch.setattr(settings, "DATA_PROCESSED_DIR", processed)
+    monkeypatch.setattr(split_service, "storage_dir", processed)
+    split_service._splits.clear()
     dataset_registry.clear()
     anomaly_service.clear()
     label_registry.clear()
+    split_service._splits.clear()
     stream_simulator.clear()
     yield
     stream_simulator.clear()

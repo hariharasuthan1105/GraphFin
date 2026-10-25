@@ -59,7 +59,8 @@ class EvaluationService:
             effective_split = (model_split or "").strip() or None
 
         pred_response = anomaly_service.predict_user_anomalies(
-            dataset_id=dataset_id, experiment_label=clean_exp, limit=100000, split_label=effective_split
+            dataset_id=dataset_id, experiment_label=clean_exp,
+            limit=len(dataset_registry.get(dataset_id).feature_service.user_features), split_label=effective_split
         )
 
         # 3. Determine evaluation mode (held_out vs in_sample)
@@ -67,6 +68,12 @@ class EvaluationService:
         if effective_split:
             split_obj = split_service.get_split(dataset_id, effective_split)
             allowed_eval_uids = set(split_obj.test_user_ids)
+            artifact = anomaly_service._load_artifact(dataset_id, clean_exp, effective_split)
+            if set(artifact.get("user_ids", [])) != set(split_obj.train_user_ids):
+                raise ValidationException("Model training entities do not match the current split assignment.")
+            actual_ids = {u.user_id for u in pred_response.users}
+            if actual_ids != allowed_eval_uids:
+                raise ValidationException("Held-out prediction coverage does not match the requested split.")
             eval_mode = "held_out"
             eval_note = (
                 f"Entity-level held-out evaluation: evaluated on test partition entity rows "
@@ -229,10 +236,14 @@ class EvaluationService:
             and usable_count >= 500
             and positive_count > 0
             and negative_count > 0
+            and label_registry.get_identity(dataset_id)["provenance_status"] != "unresolved_conflict"
         )
         run_quality_tier = "paper_reportable" if is_paper_reportable else "pipeline_validation"
 
         return ExperimentEvaluationMetrics(
+            implementation_id=metadata.implementation_id,
+            baseline_contract=metadata.baseline_contract,
+            label_identity=label_registry.get_identity(dataset_id),
             dataset_id=dataset_id,
             experiment_label=clean_exp,
             status="success",

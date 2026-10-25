@@ -1,0 +1,14 @@
+{
+  "title": "Machine Learning Enhanced Graph-Based Anomaly Detection for Financial Transactions",
+  "version": "phase5r-selective-top5-v1",
+  "parent_protocol_sha256": "508a84edfc7eef3cf2a9b99d7b776533c49d742ef5215d18ce59a4e46ec6daff",
+  "dataset": "IBM AML supplied 5K, split 42, complete 1,500-account held-out population",
+  "selection_rule": "Top five by frozen E4 raw anomaly score, descending; Unicode lexical ID tie-break",
+  "label_policy": "No held-out labels are loaded before selection; labels are metrics-only after every complete-population score is finalized",
+  "intervention_families": ["counterparty", "temporal", "budgeted"],
+  "scoring": "Frozen E4 model and Phase 5 CREST aggregation, alpha=beta=0.25",
+  "nonselected_fallback": "E6_BASE empirical training-score calibrated E4 score",
+  "compute_safety_budget_seconds": 900,
+  "evaluation_population": "All held-out accounts, identical for E4 and selective CREST modes",
+  "interpretation": "Exploratory, score-selected and selection-biased; not equivalent to full-population CREST and not confirmatory"
+}
