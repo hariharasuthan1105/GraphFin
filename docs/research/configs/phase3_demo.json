@@ -1,0 +1,18 @@
+{
+  "dataset_id": "phase3-synthetic-demo",
+  "source_identity": "phase3-synthetic-demo-v1",
+  "time_kind": "simulation_hour",
+  "cutoff": "9",
+  "window_size": 3,
+  "window_unit": "hours",
+  "intervention_seed": 17,
+  "focal_accounts": ["A"],
+  "known_accounts": ["ISOLATED"],
+  "budget": {
+    "max_count": 2,
+    "max_fraction": 0.5,
+    "max_amount_fraction": 0.5,
+    "min_retained": 2,
+    "max_interventions": 12
+  }
+}

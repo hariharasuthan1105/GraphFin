@@ -26,9 +26,11 @@ from fastapi.testclient import TestClient
 from backend.app.main import app
 from backend.app.core.config import settings
 
-# Frozen expected SHA-256 hashes (lowercase)
-EXPECTED_JSON_SHA256 = "e16e2d5948b66f0cde493fadf43e1491fee219b582faa6a38eabfe53be786ad2"
-EXPECTED_CSV_SHA256 = "ba89012faf612cfe96d9e5049a869c40596894d167d37bb26a1581d976efa40a"
+# Versioned supplied-ZIP byte policy; prior CRLF expectations remain documented
+# and tested separately in test_phase2_correctness.py. No data is normalized.
+from backend.app.services.artifact_integrity import protected_sha
+EXPECTED_JSON_SHA256 = protected_sha("data/results/final_e0_e4_comparison.json")
+EXPECTED_CSV_SHA256 = protected_sha("data/results/final_e0_e4_comparison.csv")
 
 LOCKED_JSON_PATH = settings.DATA_DIR / "results" / "final_e0_e4_comparison.json"
 LOCKED_CSV_PATH = settings.DATA_DIR / "results" / "final_e0_e4_comparison.csv"

@@ -39,67 +39,42 @@ def compute_bootstrap_pr_auc_ci(
     n_bootstraps: int = 500,
     random_state: int = 42,
 ) -> Tuple[float, BootstrapCI]:
+    """IID account bootstrap, sklearn threshold-grouped AP (v2).
+
+    Zero-positive draws are undefined and skipped; all-positive draws have AP=1.
+    Undefined point/interval uses a compatibility zero sentinel plus explicit flags.
+    Graph-dependent accounts are not IID in general; this is not a causal interval.
     """
-    Compute 95% Bootstrap Confidence Interval for PR-AUC / Average Precision.
-    Resamples the FULL evaluation set with replacement N times using a fixed random_state,
-    strictly preserving class prevalence without downsampling.
-    Resamples with zero positive instances are skipped (not appended) and recorded.
-    """
-    yt = np.asarray(y_true, dtype=np.int32)
+    yt = np.asarray(y_true)
     sc = np.asarray(scores, dtype=np.float64)
-    point_estimate = round(float(average_precision_score(yt, sc)), 4) if len(np.unique(yt)) > 1 else 0.0
-
-    if len(yt) == 0 or len(np.unique(yt)) <= 1:
-        ci = BootstrapCI(
-            point_estimate=point_estimate,
-            ci_lower=point_estimate,
-            ci_upper=point_estimate,
-            skipped_resamples=0,
-        )
-        return point_estimate, ci
-
+    if yt.ndim != 1 or sc.ndim != 1 or len(yt) != len(sc):
+        raise ValueError("Labels/scores must be aligned one-dimensional arrays.")
+    if not np.isin(yt, [0, 1]).all() or not np.isfinite(sc).all():
+        raise ValueError("Binary labels and finite scores are required.")
+    if n_bootstraps < 1:
+        raise ValueError("n_bootstraps must be positive.")
+    point_defined = bool(len(yt) and np.sum(yt) > 0)
+    point = float(average_precision_score(yt, sc)) if point_defined else 0.0
     rng = np.random.RandomState(random_state)
-    n = len(yt)
-    boot_scores: List[float] = []
+    values = []
     skipped = 0
-
     for _ in range(n_bootstraps):
-        idxs = rng.randint(0, n, size=n)
-        yt_b = yt[idxs]
-        sc_b = sc[idxs]
-
-        n_pos_b = int(np.sum(yt_b))
-        if n_pos_b == 0:
+        indices = rng.randint(0, len(yt), size=len(yt)) if len(yt) else []
+        yb, sb = yt[indices], sc[indices]
+        if not len(yb) or not np.sum(yb):
             skipped += 1
             continue
-
-        if n_pos_b == n:
-            boot_scores.append(1.0)
-            continue
-
-        # Fast vectorised average precision on resample
-        order = np.argsort(-sc_b, kind="mergesort")
-        y_sorted = yt_b[order]
-        pos_cumsum = np.cumsum(y_sorted)
-        ranks = np.arange(1, n + 1, dtype=np.float64)
-        precisions = pos_cumsum / ranks
-        ap = float(np.dot(precisions, y_sorted) / n_pos_b)
-        boot_scores.append(ap)
-
-    if not boot_scores:
-        ci_lower = point_estimate
-        ci_upper = point_estimate
-    else:
-        ci_lower = round(float(np.percentile(boot_scores, 2.5)), 4)
-        ci_upper = round(float(np.percentile(boot_scores, 97.5)), 4)
-
+        values.append(float(average_precision_score(yb, sb)))
+    lower, upper = np.percentile(values, [2.5, 97.5]) if values else (0.0, 0.0)
     ci = BootstrapCI(
-        point_estimate=point_estimate,
-        ci_lower=ci_lower,
-        ci_upper=ci_upper,
-        skipped_resamples=skipped,
+        statistic_version="sklearn-ap-iid-v2",
+        point_estimate=round(point, 4), ci_lower=round(float(lower), 4),
+        ci_upper=round(float(upper), 4), skipped_resamples=skipped,
+        point_defined=point_defined, interval_defined=bool(values),
+        valid_resamples=len(values), requested_resamples=n_bootstraps,
+        undefined_reason=None if point_defined and values else "no_positive_evaluation_or_valid_resamples",
     )
-    return point_estimate, ci
+    return point, ci
 
 
 def compute_precision_at_k(
@@ -171,6 +146,8 @@ class TransferService:
 
         src_labels = label_registry.get_labels(src_id)
         tgt_labels = label_registry.get_labels(tgt_id)
+        src_identity = label_registry.require_research_identity(src_id, request.source_label_set_id, request.acknowledge_unresolved_labels)
+        tgt_identity = label_registry.require_research_identity(tgt_id, request.target_label_set_id, request.acknowledge_unresolved_labels)
 
         # 2. Extract feature matrices
         src_uids, src_full_matrix, src_feat_names = src_store.get_feature_matrix()
@@ -402,7 +379,7 @@ class TransferService:
                     n_estimators=100,
                     contamination=0.005,
                     max_samples="auto",
-                    random_state=seed,
+                    random_state=request.model_seed,
                     n_jobs=-1,
                 )
                 model.fit(X_src_train_scaled)
@@ -485,6 +462,7 @@ class TransferService:
             len(results) > 0
             and all(r.status == "success" for r in results)
             and len(tgt_test_indices) >= 500
+            and all(i["provenance_status"] != "unresolved_conflict" for i in (src_identity, tgt_identity))
         )
         run_tier = "paper_reportable" if is_paper_reportable else "pipeline_validation"
 
@@ -494,11 +472,18 @@ class TransferService:
         }
 
         paysim_label_rule = (
-            "Account-involvement rule: An account is labeled positive (1) if it appears as sender or receiver "
-            "in at least one transaction where isFraud == 1; negative (0) otherwise."
+            "Declared account-involvement rule: sender or receiver in a flagged transaction. "
+            "PaySim original evidence horizon and conflicting label generation remain unresolved; see label identities."
         )
 
         now_str = datetime.now(timezone.utc).isoformat()
+        from .research_identity import baseline_contract
+        for result in results:
+            selected = [f for group in result.feature_groups for f in FEATURE_GROUP_MAP[group]]
+            result.implementation = (baseline_contract("e0-transfer-signed-unit-v1", selected)
+                if result.experiment_label == "E0" else {"implementation_id": "if-source-scaled-percentile-v1",
+                "feature_names": selected, "preprocessing": "source train mean/std; std<1e-9 replaced by 1",
+                "formula": "100*(1-source_train_decision_percentile)", "metric_version": "sklearn-ap-iid-v2"})
 
         response = TransferExperimentResponse(
             source_dataset_id=src_id,
@@ -512,6 +497,13 @@ class TransferService:
             experiments=results,
             feature_distribution_check=distribution_checks,
             reproducibility_manifest={
+                "protocol": "transfer-api-v2",
+                "source_labels": src_identity, "target_labels": tgt_identity,
+                "model_seed": request.model_seed, "bootstrap_seed": seed,
+                "source_split_seed": src_split_obj.random_state, "target_split_seed": tgt_split_obj.random_state,
+                "score_orientation": "higher_is_more_anomalous",
+                "metric_version": "sklearn-ap-iid-v2",
+                "replay_note": "Use research_protocol for input-checksummed replay and saved raw scores; this API retains legacy percentile IF scores.",
                 "source_dataset_id": src_id,
                 "target_dataset_id": tgt_id,
                 "source_entities": len(src_uids),
@@ -528,7 +520,8 @@ class TransferService:
         # Export result to data/results/cross_dataset/ (only for full research runs, not unit tests)
         if "test" not in src_id.lower() and "test" not in tgt_id.lower():
             try:
-                out_dir = settings.DATA_DIR / "results" / "cross_dataset"
+                from uuid import uuid4
+                out_dir = settings.DATA_DIR / "results" / "v2" / "transfer_api" / uuid4().hex
                 out_dir.mkdir(parents=True, exist_ok=True)
                 canonical_filename = (
                     "ibm_to_paysim_transfer.json"
@@ -536,7 +529,7 @@ class TransferService:
                     else "paysim_to_ibm_transfer.json"
                 )
                 out_file = out_dir / canonical_filename
-                with open(out_file, "w", encoding="utf-8") as f:
+                with open(out_file, "x", encoding="utf-8") as f:
                     json.dump(response.model_dump(), f, indent=2)
                 logger.info(f"Exported cross-dataset transfer result to {out_file}")
             except Exception as e:

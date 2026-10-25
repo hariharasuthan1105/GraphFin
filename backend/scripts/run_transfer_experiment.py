@@ -15,6 +15,11 @@ from backend.app.schemas.transfer import TransferExperimentRequest
 from backend.app.core.config import settings
 
 def main():
+    raise RuntimeError(
+        "Legacy transfer entry point disabled: its PaySim UUID resolves to a demo prefix and label provenance is unresolved. "
+        "Use python -m backend.app.services.research_protocol CONFIG OUTPUT_ROOT RUN_ID with explicit source/target inputs. "
+        "Historical transfer outputs must not be overwritten."
+    )
     print("Initializing Cross-Dataset Transfer Experiment...", flush=True)
     t0 = time.time()
 

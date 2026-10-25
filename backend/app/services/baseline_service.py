@@ -180,7 +180,10 @@ class BaselineService:
                 groups.append("temporal")
 
         # 7. Assemble metadata
+        from .research_identity import baseline_contract
         metadata = ModelMetadata(
+            implementation_id="e0-offline-signed-zero-v1",
+            baseline_contract=baseline_contract("e0-offline-signed-zero-v1", selected_features),
             model_type="StatisticalBaseline",
             method="Statistical (z-score, no ML)",
             sklearn_version="N/A",
@@ -212,7 +215,7 @@ class BaselineService:
             "predictions": predictions_dict,
             "risk_scores": risk_scores_dict,
             "reasons": reasons_dict,
-            "user_ids": fit_user_ids,
+            "user_ids": list(fit_user_ids),
             "z_threshold": z_thresh,
             "features": selected_features,
         }

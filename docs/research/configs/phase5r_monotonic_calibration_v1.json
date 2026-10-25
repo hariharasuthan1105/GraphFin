@@ -1,0 +1,11 @@
+{
+  "title": "Machine Learning Enhanced Graph-Based Anomaly Detection for Financial Transactions",
+  "protocol": "phase5r-monotonic-calibration-exploratory-v1",
+  "parent_protocol_sha256": "508a84edfc7eef3cf2a9b99d7b776533c49d742ef5215d18ce59a4e46ec6daff",
+  "algorithm": "source-logistic-rank-preserving-v3",
+  "fit_data": "source-training raw E4 scores only, independently per existing frozen split",
+  "transform": "sigmoid((s - median(train_scores)) / scale(train_scores)); scale=max(IQR/1.349, max_abs_deviation/20, 1.0)",
+  "numerical_policy": "float64 stable logaddexp; fail if distinct finite scores collapse to a tie",
+  "evaluation": "replay existing held-out E4 score arrays only; no model refit, label-based parameter selection, or change to E6_BASE",
+  "status": "exploratory; frozen Phase 5 method and results remain unchanged"
+}

@@ -56,6 +56,9 @@ class ExperimentEvaluationMetrics(BaseModel):
     """Full quantitative performance evaluation metrics and manifest for one trained experiment."""
 
     dataset_id: str = Field(..., description="UUID of the evaluated dataset")
+    implementation_id: str = "legacy-unspecified"
+    baseline_contract: Dict[str, Any] = Field(default_factory=dict)
+    label_identity: Dict[str, Any] = Field(default_factory=dict)
     experiment_label: str = Field(..., description="Experiment identifier (e.g. 'baseline', 'e1', 'e2')")
     status: str = Field(default="success", description="Evaluation status: 'success' or 'error'")
     error: Optional[str] = Field(None, description="Detailed explanation if evaluation status is 'error'")

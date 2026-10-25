@@ -1,0 +1,213 @@
+[
+  {
+    "centrality_seed": 42,
+    "detector": null,
+    "feature_count": 6,
+    "feature_names": [
+      "in_degree",
+      "out_degree",
+      "total_degree",
+      "weighted_in_degree",
+      "weighted_out_degree",
+      "betweenness_centrality"
+    ],
+    "graph": "full-observation transductive",
+    "method": "E0",
+    "model_seed": null,
+    "preprocessing": "positive nonself; unchanged raw float32",
+    "score": "max source signed z; zero std<=1e-9",
+    "split_seeds": [
+      42,
+      123,
+      7,
+      2024,
+      99,
+      555
+    ],
+    "version": "e0-source-signed-zero-v2"
+  },
+  {
+    "centrality_seed": 42,
+    "detector": {
+      "contamination": 0.005,
+      "max_samples": "auto",
+      "n_estimators": 100,
+      "n_jobs": 1
+    },
+    "feature_count": 6,
+    "feature_names": [
+      "in_degree",
+      "out_degree",
+      "total_degree",
+      "weighted_in_degree",
+      "weighted_out_degree",
+      "betweenness_centrality"
+    ],
+    "graph": "full-observation transductive",
+    "method": "E1",
+    "model_seed": 42,
+    "preprocessing": "positive nonself; unchanged raw float32",
+    "score": "-decision_function",
+    "split_seeds": [
+      42,
+      123,
+      7,
+      2024,
+      99,
+      555
+    ],
+    "version": "isolation-forest-raw-v2"
+  },
+  {
+    "centrality_seed": 42,
+    "detector": {
+      "contamination": 0.005,
+      "max_samples": "auto",
+      "n_estimators": 100,
+      "n_jobs": 1
+    },
+    "feature_count": 14,
+    "feature_names": [
+      "in_degree",
+      "out_degree",
+      "total_degree",
+      "weighted_in_degree",
+      "weighted_out_degree",
+      "betweenness_centrality",
+      "transaction_count",
+      "total_sent",
+      "total_received",
+      "net_flow",
+      "average_transaction_amount",
+      "maximum_transaction_amount",
+      "unique_receivers",
+      "unique_senders"
+    ],
+    "graph": "full-observation transductive",
+    "method": "E2",
+    "model_seed": 42,
+    "preprocessing": "positive nonself; unchanged raw float32",
+    "score": "-decision_function",
+    "split_seeds": [
+      42,
+      123,
+      7,
+      2024,
+      99,
+      555
+    ],
+    "version": "isolation-forest-raw-v2"
+  },
+  {
+    "centrality_seed": 42,
+    "detector": {
+      "contamination": 0.005,
+      "max_samples": "auto",
+      "n_estimators": 100,
+      "n_jobs": 1
+    },
+    "feature_count": 11,
+    "feature_names": [
+      "in_degree",
+      "out_degree",
+      "total_degree",
+      "weighted_in_degree",
+      "weighted_out_degree",
+      "betweenness_centrality",
+      "transactions_per_day",
+      "transactions_per_week",
+      "average_time_between_transactions",
+      "minimum_time_between_transactions",
+      "maximum_time_between_transactions"
+    ],
+    "graph": "full-observation transductive",
+    "method": "E3",
+    "model_seed": 42,
+    "preprocessing": "positive nonself; unchanged raw float32",
+    "score": "-decision_function",
+    "split_seeds": [
+      42,
+      123,
+      7,
+      2024,
+      99,
+      555
+    ],
+    "version": "isolation-forest-raw-v2"
+  },
+  {
+    "centrality_seed": 42,
+    "detector": {
+      "contamination": 0.005,
+      "max_samples": "auto",
+      "n_estimators": 100,
+      "n_jobs": 1
+    },
+    "feature_count": 19,
+    "feature_names": [
+      "in_degree",
+      "out_degree",
+      "total_degree",
+      "weighted_in_degree",
+      "weighted_out_degree",
+      "betweenness_centrality",
+      "transaction_count",
+      "total_sent",
+      "total_received",
+      "net_flow",
+      "average_transaction_amount",
+      "maximum_transaction_amount",
+      "unique_receivers",
+      "unique_senders",
+      "transactions_per_day",
+      "transactions_per_week",
+      "average_time_between_transactions",
+      "minimum_time_between_transactions",
+      "maximum_time_between_transactions"
+    ],
+    "graph": "full-observation transductive",
+    "method": "E4",
+    "model_seed": 42,
+    "preprocessing": "positive nonself; unchanged raw float32",
+    "score": "-decision_function",
+    "split_seeds": [
+      42,
+      123,
+      7,
+      2024,
+      99,
+      555
+    ],
+    "version": "isolation-forest-raw-v2"
+  },
+  {
+    "centrality_seed": 42,
+    "detector": {
+      "contamination": 0.005,
+      "max_samples": "auto",
+      "n_estimators": 100,
+      "n_jobs": 1
+    },
+    "feature_count": 4,
+    "feature_names": [
+      "egonet_node_count",
+      "egonet_edge_count",
+      "egonet_density",
+      "circular_flow_indicator"
+    ],
+    "graph": "full-observation transductive",
+    "method": "E5",
+    "model_seed": 42,
+    "preprocessing": "positive nonself; unchanged raw float32",
+    "score": "-decision_function",
+    "split_seeds": [
+      42,
+      123,
+      7,
+      2024,
+      99,
+      555
+    ],
+    "version": "isolation-forest-raw-v2"
+  }
+]

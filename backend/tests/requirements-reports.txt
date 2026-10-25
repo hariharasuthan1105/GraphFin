@@ -1,0 +1,2 @@
+# Optional PDF validation tooling; production uses the existing ReportLab dependency.
+pypdf>=5.0

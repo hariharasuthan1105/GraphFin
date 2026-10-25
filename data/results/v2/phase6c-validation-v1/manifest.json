@@ -1,0 +1,30 @@
+{
+  "artifacts": {
+    "50k-E1-model-101-scores.json": "ae01f92a2442d1e6ad0619f520fcde9c1de6f3f5878d2e04808f47b178f4e08b",
+    "50k-E1-model-13-scores.json": "17ffd018edc3a4d8a04db4a17751e23fa3a0152721915941356df9803a78f10d",
+    "50k-E1-model-42-scores.json": "042cdf2ac9eb7a5174f0784eee7a30a91bddc5f90835df152f7578ed68dbaab4",
+    "50k-E4-model-101-scores.json": "aa32859682eca6450db52223de02fc6a57724be112ed49a7ef6286c1b38ff5d9",
+    "50k-E4-model-13-scores.json": "f6233dae5b0ea9511bcf658d76e041aee99db073783667b53fd182b2633984f6",
+    "50k-E4-model-42-scores.json": "2fe8db55e2149ce87a501f5c6dabe05df0e3db831c7a36d7472abe8fb95202e4",
+    "5k-E1-model-101-scores.json": "ded3d7e8cb600151d65748862e44104d2a7f0f79baec44c3251cfe99b19fd7d7",
+    "5k-E1-model-13-scores.json": "c70383b5e92e80e26e36fa9e81044864adc5898f68bcc068e27fd2a9b2c36aef",
+    "5k-E1-model-42-scores.json": "d0aed50e7796ddcd4e1541050fa6cb5bb9026dce694867bac262f705afce99d2",
+    "5k-E4-model-101-scores.json": "96e8ef73d586320b8cdb6cc4a603e9e6ccb8f9e8cec144c432178e7f417ca6c9",
+    "5k-E4-model-13-scores.json": "910fa2c5f7886582b2a705de1ebfd64206fe107f10ef4576e5e2b272e91b53fe",
+    "5k-E4-model-42-scores.json": "864c4499eb6d587eb9cab444a0733c23b9771d587bca1817f9b76d93d9afb56c",
+    "before.json": "b5c544ea3bb4fe4af000741ecc580503b99cbc25e3b4d51901dca6117a614ce8",
+    "evaluate-process.json": "8c55beb633e19c7bcd271075a57ff223ef4a69a14c044d736555b62f604128a8",
+    "evaluate.log": "7c157d1cb426b87adc016c262e4738f556cd5e16b7243229cfe25450e041fdef",
+    "model_seed_results.json": "d8a7da63b38ced9524d87f0f1b3e77c7e0d811d94255fbe47f91c01d74ed048b",
+    "model_seed_stability.json": "8bc1c50b79b9c5ff9ba889c8f81577a53aa0a91d7b5f8913b647930b61c456c1",
+    "model_seed_summary.json": "2b39a374811d18ae2c9a3ba346d7b917782eab089708c7f6adfe9acea4a61c45",
+    "prepare-process.json": "084483cc7e05143c280c7235823ca7d1e92d98e66a1868fb0f0c8572790d260f",
+    "prepare.log": "a7c18e10ade967a7ddcc5db0af5f14f9bbc32c0bdfba543d564021c53b519719",
+    "protocol.json": "7487d2a8a320c5a965b29cbca3a328e34ce8bede9c00a2915dde97f0227797d5",
+    "replay_comparison.json": "789251b080dd739708ae87949128673a88302fb470991d22dc570ec3e08ad93e",
+    "seeds-process.json": "a41b15e39b38cc12d688016fbda7f9164ee29e6bbd52e61fd45195962fe998e5",
+    "seeds.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "protocol_sha256": "7487d2a8a320c5a965b29cbca3a328e34ce8bede9c00a2915dde97f0227797d5",
+  "stage": "phase6c-complete"
+}

@@ -198,7 +198,9 @@ class SplitService:
         key = (dataset_id, clean_split)
 
         if key in self._splits:
-            return self._splits[key]
+            assignment = self._splits[key]
+            self._validate_identity(assignment, dataset_id, clean_split)
+            return assignment
 
         # Check disk cache
         split_file = self._get_split_path(dataset_id, clean_split)
@@ -206,6 +208,7 @@ class SplitService:
             try:
                 data = json.loads(split_file.read_text(encoding="utf-8"))
                 assignment = SplitAssignment(**data)
+                self._validate_identity(assignment, dataset_id, clean_split)
                 self._splits[key] = assignment
                 return assignment
             except Exception as e:
@@ -215,6 +218,14 @@ class SplitService:
             f"Split assignment '{clean_split}' not found for dataset '{dataset_id}'. "
             f"Please create it first via POST /api/v1/datasets/{dataset_id}/splits."
         )
+
+    @staticmethod
+    def _validate_identity(assignment, dataset_id, split_label):
+        if assignment.dataset_id != dataset_id or assignment.split_label != split_label:
+            raise NotFoundException("Split metadata does not match requested dataset/split.")
+        train, test = assignment.train_user_ids, assignment.test_user_ids
+        if len(set(train)) != len(train) or len(set(test)) != len(test) or set(train) & set(test):
+            raise NotFoundException("Split contains duplicate or overlapping entity IDs.")
 
     def get_split_summary(self, dataset_id: str, split_label: str = "default") -> SplitSummaryResponse:
         """Retrieve stored split summary without raw user ID lists."""

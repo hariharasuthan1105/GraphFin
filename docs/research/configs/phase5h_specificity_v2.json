@@ -1,0 +1,43 @@
+{
+  "project_title": "Machine Learning Enhanced Graph-Based Anomaly Detection for Financial Transactions",
+  "version": "phase5h-matched-control-specificity-v1",
+  "algorithm": "E6_CREST_V2",
+  "parent_protocol_sha256": "508a84edfc7eef3cf2a9b99d7b776533c49d742ef5215d18ce59a4e46ec6daff",
+  "pilot_manifest_sha256": "97db89c06b906a228adabf8cbafd130f30b6bb4e6244d1790b0aaad6279094b3",
+  "cohort": "Reuse all six fixed Phase5G held-out accounts, no outcome selection or additions",
+  "activity_groups": {"low": "2-4 incident events", "middle": "5-29 incident events", "high": "30 or more incident events"},
+  "matching": {
+    "version": "same-account-decimal-caliper-two-controls-v1",
+    "control_seed": 2902,
+    "controls_per_intervention": 2,
+    "absolute_amount_fraction_tolerance": "0.01",
+    "relative_amount_tolerance": "0.10",
+    "enumeration_limit": 10000,
+    "same_omission_allowed": false,
+    "count_and_evidence_fraction": "exact; same account and historical incident denominator",
+    "selection": "Enumerate all count-matched subsets under the bound; filter all budgets and both monetary calipers; order by SHA256(seed, context, structured identity, control IDs); select first two distinct sets",
+    "insufficient_controls": "unmatched; no tolerance relaxation or single-control substitution",
+    "context": "Identical history hash, cutoff, time kind, population, account, model and canonical19 schema"
+  },
+  "ranking": {
+    "version": "raw-e4-family-median-excess-v2",
+    "lambda": 1.0,
+    "justification": "Unit coefficient in the same raw anomaly-score units; one unit of excess response contributes one unit to score; fixed mechanistic hypothesis, no empirical optimality claim",
+    "family_excess": "median matched structured raw deltas minus median of their pooled controls (exactly two per structured omission)",
+    "aggregation": "equal mean across families with at least one fully matched structured omission",
+    "missing": "raw E4 fallback with explicit reason",
+    "tie_break": "descending unrounded score then ascending account ID",
+    "numerics": "float64 finite checks; no clipping or calibration; fail on overflow or absorbed nonzero addition"
+  },
+  "budget": {"max_count": 2, "max_fraction": 0.5, "max_amount_fraction": 0.5, "min_retained": 1, "max_interventions": 2},
+  "reuse": "Checksum-verified Phase5G vectors by history-aware focal omission identity; exact batch versus singleton frozen E4 scoring verification",
+  "reference_checks": "First new control per score stratum against full reference and an uncached focal replay; no approximation",
+  "model_seed": 42,
+  "split_seed": 42,
+  "graph_seed": 42,
+  "numerical_diagnostic_threshold": 1e-12,
+  "wall_budget_seconds": 1800,
+  "labels": "No evaluation-label parsing, fitting, control selection or detector metrics; protected bytes may be hashed",
+  "outputs": "Exclusive new data/results/v2/phase5h-* directory; manifest last; preserve incomplete runs",
+  "projection_policy": "Separate incremental reuse cost from cold unique-scenario cost; same-5K-cost scenarios for 250,500,1500,14998 accounts only; 50K unprofiled and guarded"
+}

@@ -280,6 +280,10 @@ def run_tier_pipeline(
             fn = cm.get("fn", 0)
 
             record = {
+                "implementation_id": meta.get("implementation_id", "legacy-unspecified"),
+                "baseline_contract": meta.get("baseline_contract", {}),
+                "feature_names": meta.get("feature_names", []),
+                "label_identity": m.get("label_identity", {}),
                 "scale": tier_name,
                 "dataset_id": dataset_id,
                 "experiment_label": exp_label,
@@ -402,7 +406,8 @@ def main():
     repo_root = Path(__file__).resolve().parent.parent.parent
     data_dir = repo_root / "data"
     research_dir = data_dir / "research"
-    results_dir = data_dir / "results"
+    from uuid import uuid4
+    results_dir = data_dir / "results" / "v2" / "legacy_final_runner" / uuid4().hex
     results_dir.mkdir(parents=True, exist_ok=True)
 
     med_tx = research_dir / "ibm_aml_medium_5k.csv"
@@ -523,7 +528,7 @@ def main():
             ]
 
             with open(csv_out_path, "w", newline="", encoding="utf-8") as f:
-                writer = csv.DictWriter(f, fieldnames=csv_fields)
+                writer = csv.DictWriter(f, fieldnames=csv_fields, extrasaction="ignore")
                 writer.writeheader()
                 for row in all_canonical_rows:
                     row_copy = dict(row)

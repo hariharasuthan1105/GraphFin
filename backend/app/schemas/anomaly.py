@@ -124,6 +124,8 @@ class ModelMetadata(BaseModel):
     """Complete metadata and hyperparameter specification for a trained model/experiment."""
 
     model_type: str = Field(default="IsolationForest", description="Model algorithm ('IsolationForest' or 'StatisticalBaseline')")
+    implementation_id: str = "legacy-unspecified"
+    baseline_contract: Dict[str, Any] = Field(default_factory=dict)
     method: str = Field(default="Isolation Forest", description="Human-readable method title (e.g. 'Isolation Forest' or 'Statistical (z-score, no ML)')")
     sklearn_version: str = Field(..., description="scikit-learn runtime library version (or 'N/A' for baseline)")
     dataset_id: str = Field(..., description="UUID of the training dataset")
