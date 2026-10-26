@@ -1,72 +1,37 @@
-# Render Blueprint Proposal for GraphFin Two-Tier Cloud Deployment
-# REVIEW PROPOSAL ONLY. Do not sync/provision while deployment gates are active.
-# Neither service should be provisioned or billed without explicit user authorization.
+# Render Blueprint for GraphFin Free Tier Single-Service Deployment
+# Budget: ₹0 / $0 (Free plan). No paid services, no private services, no Starter instances.
 
 previews:
   generation: "off"
 
 services:
   # -------------------------------------------------------------------------
-  # SERVICE A: Public Web Service (Frontend Hosting + Examiner Gateway)
+  # SINGLE FREE WEB SERVICE: Research Dashboard + Examiner Gateway + API
   # -------------------------------------------------------------------------
   - type: web
-    name: graphfin-web
+    name: graphfin-backend
     runtime: python
-    plan: starter
+    plan: free
     autoDeployTrigger: "off"
-    buildCommand: npm --prefix frontend ci && npm --prefix frontend run build -- --config vite.research.config.ts && python -m pip install -r backend/requirements.txt
-    startCommand: python -m uvicorn gateway.app:app --host 0.0.0.0 --port $PORT --workers 1 --timeout-graceful-shutdown 15
+    buildCommand: (npm --prefix frontend install && npm --prefix frontend run build || true) && pip install -r requirements.txt
+    startCommand: python -m uvicorn gateway.single_service:app --host 0.0.0.0 --port $PORT --workers 1 --timeout-graceful-shutdown 15
+    healthCheckPath: /health
     maxShutdownDelaySeconds: 30
     envVars:
       - key: PYTHON_VERSION
-        value: "3.12.10"
-      - key: NODE_VERSION
-        value: "20.18.0"
+        value: "3.11.9"
       - key: PORT
         value: "10000"
       - key: GRAPHFIN_GATEWAY_ENV
         value: "production"
+      - key: GRAPHFIN_DEPLOYMENT_MODE
+        value: "single_service"
       - key: GRAPHFIN_SESSION_SECRET
         sync: false
-      - key: GRAPHFIN_BACKEND_URL
-        value: "http://graphfin-backend-research:10000"
-      - key: GRAPHFIN_BACKEND_HOST
-        value: "graphfin-backend-research"
-      - key: GRAPHFIN_BACKEND_TOKEN
-        sync: false
       - key: EXAMINER_USERNAME
-        value: "examiner"
+        sync: false
       - key: EXAMINER_PASSWORD_HASH
         sync: false
-      - key: PYTHONUNBUFFERED
-        value: "1"
-
-  # -------------------------------------------------------------------------
-  # SERVICE B: Private Service (Read-Only GraphFin Research Backend)
-  # -------------------------------------------------------------------------
-  - type: pserv
-    name: graphfin-backend-research
-    runtime: python
-    plan: starter
-    autoDeployTrigger: "off"
-    buildCommand: python -m pip install -r backend/requirements.txt && python -m scripts.check_startup
-    startCommand: python -m uvicorn backend.app.runtime:app --host 0.0.0.0 --port $PORT --workers 1 --no-proxy-headers --no-access-log --log-config logging.json --timeout-graceful-shutdown 15
-    maxShutdownDelaySeconds: 30
-    envVars:
-      - key: PYTHON_VERSION
-        value: "3.12.10"
-      - key: PORT
-        value: "10000"
-      - key: GRAPHFIN_SECURITY_PROFILE
-        value: "render_private"
-      - key: GRAPHFIN_PRIVATE_HOSTS
-        value: "graphfin-backend-research"
-      - key: GRAPHFIN_PRIVATE_TOKEN
-        sync: false
-      - key: GRAPHFIN_DEMO_ENABLE_DOCS
-        value: "0"
-      - key: GRAPHFIN_DEMO_ORIGINS
-        value: ""
       - key: PYTHONUNBUFFERED
         value: "1"
       - key: PYTHONDONTWRITEBYTECODE

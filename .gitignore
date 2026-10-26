@@ -81,7 +81,9 @@ Thumbs.db
 frontend/node_modules/
 frontend/.next/
 frontend/out/
-dist/
+/dist/
+!frontend/dist/
+!frontend/dist/**
 
 # Antigravity / Gemini local files
 .gemini/

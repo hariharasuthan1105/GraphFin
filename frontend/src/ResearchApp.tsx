@@ -2,7 +2,6 @@ import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { TITLE } from "./research/state";
 import "./research/research.css";
 
-const Legacy = lazy(() => import("./LegacyApp"));
 const pages = {
   overview: lazy(() => import("./research/pages/Overview")),
   datasets: lazy(() => import("./research/pages/Datasets")),
@@ -155,17 +154,10 @@ export function App() {
     }
   };
 
-  if (route === "workspace")
-    return (
-      <>
-        <a className="workspace-return" href="#/overview">
-          Read-only research terminal
-        </a>
-        <Suspense fallback={<p>Loading existing workspace.</p>}>
-          <Legacy />
-        </Suspense>
-      </>
-    );
+  if (route === "workspace") {
+    window.location.hash = "#/overview";
+    return null;
+  }
 
   const Page = pages[route as keyof typeof pages];
   const isProtected = !PUBLIC_ROUTES.has(route);
@@ -232,8 +224,7 @@ export function App() {
               <p className="eyebrow technical">PUBLIC VISITOR MODE</p>
             )}
           </div>
-          <a href="#/workspace">Existing analysis workspace</a>
-          <small>Operational tools in separate workspace</small>
+
         </div>
       </aside>
       {open && (

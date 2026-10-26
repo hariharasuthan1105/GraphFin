@@ -62,6 +62,10 @@ jobs:
         run: |
           python -m pytest tests/test_gateway_security.py tests/test_gateway_e2e_integration.py -v
 
+      - name: Execute Single-Service Free Architecture Suite (6 tests)
+        run: |
+          python -m pytest tests/test_single_service.py -v
+
       - name: Execute Internal HTTP Smoke Verification
         run: |
           python -m scripts.private_http_smoke

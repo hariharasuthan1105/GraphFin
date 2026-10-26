@@ -1,58 +1,64 @@
-"""Cryptographic secret generator for GraphFin Render production deployment.
+"""Cryptographic secret generator for GraphFin Single-Service Render Free Tier deployment.
 
 Generates:
-1. GRAPHFIN_SESSION_SECRET: 32 cryptographically secure random bytes for session cookie signing.
-2. GRAPHFIN_PRIVATE_TOKEN / GRAPHFIN_BACKEND_TOKEN: Canonical 256-bit base64url token matching backend validator.
-3. EXAMINER_PASSWORD_HASH helper: Computes SHA-256 digest of operator-supplied examiner password.
+1. GRAPHFIN_SESSION_SECRET: Cryptographically secure 256-bit random secret for session cookie signing.
+2. EXAMINER_PASSWORD_HASH: Salted scrypt password hash (RFC 7914 / NIST SP 800-132).
+3. Production environment variables for single-service Render Web Service deployment.
 
 DO NOT commit generated production values to version control.
 """
-import base64
-import hashlib
 import os
 import secrets
 import sys
 
+from gateway.auth import hash_examiner_password
 
-def generate_secrets():
+
+def generate_secrets(username: str = None, password: str = None):
     print("=" * 70)
-    print("GraphFin Production Secrets Generator")
+    print("GraphFin Single-Service Production Secrets Generator (Render Free Tier)")
     print("=" * 70)
 
-    # 1. Session secret
-    session_secret = secrets.token_hex(32)  # 64 chars hex (256-bit)
+    # 1. Session secret (256-bit entropy)
+    session_secret = secrets.token_hex(32)
 
-    # 2. Canonical 256-bit private token for server-to-server auth
-    raw_token_bytes = secrets.token_bytes(32)
-    canonical_token = base64.urlsafe_b64encode(raw_token_bytes).decode("ascii").rstrip("=")
-    assert len(canonical_token) == 43, f"Unexpected token length: {len(canonical_token)}"
+    # 2. Examiner Credentials
+    if not username:
+        if sys.stdin.isatty():
+            username = input("Enter production examiner username [default: examiner]: ").strip() or "examiner"
+        else:
+            username = "examiner"
 
-    print("\n[1] Gateway Session Signing Secret (configure on 'graphfin-web'):")
-    print(f"GRAPHFIN_SESSION_SECRET={session_secret}")
+    if not password:
+        if sys.stdin.isatty():
+            password = input("Enter production examiner password: ").strip()
+        else:
+            password = secrets.token_urlsafe(24)
+            print(f"[Generated Secure Random Password: {password}]")
 
-    print("\n[2] Shared Private Service Token (configure on BOTH services):")
-    print(f"# Configure on 'graphfin-web':")
-    print(f"GRAPHFIN_BACKEND_TOKEN={canonical_token}")
-    print(f"# Configure on 'graphfin-backend-research':")
-    print(f"GRAPHFIN_PRIVATE_TOKEN={canonical_token}")
-
-    print("\n[3] Examiner Credentials (configure on 'graphfin-web'):")
-    user = input("Enter production examiner username [default: examiner]: ").strip() or "examiner"
-    pwd = input("Enter production examiner password: ").strip()
-
-    if not pwd:
+    if not password:
         print("ERROR: Password cannot be empty.")
         sys.exit(1)
 
-    pwd_hash = hashlib.sha256(pwd.encode("utf-8")).hexdigest()
-    print(f"\nEXAMINER_USERNAME={user}")
+    # Salted scrypt key derivation (RFC 7914, N=16384, r=8, p=1)
+    pwd_hash = hash_examiner_password(password)
+
+    print()
+    print("--- RENDER ENVIRONMENT VARIABLES (Single Free Web Service) ---")
+    print("GRAPHFIN_GATEWAY_ENV=production")
+    print("GRAPHFIN_DEPLOYMENT_MODE=single_service")
+    print(f"GRAPHFIN_SESSION_SECRET={session_secret}")
+    print(f"EXAMINER_USERNAME={username}")
     print(f"EXAMINER_PASSWORD_HASH={pwd_hash}")
 
-    print("\n" + "=" * 70)
-    print("Copy these values into your Render Dashboard Environment Settings.")
-    print("DO NOT commit these values to Git or send them over unencrypted channels.")
+    print()
+    print("=" * 70)
+    print("Add these 5 environment variables to your existing Render Web Service:")
+    print("Render Dashboard -> graphfin-backend -> Environment")
     print("=" * 70)
 
 
 if __name__ == "__main__":
-    generate_secrets()
+    u = sys.argv[1] if len(sys.argv) > 1 else None
+    p = sys.argv[2] if len(sys.argv) > 2 else None
+    generate_secrets(u, p)

@@ -13,6 +13,51 @@ from .security import create_signed_session, verify_session
 
 router = APIRouter(prefix="/api/auth", tags=["Examiner Authentication"])
 
+import secrets
+
+def hash_examiner_password(password: str, salt: bytes = None) -> str:
+    """Generate salted scrypt hash (RFC 7914 / NIST SP 800-132)."""
+    salt = salt or secrets.token_bytes(16)
+    key = hashlib.scrypt(
+        password.encode("utf-8"),
+        salt=salt,
+        n=16384,
+        r=8,
+        p=1,
+        maxmem=32 * 1024 * 1024,
+    )
+    return f"scrypt$16384$8$1${salt.hex()}${key.hex()}"
+
+
+def verify_examiner_password(password: str, stored_hash: str) -> bool:
+    """Constant-time verification of password against stored hash.
+    Supports salted scrypt ($scrypt$16384$8$1$salt$key) and sha256 hex fallback."""
+    if not password or not stored_hash:
+        return False
+    try:
+        if stored_hash.startswith("scrypt$"):
+            parts = stored_hash.split("$")
+            if len(parts) == 6:
+                _, n_str, r_str, p_str, salt_hex, key_hex = parts
+                salt = bytes.fromhex(salt_hex)
+                expected_key = bytes.fromhex(key_hex)
+                computed = hashlib.scrypt(
+                    password.encode("utf-8"),
+                    salt=salt,
+                    n=int(n_str),
+                    r=int(r_str),
+                    p=int(p_str),
+                    maxmem=32 * 1024 * 1024,
+                )
+                return hmac.compare_digest(computed, expected_key)
+        if len(stored_hash) == 64:
+            input_hash = hashlib.sha256(password.encode("utf-8")).hexdigest().lower()
+            return hmac.compare_digest(input_hash, stored_hash.lower())
+    except Exception:
+        return False
+    return False
+
+
 # In-memory brute-force protection: track failed attempts per client IP
 # Structure: client_ip -> list of failure timestamps
 _failed_attempts: dict[str, list[float]] = defaultdict(list)
@@ -80,12 +125,10 @@ async def login(request: Request, body: LoginRequest, response: Response):
             status_code=503,
         )
 
-    # 3. Constant-time comparison of username and SHA-256 password hash
+    # 3. Constant-time comparison of username and salted password hash
     input_user = body.username.strip()
-    input_hash = hashlib.sha256(body.password.encode("utf-8")).hexdigest()
-
     user_matches = hmac.compare_digest(input_user.lower(), config.examiner_username.lower())
-    pwd_matches = hmac.compare_digest(input_hash.lower(), config.examiner_password_hash.lower())
+    pwd_matches = verify_examiner_password(body.password, config.examiner_password_hash)
 
     if not (user_matches and pwd_matches):
         _failed_attempts[ip].append(now)

@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
 
   // GitHub Pages deployment
-  base: '/GraphFin/',
+  base: './',
 
   server: {
     port: 5173,
