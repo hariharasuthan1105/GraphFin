@@ -38,7 +38,14 @@ function Detail({ id }: { id: string }) {
 }
 export default function Datasets() {
   const r = useResearch<Page_Dataset_>("/datasets", "Page_Dataset_");
-  const [id, setId] = useState("ibm-5k");
+  const [id, setId] = useState(() => {
+    const requested = new URLSearchParams(
+      location.hash.split("?")[1] ?? "",
+    ).get("dataset_id");
+    return requested && ["ibm-5k", "ibm-50k", "paysim"].includes(requested)
+      ? requested
+      : "ibm-5k";
+  });
   return (
     <>
       <Heading index="02" title="Dataset explorer">

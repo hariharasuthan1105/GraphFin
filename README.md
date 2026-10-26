@@ -1,258 +1,130 @@
 # Machine Learning Enhanced Graph-Based Anomaly Detection for Financial Transactions
 
-A research-driven platform combining graph-mining metrics with behavioral and temporal feature engineering to detect anomalous transactional patterns in financial networks.
+**Phase 10R controlled demo:** use the isolated loopback-only `backend.app.research_demo:app` entry described in [controlled-demo readiness](docs/research/10R_controlled_demo_readiness.md). Legacy raw/training APIs are deliberately absent from that profile. Earlier Phase 10 reports remain historical evidence, not the current controlled-startup command.
 
----
+GraphFin is a reproducible research application for retrospective account anomaly ranking on supplied synthetic transaction graphs. It combines established graph features and Isolation Forest with versioned experiments, explicit dataset/label identities, a read-only research dashboard, a bounded graph explorer and institutional PDF exports.
 
-## Project Overview & Current Status
+**Scientific status:** CREST detector and explanation superiority are unsupported. Anomaly scores are not calibrated fraud probabilities. Same-input replay establishes reproducibility, not external validity. IBM label lineage is partially verified; PaySim's two label sets remain unresolved. This is a local research demonstration, not a certified financial-crime detection system.
 
-GraphFin provides a controlled empirical framework for evaluating structural, behavioral, and temporal transaction representations. The repository currently includes:
+## Current source and publication state
 
-- [x] **FastAPI Backend Pipeline** under `/api/v1` for datasets, graph analytics, feature engineering, model training, and evaluation.
-- [x] **NetworkX Directed Weighted Graph Engine** computing in/out degrees, weighted amounts, and Brandes betweenness centrality.
-- [x] **19-Dimensional Canonical GraphFin Representation** integrating 6 graph, 8 behavioral, and 5 temporal features.
-- [x] **E0–E5 Anomaly Detection Suite** featuring rule-based statistical baselines, Isolation Forests across feature groups, and egonet/circular-flow metrics.
-- [x] **IBM AML Benchmark Dataset Integration** (`HI-Small` subsamples: 5,000 and 49,992 accounts).
-- [x] **PaySim Secondary Research Dataset Integration** (299,999 transactions, 547,686 unique accounts).
-- [x] **Bidirectional Cross-Dataset Transfer Generalization (IBM AML $\leftrightarrow$ PaySim)** under a strict source-only fitting protocol.
-- [x] **Rigorous Research Metrics**: 1,000-resample 95% Bootstrap Confidence Intervals, Precision@K ($P@10, P@25, P@50, P@100$), and standardized feature distribution shift ($\Delta \mu$).
-- [x] **React Research Interface**: Interactive dashboard for dataset selection, graph exploration, feature analysis, anomaly scoring, and cross-dataset evaluation.
-- [x] **Automated PaySim Integration Test Suite** (21 / 21 passing tests in `backend/tests/test_paysim_integration.py`).
-- [x] **Multi-Jurisdiction Tax Analytics Module** (India AY 2026–27, US Federal 2026, UK & Scotland 2026–27, Germany 2026, France 2026).
+The last verified published feature branch is `feature/institutional-dataset-pdf`, commit `2fc9a729efb015029a559c6c2c0f71814ec4e662`. Phase 9 and Phase 10 are uncommitted local work on `feature/phase9-graph-explorer`. A clone of the published baseline alone does not yet contain the graph-explorer changes described here. No Phase 10 commit, push, merge or deployment was performed.
 
----
+## Architecture
 
-## Research Architecture & Feature Representation
+- Research computation: canonical transactions -> directed NetworkX graph -> ordered features -> source-training-only baseline fitting -> held-out saved scores/metrics -> immutable manifests.
+- Saved-evidence serving: FastAPI's `/api/v1/research/*` reads checksum-pinned JSON, with separate dataset PDF and graph namespaces.
+- Research frontend: React/TypeScript/Vite with existing Tailwind, D3 and Recharts dependencies. The additive research Vite configuration preserves the original frontend entry.
+- Graph serving: offline SQLite index -> bounded GET query -> opaque session references -> deterministic validated Web Worker layout. No model fitting, score recomputation or centrality calculation is triggered by research UI requests.
+- Legacy workspace: preserved operational upload, graph, feature, training, simulation, evaluation, report and tax interfaces. It is separate from the validated saved-evidence research path and is not cleared for public exposure.
 
-GraphFin transforms raw transaction streams into entity-level graph representations for anomaly scoring:
+## Research scope
 
-```
-Transactions  ──>  Directed Weighted Graph  ──>  19-Dimensional Feature Schema  ──>  E0–E5 Anomaly Pipeline  ──>  Evaluation & Research Artifacts
-```
+The canonical E4 vector has19 columns: six structural, eight behavioral and five temporal. Four egonet/circular columns are appended to the23-column exported matrix for E5. Columns include exact/near-exact redundancies; they are not19 independent signals.
 
-### Canonical 19-Feature Schema
+|Method|Frozen definition|
+|---|---|
+|E0|graph-six, signed training z-score maximum, `e0-source-signed-zero-v2`|
+|E1|graph-six Isolation Forest|
+|E2|graph + behavior,14 features|
+|E3|graph + time,11 features|
+|E4|all canonical19 features|
+|E5|four project-specific egonet/circular heuristics; not a full Graphomaly reproduction|
+|E6_BASE|historical empirical-CDF calibration of frozen E4; no intervention evidence|
 
-GraphFin enforces a strict 19-dimensional canonical feature schema across all datasets to ensure feature-level compatibility during cross-dataset evaluation:
+Six account split seeds42/123/7/2024/99/555 at model42 are distinct from model-seed13/42/101 evidence at split42 for E1/E4. Report non-interpolated **Average Precision**, sample SD and retrieval counts accurately. Graph features use the full observation graph: evaluation is transductive entity holdout. Do not pool historical scoring versions or interpret split SD as a confidence interval. The original full intervention E6 benchmark remains incomplete. Of24 saved diagnostic rows,13 have actual intervention evidence; their coverage does not establish superior explanations.
 
-1. **Graph Topological Features (6)**:
-   - `in_degree`: Count of incoming transaction edges
-   - `out_degree`: Count of outgoing transaction edges
-   - `total_degree`: Total incident edge count (`in_degree + out_degree`)
-   - `weighted_in_degree`: Total incoming transaction volume
-   - `weighted_out_degree`: Total outgoing transaction volume
-   - `betweenness_centrality`: Network flow centrality metric
+|Supplied dataset|Active accounts|Retained events|Label status|
+|---|---:|---:|---|
+|IBM AML5K|5,000|31,463|20 positives; partially verified endpoint-involvement lineage|
+|IBM AML~50K|49,992|353,850|249 positives;50,000 label-file rows include8 inactive accounts|
+|PaySim|547,686 label-population accounts|Not exposed as a compatible benchmark by the research catalog|774 vs2,606 positives;1,832 disagreements; unresolved|
 
-2. **Behavioral Features (8)**:
-   - `transaction_count`: Total number of transactions associated with account
-   - `total_sent`: Cumulative value sent
-   - `total_received`: Cumulative value received
-   - `net_flow`: Net transfer balance (`total_received - total_sent`)
-   - `average_transaction_amount`: Mean transfer size
-   - `maximum_transaction_amount`: Peak transfer size
-   - `unique_receivers`: Number of distinct counterparty destination accounts
-   - `unique_senders`: Number of distinct counterparty source accounts
+The graph explorer supports only IBM tiers:5,315/65,439 directed pairs in the full source snapshots, but a fixed600-account approved lens and at most250 nodes/500 edges per response. PaySim graph topology is unavailable. Amount units and synthetic timestamps do not establish real-world currency or financial misconduct. See [label lineage](docs/research/06C_label_lineage.md).
 
-3. **Temporal Features (5)**:
-   - `transactions_per_day`: Average daily transaction frequency
-   - `transactions_per_week`: Average weekly transaction frequency
-   - `average_time_between_transactions`: Mean inter-transaction interval (seconds)
-   - `minimum_time_between_transactions`: Shortest inter-transaction interval (seconds)
-   - `maximum_time_between_transactions`: Longest inter-transaction interval (seconds)
+## Installation and bounded local demonstration
 
----
+Use the current working tree, Python3.12 and a Node version satisfying the locked Vite engine requirement (`^20.19.0 || >=22.12.0`); Phase10 observed Python3.12.10 and Node24.19.0 on Windows. Dependency constraints describe this environment, not universal wheel hashes. For an isolated environment:
 
-## Research Experiment Matrix
-
-| Experiment | Features | Method | Description |
-|---|---|---|---|
-| **E0** | Graph Baseline (6) | Statistical (z-score) | Non-ML baseline using rule-based z-score thresholding ($\ge 2.0\sigma$) on source-fitted graph topology metrics. |
-| **E1** | Graph Only (6) | Isolation Forest | Unsupervised Isolation Forest trained exclusively on 6 graph topological features. |
-| **E2** | Graph + Behavioral (14) | Isolation Forest | Unsupervised Isolation Forest combining graph topology with 8 user behavioral statistics. |
-| **E3** | Graph + Temporal (11) | Isolation Forest | Unsupervised Isolation Forest combining graph topology with 5 temporal interval metrics. |
-| **E4** | Full GraphFin (19) | Isolation Forest | Comprehensive feature fusion combining all 19 canonical graph, behavioral, and temporal features (default model). |
-| **E5** | Reduced Egonet + Circular Flow | Isolation Forest | Topology-focused model using 1-hop egonet structure (`egonet_node_count`, `egonet_edge_count`, `egonet_density`) and 2/3-step circular flow indicators. |
-
----
-
-## Research Dataset: PaySim
-
-PaySim is integrated as a secondary research benchmark to evaluate model transferability and domain generalizability.
-
-### Dataset Specifications
-- **Dataset**: PaySim (Secondary Research Benchmark)
-- **Raw Data Location**: `data/research/paysim_transactions.csv`
-- **Transactions Loaded**: 299,999
-- **Unique Account Universe**: 547,686 accounts (unique senders and receivers)
-- **Fraud-Labelled Transactions**: 181 (`isFraud == 1` in loaded transactions)
-- **Positive Accounts**: 480 accounts (derived via the ground-truth Any-Involvement rule)
-- **Label Provenance File**: `data/research/paysim_labels.csv`
-
-### Feature Ingestion & Leakage Prevention Protocol
-GraphFin ingests the following raw fields from PaySim:
-- `step`: Simulated time index (converted deterministically to UTC timestamp)
-- `nameOrig`: Sender account ID
-- `nameDest`: Receiver account ID
-- `amount`: Transaction value
-- `isFraud`: Ground-truth label (used **strictly** for evaluation, never as an input feature)
-
-> [!IMPORTANT]
-> **Data Leakage Prevention**:
-> The raw PaySim fields `oldbalanceOrg`, `newbalanceOrig`, `oldbalanceDest`, `newbalanceDest`, and `isFlaggedFraud` are **strictly excluded** from GraphFin feature engineering. No balance data is incorporated into anomaly scoring vectors.
-
-### Time Conversion Mapping
-PaySim's `step` column represents 1-hour time steps. GraphFin converts `step` using a deterministic base timestamp:
-$$\text{timestamp} = \text{2023-01-01 00:00:00 UTC} + \text{step hours}$$
-
-- `step = 0` $\rightarrow$ `2023-01-01 00:00:00 UTC`
-- `step = 1` $\rightarrow$ `2023-01-01 01:00:00 UTC`
-
-*Note: PaySim step values reflect simulated time steps and are not wall-clock timestamps.*
-
----
-
-## Betweenness Centrality Strategy
-
-Betweenness centrality measures an account's role in intermediary financial flows using NetworkX Brandes algorithm:
-- **Small Networks ($\le 2,000$ nodes)**: Exact Brandes betweenness centrality (`normalized=True`).
-- **Large Networks ($> 2,000$ nodes)**: Sampled Brandes approximation ($k=500$ sample size, $k=100$ if $> 50,000$ nodes, `seed=42`, `normalized=True`) to maintain computational safety.
-
----
-
-## Cross-Dataset Transfer Generalization Protocol
-
-GraphFin evaluates cross-dataset transfer generalization across distinct transaction domain distributions (IBM AML $\leftrightarrow$ PaySim) under a strict protocol:
-
-1. **Source-Only Model & Preprocessing Fitting**:
-   - Isolation Forest models and `StandardScaler` parameters ($\mu, \sigma$) are fit **strictly** on the source dataset.
-   - Target dataset feature vectors are normalized using source mean and standard deviation.
-   - Target ground-truth labels are used **only** for final test evaluation; no target tuning or threshold adaptation occurs.
-
-2. **Any-Involvement Account Labeling Rule**:
-   - An account is designated positive ($y=1$) if involved as sender or receiver in at least one transaction where `isFraud == 1`.
-
-3. **Evaluation Metrics & Bootstrap Confidence Intervals**:
-   - **Metrics**: PR-AUC, ROC-AUC, Precision, Recall, F1, Precision@K ($P@10, P@25, P@50, P@100$).
-   - **Relative Degradation Formula**:
-     $$\text{Relative Degradation} = \frac{\text{PR-AUC}_{\text{source}} - \text{PR-AUC}_{\text{target}}}{\text{PR-AUC}_{\text{source}}}$$
-   - **Bootstrap CIs**: 1,000-resample 95% percentile confidence intervals (`random_state=42`).
-
----
-
-## Empirical Cross-Dataset Transfer Results
-
-Results from the empirical transfer experiments stored in `data/results/cross_dataset/`:
-
-### Direction A: IBM AML $\rightarrow$ PaySim
-*Source: IBM AML (50,000 accounts) $\mid$ Target: PaySim (547,686 accounts)*
-
-| Exp | Method | Source PR-AUC (95% CI) | Target PR-AUC (95% CI) | Target ROC-AUC | Rel. Degradation | P@10 | P@25 | P@50 | P@100 |
-|:---|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **E0** | Statistical Baseline | 0.0116 (0.0081–0.0214) | 0.0018 (0.0017–0.0027) | 0.5787 | +84.48% | 0.00 | 0.00 | 0.00 | 0.00 |
-| **E1** | Graph (Isolation Forest) | 0.0222 (0.0101–0.0555) | 0.0081 (0.0059–0.0114) | 0.7697 | +63.51% | 0.00 | 0.00 | 0.00 | 0.00 |
-| **E2** | Graph + Behavioral | 0.0173 (0.0094–0.0449) | 0.0091 (0.0066–0.0133) | 0.7730 | +47.40% | 0.00 | 0.00 | 0.00 | 0.00 |
-| **E3** | Graph + Temporal | 0.0121 (0.0079–0.0196) | 0.0043 (0.0032–0.0098) | 0.7464 | +64.46% | 0.10 | 0.04 | 0.02 | 0.02 |
-| **E4** | Full GraphFin (19-feat) | 0.0149 (0.0088–0.0313) | 0.0053 (0.0037–0.0107) | 0.7564 | +64.43% | 0.10 | 0.04 | 0.04 | 0.03 |
-| **E5** | Egonet + Circular Flow | 0.0099 (0.0065–0.0251) | 0.0014 (0.0012–0.0019) | 0.5000 | N/A* | 0.00 | 0.00 | 0.00 | 0.00 |
-
-*\*E5 baseline on PaySim is degenerate (target ROC-AUC = 0.5000).*
-
-### Direction B: PaySim $\rightarrow$ IBM AML
-*Source: PaySim (547,686 accounts) $\mid$ Target: IBM AML (50,000 accounts)*
-
-| Exp | Method | Source PR-AUC (95% CI) | Target PR-AUC (95% CI) | Target ROC-AUC | Rel. Degradation | P@10 | P@25 | P@50 | P@100 |
-|:---|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **E0** | Statistical Baseline | 0.0065 (0.0047–0.0110) | 0.0128 (0.0088–0.0237) | 0.7187 | −96.92% | 0.10 | 0.04 | 0.02 | 0.01 |
-| **E1** | Graph (Isolation Forest) | 0.0077 (0.0056–0.0106) | 0.0136 (0.0092–0.0317) | 0.7453 | −76.62% | 0.10 | 0.08 | 0.04 | 0.02 |
-| **E2** | Graph + Behavioral | 0.0091 (0.0066–0.0132) | 0.0119 (0.0082–0.0186) | 0.7377 | −30.77% | 0.00 | 0.00 | 0.02 | 0.03 |
-| **E3** | Graph + Temporal | 0.0054 (0.0041–0.0077) | 0.0155 (0.0105–0.0277) | 0.7281 | −187.04% | 0.00 | 0.00 | 0.00 | 0.02 |
-| **E4** | Full GraphFin (19-feat) | 0.0093 (0.0065–0.0145) | 0.0133 (0.0093–0.0289) | 0.7448 | −43.01% | 0.00 | 0.04 | 0.04 | 0.03 |
-| **E5** | Egonet + Circular Flow | 0.0014 (0.0012–0.0019) | 0.0050 (0.0040–0.0086) | 0.7300 | −257.14% | 0.00 | 0.00 | 0.00 | 0.00 |
-
----
-
-## Research Artifacts
-
-The empirical cross-dataset evaluation artifacts are saved in structured JSON formats separate from locked benchmark results:
-- `data/results/cross_dataset/ibm_to_paysim_transfer.json`
-- `data/results/cross_dataset/paysim_to_ibm_transfer.json`
-
-Each artifact details the full reproducibility manifest, random seeds, bootstrap CI distributions, confusion matrices, and feature shift statistics.
-
----
-
-## Automated Test Suite
-
-PaySim integration correctness is verified via an automated test suite:
-- **PaySim Integration Tests**: **21 / 21 Passing** (`pytest backend/tests/test_paysim_integration.py -v`)
-- **Key Test Coverage**:
-  - Dataset registration and alias mapping
-  - Required column validation and time conversion
-  - Account label derivation under the any-involvement rule
-  - Exact 19-feature schema ordering and balance field exclusion
-  - Deterministic feature generation & Brandes betweenness approximation
-  - Source-only model fitting & target label isolation
-  - Precision@K calculation & 95% bootstrap reproducibility
-  - Correct relative degradation sign calculation
-  - Immutability of locked IBM research benchmark results
-
----
-
-## Methodological Disclosures & Research Notice
-
-> [!IMPORTANT]
-> **Research Notice**:
-> GraphFin includes completed empirical within-dataset IBM AML evaluation and bidirectional IBM AML $\leftrightarrow$ PaySim cross-dataset transfer experiments. Results are stored as reproducible research artifacts under `data/results/`. These experiments use synthetic benchmark datasets and should not be interpreted as evidence of production fraud detection or legal fraud determination.
-
-1. **Relative Presentation Risk Score (0–100)**: The risk score is a relative ranking score derived from normalized anomaly outputs. It is **not** a calibrated probability of fraud.
-2. **Synthetic Data Characteristics**: Both IBM AMLSim and PaySim are synthetic agent-based financial simulation benchmarks.
-3. **Transductive Graph Feature Construction**: Graph features are derived from the full transaction network prior to entity-level train/test splitting; this protocol evaluates entity-level held-out generalization rather than fully isolated inductive graph learning.
-4. **Cross-Dataset Generalization Scope**: Transfer experiments quantify cross-distribution performance degradation between synthetic benchmark datasets and do not guarantee performance on unseen real-world banking systems.
-
----
-
-## Multi-Jurisdiction Tax Analytics Module
-
-GraphFin includes a jurisdiction-aware tax analytics engine supporting **India**, **United States**, **United Kingdom & Scotland**, **Germany**, and **France**.
-
-> [!IMPORTANT]
-> **Strict Boundary Notice**:
-> The tax analytics module operates strictly from explicitly classified income inputs. A transaction between accounts is not automatically treated as taxable income.
-
-### Supported Jurisdictions & Tax Regimes
-1. **India (`IN`)**: Assessment Year 2026–27 New Tax Regime (Slabs: 0%, 5%, 10%, 15%, 20%, 25%, 30%), Section 87A rebate & marginal relief, Surcharge, 4% Cess. Official source: Income Tax Department (`incometax.gov.in`).
-2. **United States (`US`)**: Tax Year 2026 IRS Federal Income Tax for `single`, `married_joint`, `married_separate`, and `head_of_household`. Official source: Internal Revenue Service (`irs.gov`).
-3. **United Kingdom (`GB`)**: Tax Year 2026–27 for England, Wales, Northern Ireland, and Scotland (6-band regime). Personal Allowance tapering above £100,000. Official source: HMRC (`gov.uk`).
-4. **Germany (`DE`)**: Tax Year 2026 progressive formula, Grundfreibetrag (€12,096), Solidaritätszuschlag, and Church Tax options. Official source: BMF (`bundesfinanzministerium.de`).
-5. **France (`FR`)**: Tax Year 2026 Barème de l'impôt (0%–45%) with Quotient Familial. Official source: DGFiP (`impots.gouv.fr`).
-
----
-
-## Quick Start
-
-### 1. Install Dependencies
-```bash
-pip install -r backend/requirements.txt
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+python -m pip install -r backend/requirements-research.txt
 ```
 
-### 2. Run Test Suite
-```bash
-# Run PaySim integration tests
-pytest backend/tests/test_paysim_integration.py -v
+The optional research requirements include original backend/report-test requirements, an observed dependency-closure constraint file, and the `psutil` dependency required by research tooling. Original backend requirements remain unchanged. Historical manifests retain their own experiment environments; a new installation is not a guarantee of cross-version bitwise ML replay.
 
-# Run complete backend test suite
-pytest backend/tests -v
+Start the **saved-evidence demonstration** on loopback:
+
+```powershell
+python -m uvicorn backend.app.research_demo:app --host 127.0.0.1 --port 8000 --no-proxy-headers
 ```
 
-### 3. Start Backend Server
-```bash
-python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload
-```
-Interactive OpenAPI documentation: `http://127.0.0.1:8000/docs`
+The restricted entry mounts only saved-evidence, graph, PDF and health routes, with no legacy dataset preloads or operational routers. It rejects nonloopback peers/Host headers, unapproved browser origins and non-GET methods. Docs are disabled by default. Keep the frontend on loopback and use its same-origin API proxy. This is a controlled local boundary, not user authentication or approval for public hosting. The full `backend.app.main:app` remains available for separately trusted operational use and is not the controlled-demo command.
 
-### 4. Start Frontend Interface
-```bash
+In a second terminal:
+
+```powershell
 cd frontend
-npm install
-npm run dev
+npm ci
+$env:VITE_RESEARCH_API_URL='/'
+npm run dev -- --config vite.research.config.ts
 ```
-Interactive dashboard: `http://localhost:5173`
+
+Open `http://127.0.0.1:5173/GraphFin/`. The explicit API override selects the local `/api` proxy. For a build/preview:
+
+```powershell
+$env:VITE_RESEARCH_API_URL='/'
+npm run build -- --config vite.research.config.ts
+npm run preview -- --config vite.research.config.ts --host 127.0.0.1 --port 4190
+```
+
+The existing `/GraphFin/` base path is verified for this local build; no production host is selected. The current GitHub Actions workflow uses the default legacy build command, so it must be reviewed before any future research-dashboard deployment. CORS is not authentication.
+
+Pinned research JSON assets and the supplied local source files are required. Graph indexes are private generated artifacts under `data/results/v3/phase9-topology-v1/`, ignored by Git. A fresh authorized local setup can prepare the index once with `python backend/scripts/build_graph_explorer.py`; it refuses existing output and does not fit models. Do not delete/rebuild existing research evidence merely to get a passing test. Review dataset permissions before transferring these assets.
+
+## Navigation and reports
+
+Research routes: `#/overview`, `#/datasets`, `#/experiments`, `#/comparison`, `#/seeds`, `#/reproducibility`, `#/diagnostics`, `#/limitations`, `#/graph`. `#/workspace` opens the preserved legacy interface.
+
+Dataset Explorer -> select an approved dataset -> **Download Dataset Report (PDF)** exports a formal four-page document. It uses actual supported label counts and saved AP summaries; unsupported PaySim performance stays unavailable. Reports are deterministic, contain evidence hashes/version metadata, and are not tagged PDF/UA documents. Graph references expire and must not be saved as durable account identities.
+
+## Validation
+
+Never run destructive persistence tests in the working repository. Use the existing disposable-copy runner:
+
+```text
+python backend/scripts/verify_phase2.py OUTSIDE_REPO_SCRATCH -- backend/tests/test_phase7_research_api.py backend/tests/test_dataset_report_pdf.py backend/tests/test_phase9_graph_explorer.py -q
+```
+
+Existing research runners can fit models or perform expensive interventions; they are not needed to demonstrate or validate the saved-evidence UI. Phase10 did not launch them. Browser tooling remains development-only, preserving original package manifests:
+
+```powershell
+cd frontend
+npm install --no-save --package-lock=false @playwright/test@1.64.1
+cd ..
+python backend/scripts/prepare_final_browser_tests.py
+cd frontend
+$env:TEST_URL='http://127.0.0.1:4190/GraphFin/'
+npx playwright test --config playwright.final.config.ts
+```
+
+The browser preparation creates an exclusive ignored `.phase10-tests` copy and substitutes artifact output paths only, preserving previous validation evidence. Use a new validation workspace for another complete run. Unsaved tooling installation can alter the installed dependency tree; `npm ci` restores the application lockfile tree. See the [reproducibility guide](docs/research/10_reproducibility_guide.md) and [final validation ledger](docs/research/10_final_system_validation.md) for exact scope/counts and observed failures.
+
+## Security, licensing and release status
+
+Keep the full application loopback-only for demonstration. Legacy APIs expose raw identities, mutation/training capabilities and expensive work without application authentication. Pseudonymized graph structure can be reidentified; the fixed lens is not formal anonymity. Source research files can also contain synthetic raw IDs. Do not enter real customer information, upload untrusted model files or expose this complete backend publicly without a separate access/hosting review.
+
+The root MIT license covers project code to the extent owned by the licensor. It does not establish rights to third-party datasets, fonts or dependencies. Font notices are retained under `frontend/src/research/fonts/`. IBM upstream distinguishes code licensing from data licensing; exact permission for these transformed inputs remains unverified. PaySim simulator licensing does not resolve the supplied dataset's license/label provenance. See [security](docs/research/10_security_and_privacy_review.md), [third-party notices](docs/research/10_third_party_notices.md), and [release readiness](docs/research/10_release_readiness.md). No public release/deployment or IEEE acceptance certification is claimed.
+
+## Reviewer materials
+
+- [Final integration and validation](docs/research/10_final_system_validation.md)
+- [Security/privacy assessment](docs/research/10_security_and_privacy_review.md)
+- [Release decision and proposed commit plan](docs/research/10_release_readiness.md)
+- [Reproducibility guide](docs/research/10_reproducibility_guide.md)
+- [Versioned IEEE-style review draft](docs/research/manuscript/phase10-v1/manuscript.md)
+- [Presenter script and screenshot checklist](docs/research/10_demo_plan.md)
+- [Phase9 graph contracts and evidence](docs/research/09_interactive_graph_explorer.md)
+
+Closest prior graph-feature/Isolation-Forest overlap: Dumitrescu et al., IEEE Access2022, DOI10.1109/ACCESS.2022.3170467. GraphFin is presented as an auditable empirical system with transparent negative findings, not the first graph-based financial anomaly detector.

@@ -1,0 +1,114 @@
+{
+  "baseline_head": "2fc9a729efb015029a559c6c2c0f71814ec4e662",
+  "branch": "feature/phase9-graph-explorer",
+  "decisions": {
+    "ieee_submission": "NO-GO; critical-review draft available",
+    "local_demo": "CONDITIONAL GO",
+    "public_release_or_deployment": "NO-GO"
+  },
+  "diff_check_exit": 0,
+  "final_changed_tree_secret_patterns": [],
+  "generated_exclusions": [
+    "frontend/node_modules/",
+    "frontend/dist/",
+    "frontend/.phase10-tests/",
+    "data/results/v3/phase9-topology-v1/",
+    "task work/phase10 evidence and disposable copies"
+  ],
+  "head": "2fc9a729efb015029a559c6c2c0f71814ec4e662",
+  "ignore_policy_checks": {
+    ".env": {
+      "expected": true,
+      "ignored": true
+    },
+    ".env.example": {
+      "expected": false,
+      "ignored": false
+    },
+    ".env.local": {
+      "expected": true,
+      "ignored": true
+    },
+    "frontend/.env.production": {
+      "expected": false,
+      "ignored": false
+    },
+    "frontend/.phase10-tests/manifest.json": {
+      "expected": true,
+      "ignored": true
+    }
+  },
+  "inventory_self_hash": "Not embedded recursively; external final-verification.json pins this file.",
+  "modified_by_phase10": [
+    ".gitignore",
+    "README.md"
+  ],
+  "new_phase10_files": [
+    "backend/constraints-research-v1.txt",
+    "backend/requirements-research.txt",
+    "backend/scripts/audit_release.py",
+    "backend/scripts/prepare_final_browser_tests.py",
+    "backend/scripts/prepare_manuscript_evidence.py",
+    "backend/scripts/verify_final_api.py",
+    "backend/tests/test_phase10_release_validation.py",
+    "docs/research/10_demo_plan.md",
+    "docs/research/10_dependency_inventory.json",
+    "docs/research/10_final_system_validation.md",
+    "docs/research/10_integration_inventory.json",
+    "docs/research/10_release_readiness.md",
+    "docs/research/10_reproducibility_guide.md",
+    "docs/research/10_security_and_privacy_review.md",
+    "docs/research/10_third_party_notices.md",
+    "docs/research/manuscript/phase10-v1/evidence_tables.json",
+    "docs/research/manuscript/phase10-v1/manuscript.md",
+    "docs/research/manuscript/phase10-v1/table_50k.md",
+    "docs/research/manuscript/phase10-v1/table_5k.md",
+    "frontend/playwright.final.config.ts",
+    "frontend/tests/final-system.spec.ts"
+  ],
+  "new_text_trailing_whitespace": [],
+  "no_commit_push_merge_or_deployment": true,
+  "original_archive_check": {
+    "missing_or_mismatched": 0,
+    "not_in_publication_subset": 25,
+    "package_members": 33,
+    "supporting_references": 173
+  },
+  "pinned_runtime_assets": 35,
+  "pinned_runtime_mismatches": [],
+  "pre_phase_files": 401,
+  "preserved_phase9_changes": {
+    "all_byte_identical": true,
+    "existing_edits": 5,
+    "new_files": 21
+  },
+  "protected_mismatches": [],
+  "protected_originals": 87,
+  "protected_zip_mismatches": [],
+  "source_file_sha256": {
+    ".gitignore": "68c5d957ddeb3916fe8fcbd6b15c7c361af758eb32fd1b2cb902a5596b83aa2b",
+    "README.md": "3041d58e26ad2c9e713f76c6739d80b9dc71dc0267d56da54a2945304ecdba18",
+    "backend/constraints-research-v1.txt": "d26a465c9f2b0506995e9e1ad296d557d1dd70421e13468c081c9e90752110c5",
+    "backend/requirements-research.txt": "ac19358100c0c5cc90d1a2e06688d927caa0f95fef1b1bee5ed7e8513b08c559",
+    "backend/scripts/audit_release.py": "fbd06a21af4a5ad22bdea58e0a6083adc3ee2dc1276854e64af4e3c0f9ccf276",
+    "backend/scripts/prepare_final_browser_tests.py": "a461379e2313f2614a482c495291458b4dff899de8ca26b7976ff5458b5118a0",
+    "backend/scripts/prepare_manuscript_evidence.py": "2b9e264b2fd4d11a9997dc0f5e987252912874b291acac2a1fb04b5ca2955898",
+    "backend/scripts/verify_final_api.py": "fe1020c363c131682def3844ad6fc24ad6d4206ddebbd220479ce1ba56d76101",
+    "backend/tests/test_phase10_release_validation.py": "b6f41fc9628373176b02ff3c5882f54c023f06adb72964912be8e815745dd2f7",
+    "docs/research/10_demo_plan.md": "48e92d7fe27a2628c1d11070a337ee64f9bd8ee15d0d1d4973e347ac383cdc56",
+    "docs/research/10_dependency_inventory.json": "a08237f9c8adf0ab41cd6d1213c93ecfde270b54a5cdef7609b154c9d7a1545f",
+    "docs/research/10_final_system_validation.md": "29bb88672725d96e66b633a216a6bda65b0fa26dced56bf5a1c94c712e828686",
+    "docs/research/10_release_readiness.md": "c968b5868b63df525fe493211447a96122c817091f455da12e036f57325f9fb8",
+    "docs/research/10_reproducibility_guide.md": "563e19853fdb1efe506e29d2cbff77b1d9d970e1dc659b501c2f6e5a45433d0b",
+    "docs/research/10_security_and_privacy_review.md": "c61fbb35a8b7b0549b6b48dce993a3f79dfc1cacbd2e94e0cfcb0181067e3ecc",
+    "docs/research/10_third_party_notices.md": "39ea031cdbc6941cd5316b871d5cc6382b394eaaeef9681d9002d0d4204ed5dd",
+    "docs/research/manuscript/phase10-v1/evidence_tables.json": "4794dd43b051a8b96dd61ae9ba54d9f2e78246f814a4cb8f33d95909f99ac3c6",
+    "docs/research/manuscript/phase10-v1/manuscript.md": "a4f1bd83eee681db5842719124d34b8735a622bf6f580b1f47106952012f32a0",
+    "docs/research/manuscript/phase10-v1/table_50k.md": "33d83f707f8e4346993950f58ff496e239af4876edda849d93611ec2c2bfd0d3",
+    "docs/research/manuscript/phase10-v1/table_5k.md": "5c1a69fb784131a1ac15a75c26b96bf48d18aa879401cf265fb71ab0f3d28c1e",
+    "frontend/playwright.final.config.ts": "f497db44ea27f2fb9fe09174a3369bb0cb0c67bef3c31af89b35e853620ce7f0",
+    "frontend/tests/final-system.spec.ts": "7d1ba874350c7133a0d7e33a89301d50003ec8aa0373367180ff1b6ea0a57c15"
+  },
+  "unchanged_pre_phase_files": 399,
+  "zip_sha256": "02c3b4d4d4c41c259ba1efb668c12551992d174ee2deb2960dcc00fba00a4531"
+}

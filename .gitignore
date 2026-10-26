@@ -89,3 +89,16 @@ dist/
 # Test artifacts
 test_*.pdf
 
+
+# Local credentials and development overrides
+.env
+.env.*
+!.env.example
+!.env.*.example
+!frontend/.env.production
+
+# Disposable final-validation browser suite
+frontend/.phase10-tests/
+
+# Isolated controlled-demo browser validation
+frontend/.phase10r-tests/

@@ -1,5 +1,6 @@
 import schemas from "./contract.schema.json";
 type Schema = {
+  const?: unknown;
   $ref?: string;
   anyOf?: Schema[];
   type?: string;
@@ -9,13 +10,17 @@ type Schema = {
   items?: Schema;
   prefixItems?: Schema[];
 };
-export function validate(value: unknown, schema: Schema): boolean {
+export function validate(
+  value: unknown,
+  schema: Schema,
+  registry: Record<string, Schema> = schemas as Record<string, Schema>,
+): boolean {
+  if (!schema) return false;
+  if ("const" in schema && value !== schema.const) return false;
   if (schema.$ref)
-    return validate(
-      value,
-      (schemas as Record<string, Schema>)[schema.$ref.split("/").pop()!],
-    );
-  if (schema.anyOf) return schema.anyOf.some((s) => validate(value, s));
+    return validate(value, registry[schema.$ref.split("/").pop()!], registry);
+  if (schema.anyOf)
+    return schema.anyOf.some((s) => validate(value, s, registry));
   if (schema.enum && !schema.enum.includes(value)) return false;
   if (schema.type === "null") return value === null;
   if (schema.type === "array")
@@ -23,7 +28,7 @@ export function validate(value: unknown, schema: Schema): boolean {
       Array.isArray(value) &&
       value.length <= 1000 &&
       value.every((v, i) =>
-        validate(v, schema.items ?? schema.prefixItems?.[i] ?? {}),
+        validate(v, schema.items ?? schema.prefixItems?.[i] ?? {}, registry),
       )
     );
   if (schema.type === "object")
@@ -34,7 +39,8 @@ export function validate(value: unknown, schema: Schema): boolean {
       (schema.required ?? []).every((k) => k in value) &&
       Object.entries(schema.properties ?? {}).every(
         ([k, s]) =>
-          !(k in value) || validate((value as Record<string, unknown>)[k], s),
+          !(k in value) ||
+          validate((value as Record<string, unknown>)[k], s, registry),
       )
     );
   if (schema.type === "number" || schema.type === "integer")
@@ -63,6 +69,9 @@ const base = (
 const cache = new Map<string, { value: unknown; expires: number }>();
 export function researchUrl(path: string) {
   return base + "/api/v1/research" + path;
+}
+export function graphExplorerUrl(path: string) {
+  return base + "/api/v1/graph-explorer" + path;
 }
 export function datasetReportUrl(datasetId: string) {
   return (

@@ -1,0 +1,268 @@
+.graph-lens-grid {
+  display: grid;
+  grid-template-columns: 210px minmax(0, 1fr) 270px;
+  gap: 18px;
+  align-items: start;
+}
+.graph-lens-grid > * {
+  min-width: 0;
+}
+.graph-controls {
+  padding: 18px;
+  border: 1px solid #303034;
+  background: #101012;
+}
+.graph-controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 11px;
+  color: #a6a6a6;
+  margin: 13px 0;
+}
+.graph-controls select,
+.graph-controls input {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px;
+  background: #171719;
+  color: #f5f5f5;
+  border: 1px solid #303034;
+}
+.graph-controls .graph-check {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+.graph-controls .graph-check input {
+  width: 18px;
+  min-height: 18px;
+}
+.graph-controls button {
+  width: 100%;
+  margin-top: 8px;
+}
+.graph-controls p {
+  font-size: 11px;
+}
+.graph-stage {
+  border: 1px solid #303034;
+  background: #080809;
+  min-width: 0;
+  overflow: hidden;
+}
+.graph-stage > svg {
+  display: block;
+  width: 100%;
+  height: 540px;
+  touch-action: none;
+  background-image: radial-gradient(#303034 1px, transparent 1px);
+  background-size: 24px 24px;
+  cursor: grab;
+}
+.graph-stage svg:active {
+  cursor: grabbing;
+}
+.graph-stage [data-graph-object] {
+  cursor: pointer;
+}
+.graph-stage [data-graph-object="node"]:hover > circle:last-of-type {
+  fill: #fff;
+}
+.graph-stage [data-graph-object="edge"]:hover > path:nth-child(2) {
+  stroke: #fff;
+}
+.graph-view-controls {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 12px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid #303034;
+}
+.graph-view-controls button {
+  font-size: 11px;
+  padding: 7px 11px;
+}
+.graph-view-controls span {
+  font:
+    10px "IBM Plex Mono",
+    monospace;
+  margin: 0 6px;
+  color: #a6a6a6;
+}
+.graph-legend,
+.graph-layout-note {
+  font:
+    10px/1.7 "IBM Plex Mono",
+    monospace;
+  padding: 12px 16px;
+  color: #a6a6a6;
+  border-top: 1px solid #303034;
+  margin: 0 !important;
+}
+.graph-inspector {
+  border: 1px solid #303034;
+  background: #101012;
+  padding: 20px;
+  overflow-wrap: anywhere;
+}
+.graph-inspector h2 {
+  font-size: 18px;
+  margin: 0 0 16px;
+}
+.graph-inspector dt {
+  font-size: 10px;
+  color: #a6a6a6;
+  margin-top: 15px;
+}
+.graph-inspector dd {
+  font:
+    12px "IBM Plex Mono",
+    monospace;
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+}
+.graph-inspector button {
+  width: 100%;
+  font-size: 11px;
+  margin-top: 15px;
+}
+.graph-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin: 20px 0;
+  font:
+    11px "IBM Plex Mono",
+    monospace;
+}
+.graph-summary span {
+  padding: 8px;
+  border: 1px solid #303034;
+}
+.graph-truncation {
+  border-left: 2px solid #a6a6a6;
+}
+.graph-table-tabs {
+  display: flex;
+  gap: 8px;
+  margin: 25px 0 12px;
+}
+.graph-table-tabs button[aria-pressed="true"] {
+  border-color: #fff;
+}
+.graph-access-list {
+  max-height: 480px;
+  overflow: auto;
+}
+.graph-access-list table {
+  font-size: 10px;
+}
+.graph-access-list button {
+  max-width: 230px;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+.graph-field-hint {
+  font-size: 10px !important;
+  color: #a6a6a6;
+}
+.graph-controls .graph-active-filter {
+  border-color: #a6a6a6;
+}
+.graph-empty {
+  padding: 40px 20px;
+  font-size: 13px;
+  border: 1px solid #303034;
+}
+.graph-session-note {
+  font-size: 11px;
+  line-height: 1.7;
+  margin-top: 18px;
+}
+.graph-inspector [role="status"] {
+  min-height: 20px;
+}
+.research .graph-header-link {
+  display: inline-block;
+  margin: 8px 0 18px;
+  border-bottom: 1px solid #77777d;
+  font-size: 12px;
+}
+@media (max-width: 1550px) {
+  .graph-lens-grid {
+    grid-template-columns: 210px minmax(0, 1fr);
+  }
+  .graph-inspector {
+    grid-column: 1/-1;
+  }
+  .graph-inspector dl {
+    display: grid;
+    grid-template-columns: 180px minmax(0, 1fr);
+    gap: 4px 16px;
+  }
+  .graph-inspector dt {
+    margin-top: 4px;
+  }
+  .graph-inspector dd {
+    margin: 4px 0;
+  }
+  .graph-stage > svg {
+    height: 500px;
+  }
+}
+@media (max-width: 900px) {
+  .graph-lens-grid {
+    grid-template-columns: 1fr;
+  }
+  .graph-controls {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 14px;
+  }
+  .graph-controls > .eyebrow,
+  .graph-controls > p,
+  .graph-controls > button {
+    grid-column: 1/-1;
+  }
+  .graph-controls label {
+    min-width: 0;
+  }
+  .graph-stage > svg {
+    height: 440px;
+  }
+  .graph-inspector dl {
+    grid-template-columns: 1fr;
+  }
+  .graph-inspector dt {
+    margin-top: 14px;
+  }
+  .graph-inspector dd {
+    margin: 2px 0;
+  }
+  .graph-legend,
+  .graph-layout-note {
+    font-size: 9px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .graph-stage * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+.graph-layout-loading {
+  min-height: 650px;
+  border: 1px solid #303034;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 25px;
+  color: #a6a6a6;
+  font:
+    12px "IBM Plex Mono",
+    monospace;
+}

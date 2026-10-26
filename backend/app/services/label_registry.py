@@ -145,10 +145,13 @@ class LabelRegistry:
         positive_count = 0
         negative_count = 0
 
-        for row_idx, row in df.iterrows():
-            row_num = row_idx + 2  # 1-indexed header + 1
-            raw_uid = row[user_col_actual]
-            raw_lbl = row[label_col_actual]
+        user_idx = df.columns.get_loc(user_col_actual) + 1
+        label_idx = df.columns.get_loc(label_col_actual) + 1
+
+        for row in df.itertuples(index=True, name=None):
+            row_num = row[0] + 2  # 1-indexed header + 1
+            raw_uid = row[user_idx]
+            raw_lbl = row[label_idx]
 
             if pd.isna(raw_uid) or str(raw_uid).strip() == "":
                 msg = f"Row {row_num}: Missing or blank user ID."
@@ -236,6 +239,27 @@ class LabelRegistry:
         )
 
         return summary
+
+    def alias_labels(
+        self,
+        source_dataset_id: str,
+        target_dataset_id: str,
+    ) -> Optional[DatasetLabelsSummaryResponse]:
+        """
+        Alias an already parsed and validated label set to an alias dataset ID.
+        Reuses in-memory labels, identities, and summaries without re-parsing CSV rows.
+        """
+        if source_dataset_id not in self._labels:
+            raise NotFoundException(f"Source dataset '{source_dataset_id}' has no stored labels to alias.")
+
+        self._labels[target_dataset_id] = self._labels[source_dataset_id]
+        if source_dataset_id in self._identities:
+            self._identities[target_dataset_id] = self._identities[source_dataset_id]
+        if source_dataset_id in self._summaries:
+            src_summary = self._summaries[source_dataset_id]
+            self._summaries[target_dataset_id] = src_summary.model_copy(update={"dataset_id": target_dataset_id})
+
+        return self._summaries.get(target_dataset_id)
 
     def has_labels(self, dataset_id: str) -> bool:
         """Check if labels exist for a dataset in-memory or on disk."""
