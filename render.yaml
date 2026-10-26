@@ -13,8 +13,8 @@ services:
     runtime: python
     plan: free
     autoDeployTrigger: "off"
-    buildCommand: (npm --prefix frontend install && npm --prefix frontend run build || true) && pip install -r requirements.txt
-    startCommand: python -m uvicorn gateway.single_service:app --host 0.0.0.0 --port $PORT --workers 1 --timeout-graceful-shutdown 15
+    buildCommand: (npm --prefix frontend install && npm --prefix frontend run build) && pip install -r requirements.txt
+    startCommand: python -m uvicorn gateway.single_service:app --host 0.0.0.0 --port $PORT --workers 1
     healthCheckPath: /health
     maxShutdownDelaySeconds: 30
     envVars:
