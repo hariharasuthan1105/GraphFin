@@ -55,12 +55,33 @@ function Rankings({ experiment }: { experiment: Experiment }) {
               "Account token",
               "Anomaly score",
               "Diagnostic availability",
+              "Graph lens",
             ]}
             rows={r.data.items.map((x) => [
               x.rank,
               x.account_token,
               fmt(x.anomaly_score, 8),
               "Not linked by this API",
+              sort === "score_desc" &&
+              x.rank <= 20 &&
+              experiment.split_seed === 42 &&
+              experiment.model_seed === 42 ? (
+                <a
+                  key="graph"
+                  href={
+                    "#/graph?" +
+                    new URLSearchParams({
+                      dataset_id: experiment.dataset_id,
+                      experiment_id: experiment.experiment_id,
+                      rank: String(x.rank),
+                    })
+                  }
+                >
+                  Open approved graph →
+                </a>
+              ) : (
+                "Available for supported top20 descending ranks at split42/model42."
+              ),
             ])}
           />
           <Pager page={page} setPage={setPage} size={25} total={r.data.total} />

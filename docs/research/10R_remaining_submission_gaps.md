@@ -1,0 +1,23 @@
+# Phase 10R - Remaining manuscript submission gaps
+
+**Machine Learning Enhanced Graph-Based Anomaly Detection for Financial Transactions**
+
+Reviewed: `manuscript/phase10-v1/manuscript.md` and the Phase 6B-6C/10 evidence interpretation. The draft and experimental outcomes were not modified. Decision: **NO-GO for IEEE submission; suitable for critical review**. No acceptance percentage is assigned.
+
+|Review item|Observed draft status|Required author/reviewer action|
+|---|---|---|
+|Unsupported novelty|The abstract/introduction/conclusion already reject superior detector/explainer and first-of-kind interpretations. The title's “Enhanced” could still be read as a performance claim.|Explain enhancement as system/feature integration, not proven predictive superiority. Audit every final claim and promotional sentence.|
+|Closest prior work|Section II explicitly identifies Dumitrescu et al., IEEE Access 2022/Graphomaly overlap; E5 is a project heuristic, not a faithful full reproduction.|Retain this distinction. Do not treat E5 as a completed reproduction or claim graph features plus Isolation Forest is novel.|
+|Labels and dataset validity|IBM raw flags/authenticated conversion lineage remain incomplete; PaySim has conflicting same-population definitions.|Obtain authoritative provenance or retain the supplied-label scope. Do not relabel/select a label set for stronger results.|
+|Validation scope|Existing exact replay and two related synthetic IBM subsets support supplied-input reproducibility, not unseen-bank/domain/time generalization.|Remove broader claims. Independent traceable validation would be necessary only if such claims are later authorized; no new experiment is launched here.|
+|Statistics|Six split results/sample SD and separate three-model-seed analysis are present. Splits overlap, graph accounts are dependent, positives are scarce.|Keep SD descriptive; no significance or confidence interval may be inferred from mean ordering. Do not pool split/model rows as independent datasets.|
+|Metric/version identity|AP is non-interpolated; historical E0 versions and calibration-only E6_BASE are distinguished.|Retain exact method/label/population versions and tie semantics. Never rename E6_BASE as a completed CREST detector.|
+|CREST interpretation|The draft states limited evidence availability, tied compatible comparisons, negative responses and incomplete full E6 evaluation.|Keep CREST as experimental evidence sensitivity. Do not claim explanation correctness, robustness, causality or superiority from these observations.|
+|Evidence completeness|Serving package is a subset; the larger original archive was checked separately in Phase 10. Original six-page manuscript source remains unavailable.|Supply author-approved source and a traceable evidence release inventory. Do not claim this new Markdown draft is a certified revision of an inspected original.|
+|Figures/layout|Tables exist, but the draft has no compiled IEEE template or completed publication figure package. Wide split tables need venue-specific layout.|Prepare readable full-width tables/figures with exact axes, units, captions, provenance and availability after venue choice. UI screenshots are system illustrations, not efficacy evidence.|
+|References|Five numbered primary references and closest-overlap discussion are present; author copies are distinguished from publisher records.|Finish venue bibliography fields/BibTeX, verified DOI/page metadata where available, citation links and name diacritics. No new or invented references added by this review.|
+|Author/institution approvals|Affiliations, correspondence, funding/conflicts/contribution declarations and author consent are not established.|Obtain all author/institution approvals; do not invent affiliation, endorsement or authorship.|
+|Venue requirements|No target venue, page limit, anonymization/ethics/data/code policy or conference track is selected.|Select a suitable empirical/system venue and check its current instructions. Application tests do not constitute template, ethics or acceptance certification.|
+|Distribution rights|Exact grants for transformed datasets/identity-bearing artifacts remain unresolved.|Separate code, data, model/score files and publication Results; preserve appropriate notices and obtain owner review before release.|
+
+The strongest supported framing remains an auditable empirical system with corrected evaluation semantics, deterministic supplied-input replay and transparent negative sensitivity findings. Professional dashboard/PDF design is engineering evidence, not proof of methodological novelty or accuracy improvement. No outcome, formula, model or manuscript claim was changed to clear this gate.

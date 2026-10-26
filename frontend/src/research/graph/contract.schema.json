@@ -1,0 +1,354 @@
+{
+  "ExplorerEdge": {
+    "properties": {
+      "edge_ref": { "type": "string", "title": "Edge Ref" },
+      "source_ref": { "type": "string", "title": "Source Ref" },
+      "target_ref": { "type": "string", "title": "Target Ref" },
+      "direction": {
+        "type": "string",
+        "const": "sender_to_receiver",
+        "title": "Direction"
+      },
+      "transaction_count": { "type": "integer", "title": "Transaction Count" },
+      "amount": { "type": "number", "title": "Amount" },
+      "first_time": { "type": "string", "title": "First Time" },
+      "last_time": { "type": "string", "title": "Last Time" },
+      "reciprocal_in_snapshot": {
+        "type": "boolean",
+        "title": "Reciprocal In Snapshot"
+      }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+      "edge_ref",
+      "source_ref",
+      "target_ref",
+      "direction",
+      "transaction_count",
+      "amount",
+      "first_time",
+      "last_time",
+      "reciprocal_in_snapshot"
+    ],
+    "title": "ExplorerEdge"
+  },
+  "ExplorerNode": {
+    "properties": {
+      "node_ref": { "type": "string", "title": "Node Ref" },
+      "display_id": { "type": "string", "title": "Display Id" },
+      "node_type": {
+        "type": "string",
+        "const": "account",
+        "title": "Node Type"
+      },
+      "in_degree": { "type": "integer", "title": "In Degree" },
+      "out_degree": { "type": "integer", "title": "Out Degree" },
+      "neighbors": { "type": "integer", "title": "Neighbors" },
+      "received_amount": { "type": "number", "title": "Received Amount" },
+      "sent_amount": { "type": "number", "title": "Sent Amount" },
+      "ranking_status": {
+        "type": "string",
+        "enum": ["available", "unavailable_population", "unavailable_temporal"],
+        "title": "Ranking Status"
+      },
+      "anomaly_score": {
+        "anyOf": [{ "type": "number" }, { "type": "null" }],
+        "title": "Anomaly Score"
+      },
+      "saved_rank": {
+        "anyOf": [{ "type": "integer" }, { "type": "null" }],
+        "title": "Saved Rank"
+      },
+      "diagnostic_ids": {
+        "items": { "type": "string" },
+        "type": "array",
+        "title": "Diagnostic Ids"
+      },
+      "diagnostic_status": { "type": "string", "title": "Diagnostic Status" }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+      "node_ref",
+      "display_id",
+      "node_type",
+      "in_degree",
+      "out_degree",
+      "neighbors",
+      "received_amount",
+      "sent_amount",
+      "ranking_status",
+      "anomaly_score",
+      "saved_rank",
+      "diagnostic_ids",
+      "diagnostic_status"
+    ],
+    "title": "ExplorerNode"
+  },
+  "GraphAnchor": {
+    "properties": {
+      "node_ref": { "type": "string", "title": "Node Ref" },
+      "display_id": { "type": "string", "title": "Display Id" },
+      "role": { "type": "string", "title": "Role" }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": ["node_ref", "display_id", "role"],
+    "title": "GraphAnchor"
+  },
+  "GraphCatalog": {
+    "properties": {
+      "datasets": {
+        "items": { "$ref": "#/components/schemas/GraphDataset" },
+        "type": "array",
+        "title": "Datasets"
+      },
+      "limitations": {
+        "items": { "type": "string" },
+        "type": "array",
+        "title": "Limitations"
+      }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": ["datasets", "limitations"],
+    "title": "GraphCatalog"
+  },
+  "GraphDataset": {
+    "properties": {
+      "dataset_id": { "type": "string", "title": "Dataset Id" },
+      "name": { "type": "string", "title": "Name" },
+      "tier": { "type": "string", "title": "Tier" },
+      "status": {
+        "type": "string",
+        "enum": ["verified", "unavailable"],
+        "title": "Status"
+      },
+      "provenance_status": {
+        "type": "string",
+        "enum": ["partially_verified", "unresolved"],
+        "title": "Provenance Status"
+      },
+      "reason": {
+        "anyOf": [{ "type": "string" }, { "type": "null" }],
+        "title": "Reason"
+      },
+      "graph_id": {
+        "anyOf": [{ "type": "string" }, { "type": "null" }],
+        "title": "Graph Id"
+      },
+      "version": { "type": "string", "title": "Version" },
+      "dataset_sha256": {
+        "anyOf": [{ "type": "string" }, { "type": "null" }],
+        "title": "Dataset Sha256"
+      },
+      "index_sha256": {
+        "anyOf": [{ "type": "string" }, { "type": "null" }],
+        "title": "Index Sha256"
+      },
+      "snapshot_identity": {
+        "anyOf": [{ "type": "string" }, { "type": "null" }],
+        "title": "Snapshot Identity"
+      },
+      "time_start": {
+        "anyOf": [{ "type": "number" }, { "type": "null" }],
+        "title": "Time Start"
+      },
+      "time_end": {
+        "anyOf": [{ "type": "number" }, { "type": "null" }],
+        "title": "Time End"
+      },
+      "time_semantics": { "type": "string", "title": "Time Semantics" },
+      "amount_unit": { "type": "string", "title": "Amount Unit" },
+      "total_nodes": {
+        "anyOf": [{ "type": "integer" }, { "type": "null" }],
+        "title": "Total Nodes"
+      },
+      "total_edges": {
+        "anyOf": [{ "type": "integer" }, { "type": "null" }],
+        "title": "Total Edges"
+      },
+      "approved_scope_nodes": {
+        "type": "integer",
+        "title": "Approved Scope Nodes"
+      },
+      "experiments": {
+        "items": { "$ref": "#/components/schemas/GraphExperiment" },
+        "type": "array",
+        "title": "Experiments"
+      }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+      "dataset_id",
+      "name",
+      "tier",
+      "status",
+      "provenance_status",
+      "reason",
+      "graph_id",
+      "version",
+      "dataset_sha256",
+      "index_sha256",
+      "snapshot_identity",
+      "time_start",
+      "time_end",
+      "time_semantics",
+      "amount_unit",
+      "total_nodes",
+      "total_edges",
+      "approved_scope_nodes",
+      "experiments"
+    ],
+    "title": "GraphDataset"
+  },
+  "GraphExperiment": {
+    "properties": {
+      "experiment_id": { "type": "string", "title": "Experiment Id" },
+      "method": { "type": "string", "title": "Method" },
+      "version": { "type": "string", "title": "Version" },
+      "split_seed": { "type": "integer", "title": "Split Seed" },
+      "model_seed": { "type": "integer", "title": "Model Seed" }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+      "experiment_id",
+      "method",
+      "version",
+      "split_seed",
+      "model_seed"
+    ],
+    "title": "GraphExperiment"
+  },
+  "GraphNeighborhood": {
+    "properties": {
+      "schema_version": {
+        "type": "string",
+        "const": "graphfin-neighborhood-v1",
+        "title": "Schema Version"
+      },
+      "graph_id": { "type": "string", "title": "Graph Id" },
+      "dataset_id": { "type": "string", "title": "Dataset Id" },
+      "tier": { "type": "string", "title": "Tier" },
+      "version": { "type": "string", "title": "Version" },
+      "snapshot_identity": { "type": "string", "title": "Snapshot Identity" },
+      "dataset_sha256": { "type": "string", "title": "Dataset Sha256" },
+      "index_sha256": { "type": "string", "title": "Index Sha256" },
+      "status": { "type": "string", "const": "verified", "title": "Status" },
+      "provenance_status": {
+        "type": "string",
+        "const": "partially_verified",
+        "title": "Provenance Status"
+      },
+      "experiment": { "$ref": "#/components/schemas/GraphExperiment" },
+      "focus_ref": { "type": "string", "title": "Focus Ref" },
+      "nodes": {
+        "items": { "$ref": "#/components/schemas/ExplorerNode" },
+        "type": "array",
+        "title": "Nodes"
+      },
+      "edges": {
+        "items": { "$ref": "#/components/schemas/ExplorerEdge" },
+        "type": "array",
+        "title": "Edges"
+      },
+      "depth": { "type": "integer", "title": "Depth" },
+      "direction": { "type": "string", "title": "Direction" },
+      "start": { "type": "number", "title": "Start" },
+      "end": { "type": "number", "title": "End" },
+      "min_count": { "type": "integer", "title": "Min Count" },
+      "min_amount": { "type": "number", "title": "Min Amount" },
+      "temporal_subset": { "type": "boolean", "title": "Temporal Subset" },
+      "scope_nodes": { "type": "integer", "title": "Scope Nodes" },
+      "max_nodes": { "type": "integer", "title": "Max Nodes" },
+      "max_edges": { "type": "integer", "title": "Max Edges" },
+      "truncated": { "type": "boolean", "title": "Truncated" },
+      "truncation_reasons": {
+        "items": { "type": "string" },
+        "type": "array",
+        "title": "Truncation Reasons"
+      },
+      "remaining_queries": { "type": "integer", "title": "Remaining Queries" },
+      "remaining_node_grants": {
+        "type": "integer",
+        "title": "Remaining Node Grants"
+      },
+      "query_seconds": { "type": "number", "title": "Query Seconds" },
+      "amount_unit": { "type": "string", "title": "Amount Unit" },
+      "limitations": {
+        "items": { "type": "string" },
+        "type": "array",
+        "title": "Limitations"
+      }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+      "schema_version",
+      "graph_id",
+      "dataset_id",
+      "tier",
+      "version",
+      "snapshot_identity",
+      "dataset_sha256",
+      "index_sha256",
+      "status",
+      "provenance_status",
+      "experiment",
+      "focus_ref",
+      "nodes",
+      "edges",
+      "depth",
+      "direction",
+      "start",
+      "end",
+      "min_count",
+      "min_amount",
+      "temporal_subset",
+      "scope_nodes",
+      "max_nodes",
+      "max_edges",
+      "truncated",
+      "truncation_reasons",
+      "remaining_queries",
+      "remaining_node_grants",
+      "query_seconds",
+      "amount_unit",
+      "limitations"
+    ],
+    "title": "GraphNeighborhood"
+  },
+  "GraphSession": {
+    "properties": {
+      "session_id": { "type": "string", "title": "Session Id" },
+      "expires_in_seconds": {
+        "type": "integer",
+        "title": "Expires In Seconds"
+      },
+      "query_budget": { "type": "integer", "title": "Query Budget" },
+      "dataset": { "$ref": "#/components/schemas/GraphDataset" },
+      "experiment": { "$ref": "#/components/schemas/GraphExperiment" },
+      "anchors": {
+        "items": { "$ref": "#/components/schemas/GraphAnchor" },
+        "type": "array",
+        "title": "Anchors"
+      },
+      "focus_ref": { "type": "string", "title": "Focus Ref" }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+      "session_id",
+      "expires_in_seconds",
+      "query_budget",
+      "dataset",
+      "experiment",
+      "anchors",
+      "focus_ref"
+    ],
+    "title": "GraphSession"
+  }
+}

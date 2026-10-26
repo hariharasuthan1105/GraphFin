@@ -1,0 +1,104 @@
+// Generated from the Phase 9 OpenAPI response models.
+export type ExplorerEdge = {
+  edge_ref: string;
+  source_ref: string;
+  target_ref: string;
+  direction: "sender_to_receiver";
+  transaction_count: number;
+  amount: number;
+  first_time: string;
+  last_time: string;
+  reciprocal_in_snapshot: boolean;
+};
+export type ExplorerNode = {
+  node_ref: string;
+  display_id: string;
+  node_type: "account";
+  in_degree: number;
+  out_degree: number;
+  neighbors: number;
+  received_amount: number;
+  sent_amount: number;
+  ranking_status:
+    "available" | "unavailable_population" | "unavailable_temporal";
+  anomaly_score: number | null;
+  saved_rank: number | null;
+  diagnostic_ids: string[];
+  diagnostic_status: string;
+};
+export type GraphAnchor = {
+  node_ref: string;
+  display_id: string;
+  role: string;
+};
+export type GraphCatalog = { datasets: GraphDataset[]; limitations: string[] };
+export type GraphDataset = {
+  dataset_id: string;
+  name: string;
+  tier: string;
+  status: "verified" | "unavailable";
+  provenance_status: "partially_verified" | "unresolved";
+  reason: string | null;
+  graph_id: string | null;
+  version: string;
+  dataset_sha256: string | null;
+  index_sha256: string | null;
+  snapshot_identity: string | null;
+  time_start: number | null;
+  time_end: number | null;
+  time_semantics: string;
+  amount_unit: string;
+  total_nodes: number | null;
+  total_edges: number | null;
+  approved_scope_nodes: number;
+  experiments: GraphExperiment[];
+};
+export type GraphExperiment = {
+  experiment_id: string;
+  method: string;
+  version: string;
+  split_seed: number;
+  model_seed: number;
+};
+export type GraphNeighborhood = {
+  schema_version: "graphfin-neighborhood-v1";
+  graph_id: string;
+  dataset_id: string;
+  tier: string;
+  version: string;
+  snapshot_identity: string;
+  dataset_sha256: string;
+  index_sha256: string;
+  status: "verified";
+  provenance_status: "partially_verified";
+  experiment: GraphExperiment;
+  focus_ref: string;
+  nodes: ExplorerNode[];
+  edges: ExplorerEdge[];
+  depth: number;
+  direction: string;
+  start: number;
+  end: number;
+  min_count: number;
+  min_amount: number;
+  temporal_subset: boolean;
+  scope_nodes: number;
+  max_nodes: number;
+  max_edges: number;
+  truncated: boolean;
+  truncation_reasons: string[];
+  remaining_queries: number;
+  remaining_node_grants: number;
+  query_seconds: number;
+  amount_unit: string;
+  limitations: string[];
+};
+export type GraphSession = {
+  session_id: string;
+  expires_in_seconds: number;
+  query_budget: number;
+  dataset: GraphDataset;
+  experiment: GraphExperiment;
+  anchors: GraphAnchor[];
+  focus_ref: string;
+};

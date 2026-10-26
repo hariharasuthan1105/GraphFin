@@ -1,0 +1,1344 @@
+{
+  "dataset_status": {
+    "ibm": "Upstream distinguishes repository Apache-2.0 and data CDLA-Sharing-1.0. Exact supplied derivative grant/lineage not established.",
+    "paysim": "Upstream simulator GPL-3.0 is not proof of licensing for these transformed dataset bytes."
+  },
+  "font_notices": [
+    "frontend/src/research/fonts/ibmplexmono-OFL.txt",
+    "frontend/src/research/fonts/pixelifysans-OFL.txt",
+    "frontend/src/research/fonts/silkscreen-OFL.txt"
+  ],
+  "npm_lock": {
+    "node_modules/@alloc/quick-lru": {
+      "dev": true,
+      "license": "MIT",
+      "version": "5.3.0"
+    },
+    "node_modules/@jridgewell/gen-mapping": {
+      "dev": true,
+      "license": "MIT",
+      "version": "0.3.13"
+    },
+    "node_modules/@jridgewell/resolve-uri": {
+      "dev": true,
+      "license": "MIT",
+      "version": "3.1.2"
+    },
+    "node_modules/@jridgewell/sourcemap-codec": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.6.0"
+    },
+    "node_modules/@jridgewell/trace-mapping": {
+      "dev": true,
+      "license": "MIT",
+      "version": "0.3.31"
+    },
+    "node_modules/@nodelib/fs.scandir": {
+      "dev": true,
+      "license": "MIT",
+      "version": "2.1.5"
+    },
+    "node_modules/@nodelib/fs.stat": {
+      "dev": true,
+      "license": "MIT",
+      "version": "2.0.5"
+    },
+    "node_modules/@nodelib/fs.walk": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.2.8"
+    },
+    "node_modules/@oxc-project/types": {
+      "dev": true,
+      "license": "MIT",
+      "version": "0.150.0"
+    },
+    "node_modules/@oxlint/binding-android-arm-eabi": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.83.0"
+    },
+    "node_modules/@oxlint/binding-android-arm64": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.83.0"
+    },
+    "node_modules/@oxlint/binding-darwin-arm64": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.83.0"
+    },
+    "node_modules/@oxlint/binding-darwin-x64": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.83.0"
+    },
+    "node_modules/@oxlint/binding-freebsd-x64": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.83.0"
+    },
+    "node_modules/@oxlint/binding-linux-arm-gnueabihf": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.83.0"
+    },
+    "node_modules/@oxlint/binding-linux-arm-musleabihf": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.83.0"
+    },
+    "node_modules/@oxlint/binding-linux-arm64-gnu": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.83.0"
+    },
+    "node_modules/@oxlint/binding-linux-arm64-musl": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.83.0"
+    },
+    "node_modules/@oxlint/binding-linux-ppc64-gnu": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.83.0"
+    },
+    "node_modules/@oxlint/binding-linux-riscv64-gnu": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.83.0"
+    },
+    "node_modules/@oxlint/binding-linux-riscv64-musl": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.83.0"
+    },
+    "node_modules/@oxlint/binding-linux-s390x-gnu": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.83.0"
+    },
+    "node_modules/@oxlint/binding-linux-x64-gnu": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.83.0"
+    },
+    "node_modules/@oxlint/binding-linux-x64-musl": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.83.0"
+    },
+    "node_modules/@oxlint/binding-openharmony-arm64": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.83.0"
+    },
+    "node_modules/@oxlint/binding-win32-arm64-msvc": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.83.0"
+    },
+    "node_modules/@oxlint/binding-win32-ia32-msvc": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.83.0"
+    },
+    "node_modules/@oxlint/binding-win32-x64-msvc": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.83.0"
+    },
+    "node_modules/@reduxjs/toolkit": {
+      "dev": false,
+      "license": "MIT",
+      "version": "2.12.0"
+    },
+    "node_modules/@rolldown/binding-android-arm-eabi": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.2.9"
+    },
+    "node_modules/@rolldown/binding-android-arm64": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.2.9"
+    },
+    "node_modules/@rolldown/binding-darwin-arm64": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.2.9"
+    },
+    "node_modules/@rolldown/binding-darwin-x64": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.2.9"
+    },
+    "node_modules/@rolldown/binding-freebsd-x64": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.2.9"
+    },
+    "node_modules/@rolldown/binding-linux-arm-gnueabihf": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.2.9"
+    },
+    "node_modules/@rolldown/binding-linux-arm64-gnu": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.2.9"
+    },
+    "node_modules/@rolldown/binding-linux-arm64-musl": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.2.9"
+    },
+    "node_modules/@rolldown/binding-linux-ppc64-gnu": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.2.9"
+    },
+    "node_modules/@rolldown/binding-linux-s390x-gnu": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.2.9"
+    },
+    "node_modules/@rolldown/binding-linux-x64-gnu": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.2.9"
+    },
+    "node_modules/@rolldown/binding-linux-x64-musl": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.2.9"
+    },
+    "node_modules/@rolldown/binding-openharmony-arm64": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.2.9"
+    },
+    "node_modules/@rolldown/binding-win32-arm64-msvc": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.2.9"
+    },
+    "node_modules/@rolldown/binding-win32-x64-msvc": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.2.9"
+    },
+    "node_modules/@rolldown/pluginutils": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.0.1"
+    },
+    "node_modules/@standard-schema/spec": {
+      "dev": false,
+      "license": "MIT",
+      "version": "1.1.0"
+    },
+    "node_modules/@standard-schema/utils": {
+      "dev": false,
+      "license": "MIT",
+      "version": "0.3.0"
+    },
+    "node_modules/@types/d3-array": {
+      "dev": false,
+      "license": "MIT",
+      "version": "3.2.2"
+    },
+    "node_modules/@types/d3-color": {
+      "dev": false,
+      "license": "MIT",
+      "version": "3.1.3"
+    },
+    "node_modules/@types/d3-ease": {
+      "dev": false,
+      "license": "MIT",
+      "version": "3.0.2"
+    },
+    "node_modules/@types/d3-force": {
+      "dev": true,
+      "license": "MIT",
+      "version": "3.0.10"
+    },
+    "node_modules/@types/d3-interpolate": {
+      "dev": false,
+      "license": "MIT",
+      "version": "3.0.4"
+    },
+    "node_modules/@types/d3-path": {
+      "dev": false,
+      "license": "MIT",
+      "version": "3.1.1"
+    },
+    "node_modules/@types/d3-scale": {
+      "dev": false,
+      "license": "MIT",
+      "version": "4.0.9"
+    },
+    "node_modules/@types/d3-shape": {
+      "dev": false,
+      "license": "MIT",
+      "version": "3.2.0"
+    },
+    "node_modules/@types/d3-time": {
+      "dev": false,
+      "license": "MIT",
+      "version": "3.0.4"
+    },
+    "node_modules/@types/d3-timer": {
+      "dev": false,
+      "license": "MIT",
+      "version": "3.0.2"
+    },
+    "node_modules/@types/node": {
+      "dev": true,
+      "license": "MIT",
+      "version": "24.13.5"
+    },
+    "node_modules/@types/react": {
+      "dev": false,
+      "license": "MIT",
+      "version": "19.3.0"
+    },
+    "node_modules/@types/react-dom": {
+      "dev": true,
+      "license": "MIT",
+      "version": "19.3.0"
+    },
+    "node_modules/@types/use-sync-external-store": {
+      "dev": false,
+      "license": "MIT",
+      "version": "0.0.6"
+    },
+    "node_modules/@vitejs/plugin-react": {
+      "dev": true,
+      "license": "MIT",
+      "version": "6.1.1"
+    },
+    "node_modules/any-promise": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.3.0"
+    },
+    "node_modules/anymatch": {
+      "dev": true,
+      "license": "ISC",
+      "version": "3.1.3"
+    },
+    "node_modules/anymatch/node_modules/picomatch": {
+      "dev": true,
+      "license": "MIT",
+      "version": "2.3.2"
+    },
+    "node_modules/arg": {
+      "dev": true,
+      "license": "MIT",
+      "version": "5.0.2"
+    },
+    "node_modules/autoprefixer": {
+      "dev": true,
+      "license": "MIT",
+      "version": "10.6.1"
+    },
+    "node_modules/baseline-browser-mapping": {
+      "dev": true,
+      "license": "Apache-2.0",
+      "version": "2.11.25"
+    },
+    "node_modules/binary-extensions": {
+      "dev": true,
+      "license": "MIT",
+      "version": "2.3.0"
+    },
+    "node_modules/braces": {
+      "dev": true,
+      "license": "MIT",
+      "version": "3.0.3"
+    },
+    "node_modules/browserslist": {
+      "dev": true,
+      "license": "MIT",
+      "version": "4.29.0"
+    },
+    "node_modules/camelcase-css": {
+      "dev": true,
+      "license": "MIT",
+      "version": "2.0.1"
+    },
+    "node_modules/caniuse-lite": {
+      "dev": true,
+      "license": "CC-BY-4.0",
+      "version": "1.0.30001810"
+    },
+    "node_modules/chokidar": {
+      "dev": true,
+      "license": "MIT",
+      "version": "3.6.0"
+    },
+    "node_modules/chokidar/node_modules/glob-parent": {
+      "dev": true,
+      "license": "ISC",
+      "version": "5.1.2"
+    },
+    "node_modules/clsx": {
+      "dev": false,
+      "license": "MIT",
+      "version": "2.1.1"
+    },
+    "node_modules/commander": {
+      "dev": true,
+      "license": "MIT",
+      "version": "4.1.1"
+    },
+    "node_modules/cssesc": {
+      "dev": true,
+      "license": "MIT",
+      "version": "3.0.0"
+    },
+    "node_modules/csstype": {
+      "dev": false,
+      "license": "MIT",
+      "version": "3.2.3"
+    },
+    "node_modules/d3-array": {
+      "dev": false,
+      "license": "ISC",
+      "version": "3.2.4"
+    },
+    "node_modules/d3-color": {
+      "dev": false,
+      "license": "ISC",
+      "version": "3.1.0"
+    },
+    "node_modules/d3-dispatch": {
+      "dev": false,
+      "license": "ISC",
+      "version": "3.0.1"
+    },
+    "node_modules/d3-ease": {
+      "dev": false,
+      "license": "BSD-3-Clause",
+      "version": "3.0.1"
+    },
+    "node_modules/d3-force": {
+      "dev": false,
+      "license": "ISC",
+      "version": "3.0.0"
+    },
+    "node_modules/d3-format": {
+      "dev": false,
+      "license": "ISC",
+      "version": "3.1.2"
+    },
+    "node_modules/d3-interpolate": {
+      "dev": false,
+      "license": "ISC",
+      "version": "3.0.1"
+    },
+    "node_modules/d3-path": {
+      "dev": false,
+      "license": "ISC",
+      "version": "3.1.0"
+    },
+    "node_modules/d3-quadtree": {
+      "dev": false,
+      "license": "ISC",
+      "version": "3.0.1"
+    },
+    "node_modules/d3-scale": {
+      "dev": false,
+      "license": "ISC",
+      "version": "4.0.2"
+    },
+    "node_modules/d3-shape": {
+      "dev": false,
+      "license": "ISC",
+      "version": "3.2.0"
+    },
+    "node_modules/d3-time": {
+      "dev": false,
+      "license": "ISC",
+      "version": "3.1.0"
+    },
+    "node_modules/d3-time-format": {
+      "dev": false,
+      "license": "ISC",
+      "version": "4.1.0"
+    },
+    "node_modules/d3-timer": {
+      "dev": false,
+      "license": "ISC",
+      "version": "3.0.1"
+    },
+    "node_modules/decimal.js-light": {
+      "dev": false,
+      "license": "MIT",
+      "version": "2.5.1"
+    },
+    "node_modules/detect-libc": {
+      "dev": true,
+      "license": "Apache-2.0",
+      "version": "2.1.2"
+    },
+    "node_modules/didyoumean": {
+      "dev": true,
+      "license": "Apache-2.0",
+      "version": "1.2.2"
+    },
+    "node_modules/dlv": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.1.3"
+    },
+    "node_modules/electron-to-chromium": {
+      "dev": true,
+      "license": "ISC",
+      "version": "1.5.431"
+    },
+    "node_modules/es-errors": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.3.0"
+    },
+    "node_modules/es-toolkit": {
+      "dev": false,
+      "license": "MIT",
+      "version": "1.52.0"
+    },
+    "node_modules/escalade": {
+      "dev": true,
+      "license": "MIT",
+      "version": "3.2.0"
+    },
+    "node_modules/eventemitter3": {
+      "dev": false,
+      "license": "MIT",
+      "version": "5.0.4"
+    },
+    "node_modules/fast-glob": {
+      "dev": true,
+      "license": "MIT",
+      "version": "3.3.3"
+    },
+    "node_modules/fast-glob/node_modules/glob-parent": {
+      "dev": true,
+      "license": "ISC",
+      "version": "5.1.2"
+    },
+    "node_modules/fastq": {
+      "dev": true,
+      "license": "ISC",
+      "version": "1.20.3"
+    },
+    "node_modules/fdir": {
+      "dev": true,
+      "license": "MIT",
+      "version": "6.5.0"
+    },
+    "node_modules/fill-range": {
+      "dev": true,
+      "license": "MIT",
+      "version": "7.1.1"
+    },
+    "node_modules/fraction.js": {
+      "dev": true,
+      "license": "MIT",
+      "version": "5.3.4"
+    },
+    "node_modules/fsevents": {
+      "dev": true,
+      "license": "MIT",
+      "version": "2.3.3"
+    },
+    "node_modules/function-bind": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.1.2"
+    },
+    "node_modules/glob-parent": {
+      "dev": true,
+      "license": "ISC",
+      "version": "6.0.2"
+    },
+    "node_modules/hasown": {
+      "dev": true,
+      "license": "MIT",
+      "version": "2.0.4"
+    },
+    "node_modules/immer": {
+      "dev": false,
+      "license": "MIT",
+      "version": "11.1.18"
+    },
+    "node_modules/internmap": {
+      "dev": false,
+      "license": "ISC",
+      "version": "2.0.3"
+    },
+    "node_modules/is-binary-path": {
+      "dev": true,
+      "license": "MIT",
+      "version": "2.1.0"
+    },
+    "node_modules/is-core-module": {
+      "dev": true,
+      "license": "MIT",
+      "version": "2.17.0"
+    },
+    "node_modules/is-extglob": {
+      "dev": true,
+      "license": "MIT",
+      "version": "2.1.1"
+    },
+    "node_modules/is-glob": {
+      "dev": true,
+      "license": "MIT",
+      "version": "4.0.3"
+    },
+    "node_modules/is-number": {
+      "dev": true,
+      "license": "MIT",
+      "version": "7.0.0"
+    },
+    "node_modules/jiti": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.21.7"
+    },
+    "node_modules/lightningcss": {
+      "dev": true,
+      "license": "MPL-2.0",
+      "version": "1.33.0"
+    },
+    "node_modules/lightningcss-android-arm64": {
+      "dev": true,
+      "license": "MPL-2.0",
+      "version": "1.33.0"
+    },
+    "node_modules/lightningcss-darwin-arm64": {
+      "dev": true,
+      "license": "MPL-2.0",
+      "version": "1.33.0"
+    },
+    "node_modules/lightningcss-darwin-x64": {
+      "dev": true,
+      "license": "MPL-2.0",
+      "version": "1.33.0"
+    },
+    "node_modules/lightningcss-freebsd-x64": {
+      "dev": true,
+      "license": "MPL-2.0",
+      "version": "1.33.0"
+    },
+    "node_modules/lightningcss-linux-arm-gnueabihf": {
+      "dev": true,
+      "license": "MPL-2.0",
+      "version": "1.33.0"
+    },
+    "node_modules/lightningcss-linux-arm64-gnu": {
+      "dev": true,
+      "license": "MPL-2.0",
+      "version": "1.33.0"
+    },
+    "node_modules/lightningcss-linux-arm64-musl": {
+      "dev": true,
+      "license": "MPL-2.0",
+      "version": "1.33.0"
+    },
+    "node_modules/lightningcss-linux-x64-gnu": {
+      "dev": true,
+      "license": "MPL-2.0",
+      "version": "1.33.0"
+    },
+    "node_modules/lightningcss-linux-x64-musl": {
+      "dev": true,
+      "license": "MPL-2.0",
+      "version": "1.33.0"
+    },
+    "node_modules/lightningcss-win32-arm64-msvc": {
+      "dev": true,
+      "license": "MPL-2.0",
+      "version": "1.33.0"
+    },
+    "node_modules/lightningcss-win32-x64-msvc": {
+      "dev": true,
+      "license": "MPL-2.0",
+      "version": "1.33.0"
+    },
+    "node_modules/lilconfig": {
+      "dev": true,
+      "license": "MIT",
+      "version": "3.1.3"
+    },
+    "node_modules/lines-and-columns": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.2.4"
+    },
+    "node_modules/merge2": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.4.1"
+    },
+    "node_modules/micromatch": {
+      "dev": true,
+      "license": "MIT",
+      "version": "4.0.8"
+    },
+    "node_modules/micromatch/node_modules/picomatch": {
+      "dev": true,
+      "license": "MIT",
+      "version": "2.3.2"
+    },
+    "node_modules/mz": {
+      "dev": true,
+      "license": "MIT",
+      "version": "2.7.0"
+    },
+    "node_modules/nanoid": {
+      "dev": true,
+      "license": "MIT",
+      "version": "3.3.19"
+    },
+    "node_modules/node-releases": {
+      "dev": true,
+      "license": "MIT",
+      "version": "2.0.56"
+    },
+    "node_modules/normalize-path": {
+      "dev": true,
+      "license": "MIT",
+      "version": "3.0.0"
+    },
+    "node_modules/object-assign": {
+      "dev": true,
+      "license": "MIT",
+      "version": "4.1.1"
+    },
+    "node_modules/object-hash": {
+      "dev": true,
+      "license": "MIT",
+      "version": "3.0.0"
+    },
+    "node_modules/oxlint": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.83.0"
+    },
+    "node_modules/path-parse": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.0.7"
+    },
+    "node_modules/picocolors": {
+      "dev": true,
+      "license": "ISC",
+      "version": "1.1.1"
+    },
+    "node_modules/picomatch": {
+      "dev": true,
+      "license": "MIT",
+      "version": "4.0.7"
+    },
+    "node_modules/pirates": {
+      "dev": true,
+      "license": "MIT",
+      "version": "4.0.7"
+    },
+    "node_modules/postcss": {
+      "dev": true,
+      "license": "MIT",
+      "version": "8.5.28"
+    },
+    "node_modules/postcss-import": {
+      "dev": true,
+      "license": "MIT",
+      "version": "15.1.0"
+    },
+    "node_modules/postcss-js": {
+      "dev": true,
+      "license": "MIT",
+      "version": "4.1.0"
+    },
+    "node_modules/postcss-load-config": {
+      "dev": true,
+      "license": "MIT",
+      "version": "6.0.1"
+    },
+    "node_modules/postcss-nested": {
+      "dev": true,
+      "license": "MIT",
+      "version": "6.2.0"
+    },
+    "node_modules/postcss-selector-parser": {
+      "dev": true,
+      "license": "MIT",
+      "version": "6.1.4"
+    },
+    "node_modules/postcss-value-parser": {
+      "dev": true,
+      "license": "MIT",
+      "version": "4.2.0"
+    },
+    "node_modules/queue-microtask": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.2.3"
+    },
+    "node_modules/react": {
+      "dev": false,
+      "license": "MIT",
+      "version": "19.3.0"
+    },
+    "node_modules/react-dom": {
+      "dev": false,
+      "license": "MIT",
+      "version": "19.3.0"
+    },
+    "node_modules/react-is": {
+      "dev": false,
+      "license": "MIT",
+      "version": "19.3.0"
+    },
+    "node_modules/react-redux": {
+      "dev": false,
+      "license": "MIT",
+      "version": "9.3.0"
+    },
+    "node_modules/read-cache": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.0.2"
+    },
+    "node_modules/readdirp": {
+      "dev": true,
+      "license": "MIT",
+      "version": "3.6.0"
+    },
+    "node_modules/readdirp/node_modules/picomatch": {
+      "dev": true,
+      "license": "MIT",
+      "version": "2.3.2"
+    },
+    "node_modules/recharts": {
+      "dev": false,
+      "license": "MIT",
+      "version": "3.10.1"
+    },
+    "node_modules/redux": {
+      "dev": false,
+      "license": "MIT",
+      "version": "5.0.1"
+    },
+    "node_modules/redux-thunk": {
+      "dev": false,
+      "license": "MIT",
+      "version": "3.1.0"
+    },
+    "node_modules/reselect": {
+      "dev": false,
+      "license": "MIT",
+      "version": "5.2.0"
+    },
+    "node_modules/resolve": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.22.12"
+    },
+    "node_modules/reusify": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.1.0"
+    },
+    "node_modules/rolldown": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.2.9"
+    },
+    "node_modules/run-parallel": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.2.0"
+    },
+    "node_modules/scheduler": {
+      "dev": false,
+      "license": "MIT",
+      "version": "0.28.0"
+    },
+    "node_modules/source-map-js": {
+      "dev": true,
+      "license": "BSD-3-Clause",
+      "version": "1.2.1"
+    },
+    "node_modules/sucrase": {
+      "dev": true,
+      "license": "MIT",
+      "version": "3.35.1"
+    },
+    "node_modules/supports-preserve-symlinks-flag": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.0.0"
+    },
+    "node_modules/tailwindcss": {
+      "dev": true,
+      "license": "MIT",
+      "version": "3.4.19"
+    },
+    "node_modules/thenify": {
+      "dev": true,
+      "license": "MIT",
+      "version": "3.3.1"
+    },
+    "node_modules/thenify-all": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.6.0"
+    },
+    "node_modules/tiny-invariant": {
+      "dev": false,
+      "license": "MIT",
+      "version": "1.3.3"
+    },
+    "node_modules/tinyglobby": {
+      "dev": true,
+      "license": "MIT",
+      "version": "0.2.17"
+    },
+    "node_modules/to-regex-range": {
+      "dev": true,
+      "license": "MIT",
+      "version": "5.0.1"
+    },
+    "node_modules/ts-interface-checker": {
+      "dev": true,
+      "license": "Apache-2.0",
+      "version": "0.1.13"
+    },
+    "node_modules/typescript": {
+      "dev": true,
+      "license": "Apache-2.0",
+      "version": "6.0.3"
+    },
+    "node_modules/undici-types": {
+      "dev": true,
+      "license": "MIT",
+      "version": "7.18.2"
+    },
+    "node_modules/update-browserslist-db": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.3.3"
+    },
+    "node_modules/use-sync-external-store": {
+      "dev": false,
+      "license": "MIT",
+      "version": "1.7.0"
+    },
+    "node_modules/util-deprecate": {
+      "dev": true,
+      "license": "MIT",
+      "version": "1.0.2"
+    },
+    "node_modules/victory-vendor": {
+      "dev": false,
+      "license": "MIT AND ISC",
+      "version": "37.3.6"
+    },
+    "node_modules/vite": {
+      "dev": true,
+      "license": "MIT",
+      "version": "8.3.0"
+    }
+  },
+  "python": {
+    "annotated-doc": {
+      "license_classifiers": [],
+      "license_expression": "MIT",
+      "license_metadata_excerpt": "",
+      "version": "0.0.5"
+    },
+    "annotated-types": {
+      "license_classifiers": [
+        "License :: OSI Approved :: MIT License"
+      ],
+      "license_expression": "MIT",
+      "license_metadata_excerpt": "",
+      "version": "0.8.0"
+    },
+    "anyio": {
+      "license_classifiers": [],
+      "license_expression": "MIT",
+      "license_metadata_excerpt": "",
+      "version": "4.14.2"
+    },
+    "certifi": {
+      "license_classifiers": [
+        "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)"
+      ],
+      "license_expression": null,
+      "license_metadata_excerpt": "MPL-2.0",
+      "version": "2026.7.22"
+    },
+    "charset-normalizer": {
+      "license_classifiers": [],
+      "license_expression": null,
+      "license_metadata_excerpt": "MIT",
+      "version": "3.5.1"
+    },
+    "click": {
+      "license_classifiers": [],
+      "license_expression": "BSD-3-Clause",
+      "license_metadata_excerpt": "",
+      "version": "8.4.2"
+    },
+    "cloudpickle": {
+      "license_classifiers": [
+        "License :: OSI Approved :: BSD License"
+      ],
+      "license_expression": null,
+      "license_metadata_excerpt": "BSD-3-Clause",
+      "version": "3.1.2"
+    },
+    "colorama": {
+      "license_classifiers": [
+        "License :: OSI Approved :: BSD License"
+      ],
+      "license_expression": null,
+      "license_metadata_excerpt": "",
+      "version": "0.4.6"
+    },
+    "contourpy": {
+      "license_classifiers": [],
+      "license_expression": "BSD-3-Clause",
+      "license_metadata_excerpt": "",
+      "version": "1.4.0"
+    },
+    "cycler": {
+      "license_classifiers": [
+        "License :: OSI Approved :: BSD License"
+      ],
+      "license_expression": null,
+      "license_metadata_excerpt": "Copyright (c) 2015, matplotlib project\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met:\n\n* Redistributions of source code mu",
+      "version": "0.12.1"
+    },
+    "fastapi": {
+      "license_classifiers": [],
+      "license_expression": "MIT",
+      "license_metadata_excerpt": "",
+      "version": "0.141.1"
+    },
+    "fonttools": {
+      "license_classifiers": [],
+      "license_expression": null,
+      "license_metadata_excerpt": "MIT",
+      "version": "4.65.0"
+    },
+    "h11": {
+      "license_classifiers": [
+        "License :: OSI Approved :: MIT License"
+      ],
+      "license_expression": null,
+      "license_metadata_excerpt": "MIT",
+      "version": "0.16.0"
+    },
+    "httpcore": {
+      "license_classifiers": [
+        "License :: OSI Approved :: BSD License"
+      ],
+      "license_expression": "BSD-3-Clause",
+      "license_metadata_excerpt": "",
+      "version": "1.0.9"
+    },
+    "httpx": {
+      "license_classifiers": [
+        "License :: OSI Approved :: BSD License"
+      ],
+      "license_expression": null,
+      "license_metadata_excerpt": "BSD-3-Clause",
+      "version": "0.28.1"
+    },
+    "idna": {
+      "license_classifiers": [],
+      "license_expression": "BSD-3-Clause",
+      "license_metadata_excerpt": "",
+      "version": "3.18"
+    },
+    "iniconfig": {
+      "license_classifiers": [],
+      "license_expression": "MIT",
+      "license_metadata_excerpt": "",
+      "version": "2.3.0"
+    },
+    "joblib": {
+      "license_classifiers": [],
+      "license_expression": "BSD-3-Clause",
+      "license_metadata_excerpt": "",
+      "version": "1.6.0"
+    },
+    "kagglehub": {
+      "license_classifiers": [
+        "License :: OSI Approved :: Apache Software License"
+      ],
+      "license_expression": null,
+      "license_metadata_excerpt": "Apache License\n                           Version 2.0, January 2004\n                        http://www.apache.org/licenses/\n\n   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION\n\n   1. Definitions.\n\n      \"License\" shall mean the",
+      "version": "1.0.2"
+    },
+    "kagglesdk": {
+      "license_classifiers": [
+        "License :: OSI Approved :: Apache Software License"
+      ],
+      "license_expression": null,
+      "license_metadata_excerpt": "Apache License\n                           Version 2.0, January 2004\n                        http://www.apache.org/licenses/\n\n   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION\n\n   1. Definitions.\n\n      \"License\" shall mean the",
+      "version": "0.1.37"
+    },
+    "kiwisolver": {
+      "license_classifiers": [
+        "License :: OSI Approved :: BSD License"
+      ],
+      "license_expression": null,
+      "license_metadata_excerpt": "=========================\n The Kiwi licensing terms\n=========================\nKiwi is licensed under the terms of the Modified BSD License (also known as\nNew or Revised BSD), as follows:\n\nCopyright (c) 2013-2026, Nucleic Development Team\n\nA",
+      "version": "1.5.1"
+    },
+    "lxml": {
+      "license_classifiers": [],
+      "license_expression": null,
+      "license_metadata_excerpt": "BSD-3-Clause",
+      "version": "6.1.3"
+    },
+    "matplotlib": {
+      "license_classifiers": [
+        "License :: OSI Approved :: Python Software Foundation License"
+      ],
+      "license_expression": null,
+      "license_metadata_excerpt": "License agreement for matplotlib versions 1.3.0 and later\n =========================================================\n\n 1. This LICENSE AGREEMENT is between the Matplotlib Development Team\n (\"MDT\"), and the Individual or Organization (\"Licen",
+      "version": "3.11.2"
+    },
+    "narwhals": {
+      "license_classifiers": [],
+      "license_expression": "MIT",
+      "license_metadata_excerpt": "",
+      "version": "2.26.0"
+    },
+    "networkx": {
+      "license_classifiers": [],
+      "license_expression": "BSD-3-Clause",
+      "license_metadata_excerpt": "",
+      "version": "3.6.1"
+    },
+    "numpy": {
+      "license_classifiers": [
+        "License :: OSI Approved :: BSD License"
+      ],
+      "license_expression": null,
+      "license_metadata_excerpt": "Copyright (c) 2005-2025, NumPy Developers.\n All rights reserved.\n\n Redistribution and use in source and binary forms, with or without\n modification, are permitted provided that the following conditions are\n met:\n\n     * Redistributions of s",
+      "version": "2.3.5"
+    },
+    "packaging": {
+      "license_classifiers": [],
+      "license_expression": "Apache-2.0 OR BSD-2-Clause",
+      "license_metadata_excerpt": "",
+      "version": "26.3"
+    },
+    "pandas": {
+      "license_classifiers": [
+        "License :: OSI Approved :: BSD License"
+      ],
+      "license_expression": null,
+      "license_metadata_excerpt": "BSD 3-Clause License\n\n Copyright (c) 2008-2011, AQR Capital Management, LLC, Lambda Foundry, Inc. and PyData Development Team\n All rights reserved.\n\n Copyright (c) 2011-2026, Open source contributors.\n\n Redistribution and use in source and ",
+      "version": "3.0.5"
+    },
+    "pillow": {
+      "license_classifiers": [],
+      "license_expression": "MIT-CMU",
+      "license_metadata_excerpt": "",
+      "version": "12.3.0"
+    },
+    "pluggy": {
+      "license_classifiers": [
+        "License :: OSI Approved :: MIT License"
+      ],
+      "license_expression": null,
+      "license_metadata_excerpt": "MIT",
+      "version": "1.6.0"
+    },
+    "protobuf": {
+      "license_classifiers": [],
+      "license_expression": null,
+      "license_metadata_excerpt": "3-Clause BSD License",
+      "version": "7.35.1"
+    },
+    "psutil": {
+      "license_classifiers": [],
+      "license_expression": null,
+      "license_metadata_excerpt": "BSD-3-Clause",
+      "version": "7.2.2"
+    },
+    "pydantic": {
+      "license_classifiers": [],
+      "license_expression": "MIT",
+      "license_metadata_excerpt": "",
+      "version": "2.13.4"
+    },
+    "pydantic-core": {
+      "license_classifiers": [],
+      "license_expression": "MIT",
+      "license_metadata_excerpt": "",
+      "version": "2.46.4"
+    },
+    "pygments": {
+      "license_classifiers": [],
+      "license_expression": "BSD-2-Clause",
+      "license_metadata_excerpt": "",
+      "version": "2.20.0"
+    },
+    "pyparsing": {
+      "license_classifiers": [],
+      "license_expression": "MIT",
+      "license_metadata_excerpt": "",
+      "version": "3.3.2"
+    },
+    "pypdf": {
+      "license_classifiers": [],
+      "license_expression": "BSD-3-Clause",
+      "license_metadata_excerpt": "",
+      "version": "6.16.1"
+    },
+    "pytest": {
+      "license_classifiers": [],
+      "license_expression": "MIT",
+      "license_metadata_excerpt": "",
+      "version": "9.1.1"
+    },
+    "python-dateutil": {
+      "license_classifiers": [
+        "License :: OSI Approved :: BSD License",
+        "License :: OSI Approved :: Apache Software License"
+      ],
+      "license_expression": null,
+      "license_metadata_excerpt": "Dual License",
+      "version": "2.9.0.post0"
+    },
+    "python-docx": {
+      "license_classifiers": [
+        "License :: OSI Approved :: MIT License"
+      ],
+      "license_expression": null,
+      "license_metadata_excerpt": "MIT",
+      "version": "1.2.0"
+    },
+    "python-dotenv": {
+      "license_classifiers": [],
+      "license_expression": null,
+      "license_metadata_excerpt": "BSD-3-Clause",
+      "version": "1.2.2"
+    },
+    "python-multipart": {
+      "license_classifiers": [
+        "License :: OSI Approved :: Apache Software License"
+      ],
+      "license_expression": "Apache-2.0",
+      "license_metadata_excerpt": "",
+      "version": "0.0.32"
+    },
+    "pyyaml": {
+      "license_classifiers": [
+        "License :: OSI Approved :: MIT License"
+      ],
+      "license_expression": null,
+      "license_metadata_excerpt": "MIT",
+      "version": "6.0.2"
+    },
+    "reportlab": {
+      "license_classifiers": [
+        "License :: OSI Approved :: BSD License"
+      ],
+      "license_expression": null,
+      "license_metadata_excerpt": "BSD license (see license.txt for details), Copyright (c) 2000-2025, ReportLab Inc.",
+      "version": "5.0.1"
+    },
+    "requests": {
+      "license_classifiers": [
+        "License :: OSI Approved :: Apache Software License"
+      ],
+      "license_expression": null,
+      "license_metadata_excerpt": "Apache-2.0",
+      "version": "2.34.2"
+    },
+    "scikit-learn": {
+      "license_classifiers": [],
+      "license_expression": "BSD-3-Clause",
+      "license_metadata_excerpt": "",
+      "version": "1.9.1"
+    },
+    "scipy": {
+      "license_classifiers": [
+        "License :: OSI Approved :: BSD License"
+      ],
+      "license_expression": null,
+      "license_metadata_excerpt": "Copyright (c) 2001-2002 Enthought, Inc. 2003, SciPy Developers.\n All rights reserved.\n\n Redistribution and use in source and binary forms, with or without\n modification, are permitted provided that the following conditions\n are met:\n\n 1. Re",
+      "version": "1.18.1"
+    },
+    "six": {
+      "license_classifiers": [
+        "License :: OSI Approved :: MIT License"
+      ],
+      "license_expression": null,
+      "license_metadata_excerpt": "MIT",
+      "version": "1.17.0"
+    },
+    "starlette": {
+      "license_classifiers": [],
+      "license_expression": "BSD-3-Clause",
+      "license_metadata_excerpt": "",
+      "version": "1.6.0"
+    },
+    "threadpoolctl": {
+      "license_classifiers": [],
+      "license_expression": "BSD-3-Clause",
+      "license_metadata_excerpt": "",
+      "version": "3.7.0"
+    },
+    "tqdm": {
+      "license_classifiers": [],
+      "license_expression": null,
+      "license_metadata_excerpt": "MPL-2.0 AND MIT",
+      "version": "4.70.0"
+    },
+    "typing-extensions": {
+      "license_classifiers": [],
+      "license_expression": "PSF-2.0",
+      "license_metadata_excerpt": "",
+      "version": "4.16.0"
+    },
+    "typing-inspection": {
+      "license_classifiers": [],
+      "license_expression": "MIT",
+      "license_metadata_excerpt": "",
+      "version": "0.4.4"
+    },
+    "tzdata": {
+      "license_classifiers": [],
+      "license_expression": null,
+      "license_metadata_excerpt": "Apache-2.0",
+      "version": "2026.3"
+    },
+    "urllib3": {
+      "license_classifiers": [],
+      "license_expression": "MIT",
+      "license_metadata_excerpt": "",
+      "version": "2.7.0"
+    },
+    "uvicorn": {
+      "license_classifiers": [],
+      "license_expression": "BSD-3-Clause",
+      "license_metadata_excerpt": "",
+      "version": "0.52.3"
+    }
+  },
+  "scope": "Observed Python closure and npm lock metadata; no legal/vulnerability clearance."
+}
