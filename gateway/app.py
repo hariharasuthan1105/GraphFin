@@ -206,6 +206,13 @@ def create_gateway_app(config: GatewayConfig = None) -> FastAPI:
             # Strict directory traversal protection: ensure file stays within dist_dir
             if full_path:
                 try:
+                    # Defensive asset resolution if requested via nested path
+                    if "assets/" in normalized and assets_dir.exists():
+                        asset_name = normalized[normalized.index("assets/") + len("assets/"):]
+                        asset_file = (assets_dir / asset_name).resolve()
+                        if asset_file.is_file() and str(asset_file).startswith(str(assets_dir.resolve())):
+                            return FileResponse(asset_file)
+
                     file_path = (dist_dir / full_path).resolve()
                     if file_path.is_file() and str(file_path).startswith(str(dist_resolved)):
                         return FileResponse(file_path)
