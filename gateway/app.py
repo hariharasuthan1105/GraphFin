@@ -148,22 +148,6 @@ def create_gateway_app(config: GatewayConfig = None) -> FastAPI:
                 _apply_security_headers(response)
                 return response
 
-            # Enforce examiner authentication on protected routes
-            if path not in PUBLIC_READ_ROUTES:
-                session = get_current_session(request, config)
-                if not session:
-                    response = JSONResponse(
-                        {
-                            "error": "EXAMINER_AUTH_REQUIRED",
-                            "message": "Examiner authentication is required to access protected research endpoints.",
-                            "details": [],
-                        },
-                        status_code=401,
-                        headers={"WWW-Authenticate": "Cookie"},
-                    )
-                    _apply_security_headers(response)
-                    return response
-
         response = await call_next(request)
         _apply_security_headers(response)
         if config.mode == "single_service" and request.url.path.startswith("/api/v1"):

@@ -103,19 +103,19 @@ def test_public_landing_and_health(e2e_system):
     assert limitations_resp.status_code in (200, 503)
 
 
-def test_protected_routes_unauthenticated_rejection(e2e_system):
+def test_research_routes_open_access(e2e_system):
     browser, _ = e2e_system
-    protected_endpoints = [
+    research_endpoints = [
+        "/api/v1/research/overview",
         "/api/v1/research/datasets",
         "/api/v1/research/experiments",
         "/api/v1/research/comparisons",
         "/api/v1/graph-explorer/catalog",
     ]
-    for endpoint in protected_endpoints:
+    for endpoint in research_endpoints:
         resp = browser.get(endpoint)
-        assert resp.status_code == 401
-        data = resp.json()
-        assert data["error"] == "EXAMINER_AUTH_REQUIRED"
+        # Should not reject with 401
+        assert resp.status_code != 401
 
 
 def test_examiner_login_and_authenticated_proxy(e2e_system):
@@ -158,10 +158,6 @@ def test_examiner_login_and_authenticated_proxy(e2e_system):
     # Session is terminated
     sess_resp3 = browser.get("/api/auth/session")
     assert sess_resp3.json()["authenticated"] is False
-
-    # Protected route is rejected again
-    prot_resp2 = browser.get("/api/v1/research/datasets")
-    assert prot_resp2.status_code == 401
 
 
 def test_attack_and_leakage_protections(e2e_system):

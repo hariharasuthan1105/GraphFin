@@ -48,20 +48,24 @@ def test_public_health_and_session_unauthenticated(gateway_client):
     assert r.json()["authenticated"] is False
 
 
-def test_protected_route_rejects_unauthenticated_visitor(gateway_client):
-    client, _, _ = gateway_client
-    protected_paths = [
+def test_research_routes_open_to_visitors(gateway_client):
+    client, mock_http, _ = gateway_client
+    mock_http.request.return_value = httpx.Response(
+        status_code=200,
+        headers={"Content-Type": "application/json"},
+        content=b'{"status": "ok"}',
+    )
+    research_paths = [
+        "/api/v1/research/overview",
         "/api/v1/research/datasets",
         "/api/v1/research/experiments",
-        "/api/v1/research-reports/datasets/ibm-5k/report.pdf",
         "/api/v1/graph-explorer/catalog",
         "/api/v1/graph-explorer/neighborhood",
     ]
-    for path in protected_paths:
+    for path in research_paths:
         r = client.get(path)
-        assert r.status_code == 401
-        data = r.json()
-        assert data["error"] == "EXAMINER_AUTH_REQUIRED"
+        # Should proxy successfully without 401
+        assert r.status_code == 200
 
 
 def test_invalid_login_rejected(gateway_client):

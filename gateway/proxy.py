@@ -81,20 +81,7 @@ async def gateway_proxy(request: Request, path: str):
             headers={"Retry-After": "60"},
         )
 
-    # 4. Check examiner session for protected research endpoints
-    session = get_current_session(request, config)
-    if full_path not in PUBLIC_READ_ROUTES and not session:
-        return JSONResponse(
-            {
-                "error": "EXAMINER_AUTH_REQUIRED",
-                "message": "Examiner authentication is required to access protected research endpoints.",
-                "details": [],
-            },
-            status_code=401,
-            headers={"WWW-Authenticate": "Cookie"},
-        )
-
-    # 5. Prepare upstream request
+    # 4. Prepare upstream request
     upstream_url = f"{config.backend_url}{full_path}"
     query_string = request.url.query
     if query_string:

@@ -53,14 +53,12 @@ def test_single_service_health_and_root(single_service_client):
     assert "GraphFin" in r_root.text or "Anomaly Detection" in r_root.text
 
 
-def test_single_service_unauthenticated_protection(single_service_client):
+def test_single_service_unrestricted_research_access(single_service_client):
     client, _ = single_service_client
-    # Public routes allowed unauthenticated (returns 200 or 503 when research results are unavailable)
-    assert client.get("/api/v1/research/overview").status_code == 200
-    assert client.get("/api/v1/research/limitations").status_code in (200, 503)
-
-    # Protected routes reject unauthenticated visitors with 401
+    # All approved read-only research routes are directly accessible to visitors without authentication
     for path in [
+        "/api/v1/research/overview",
+        "/api/v1/research/limitations",
         "/api/v1/research/datasets",
         "/api/v1/research/experiments",
         "/api/v1/research/comparisons",
@@ -70,12 +68,10 @@ def test_single_service_unauthenticated_protection(single_service_client):
         "/api/v1/graph-explorer/catalog",
         "/api/v1/graph-explorer/session",
         "/api/v1/graph-explorer/neighborhood",
-        "/api/v1/research-reports/datasets/ibm-5k/report.pdf",
     ]:
         res = client.get(path)
-        assert res.status_code == 401, f"Expected 401 for {path}, got {res.status_code}"
-        assert res.json()["error"] == "EXAMINER_AUTH_REQUIRED"
-        assert res.headers.get("WWW-Authenticate") == "Cookie"
+        # Accessible without 401: visitors are never rejected by authentication
+        assert res.status_code != 401, f"Expected non-401 for {path}, got {res.status_code}"
 
 
 def test_single_service_login_logout_flow(single_service_client):
@@ -117,8 +113,9 @@ def test_single_service_login_logout_flow(single_service_client):
     r_logout = client.post("/api/auth/logout", headers={"X-CSRF-Token": csrf_token})
     assert r_logout.status_code == 200
 
-    # 7. Subsequent request to protected route is rejected
-    assert client.get("/api/v1/graph-explorer/catalog").status_code == 401
+    # 7. Subsequent session check confirms session cleared
+    r_post_logout = client.get("/api/auth/session")
+    assert r_post_logout.json()["authenticated"] is False
 
 
 def test_single_service_unsafe_methods_and_disallowed_routes(single_service_client):

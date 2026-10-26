@@ -52,6 +52,48 @@ export default function Datasets() {
         Synthetic networks. Explicit label identities. Verifiable artifact
         lineage.
       </Heading>
+
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          background: "#101012",
+          border: "1px solid #303034",
+          padding: "16px 20px",
+          marginBottom: "24px",
+          borderRadius: "2px",
+          flexWrap: "wrap",
+          gap: "12px",
+        }}
+      >
+        <div>
+          <span className="eyebrow red">CUSTOM TRANSACTION ANALYSIS</span>
+          <strong style={{ display: "block", color: "#f5f5f5", fontSize: "14px", marginTop: "2px" }}>
+            Upload and analyze your own financial transaction dataset
+          </strong>
+          <span style={{ color: "#a6a6a6", fontSize: "12px" }}>
+            Supports CSV, TSV, or JSON with client-side graph construction and anomaly scoring.
+          </span>
+        </div>
+        <a
+          href="#/analyze"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "8px",
+            background: "#b44a50",
+            color: "#ffffff",
+            padding: "8px 18px",
+            fontWeight: 600,
+            fontSize: "12px",
+            borderRadius: "2px",
+            textDecoration: "none",
+          }}
+        >
+          <span>↑</span> UPLOAD DATASET <span>→</span>
+        </a>
+      </div>
       {!r.data ? (
         <State {...r} />
       ) : (

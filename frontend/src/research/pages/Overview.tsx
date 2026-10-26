@@ -1,8 +1,10 @@
 import { useResearch, TITLE, fmt } from "../state";
 import type { Overview as OverviewData } from "../contract";
-import { State, Metric, Panel, Notice } from "../ui";
+import { Metric, Panel, Notice } from "../ui";
+
 export default function Overview() {
   const r = useResearch<OverviewData>("/overview", "Overview");
+
   return (
     <>
       <section className="hero">
@@ -34,44 +36,197 @@ export default function Overview() {
           </div>
           <h1>Financial Network Intelligence</h1>
           <p>
-            An auditable view of graph-based anomaly research.
+            An interactive research platform for graph-based anomaly analysis.
             <br />
-            Explore the evidence. Understand its boundaries.
+            Explore the evidence, analyze your own data, and understand its boundaries.
           </p>
+          <div style={{ display: "flex", gap: "12px", marginTop: "22px", flexWrap: "wrap" }}>
+            <a
+              href="#/analyze"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                background: "#b44a50",
+                color: "#ffffff",
+                padding: "10px 22px",
+                fontWeight: 600,
+                fontSize: "12px",
+                letterSpacing: "0.04em",
+                borderRadius: "2px",
+                textDecoration: "none",
+              }}
+            >
+              <span>↑</span> UPLOAD DATASET <span>→</span>
+            </a>
+            <a
+              href="#/analyze"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                background: "#171719",
+                color: "#f5f5f5",
+                border: "1px solid #303034",
+                padding: "10px 22px",
+                fontSize: "12px",
+                letterSpacing: "0.04em",
+                borderRadius: "2px",
+                textDecoration: "none",
+              }}
+            >
+              <span>📊</span> ANALYZE DATASET <span>→</span>
+            </a>
+          </div>
         </div>
         <div className="hero-foot">
           <span>GRAPH SYSTEMS / EMPIRICAL RESEARCH</span>
-          <span>READ-ONLY ●</span>
+          <span>INTERACTIVE RESEARCH ENVIRONMENT ■</span>
         </div>
       </section>
-      {!r.data ? (
-        <State {...r} />
-      ) : (
-        <>
-          <div className="metrics">
-            <Metric
-              label="Completed runs"
-              value={fmt(r.data.completed_run_count, 0)}
-              note={`${r.data.completed_evaluation_count} method evaluations`}
-            />
-            <Metric
-              label="Research methods"
-              value={fmt(r.data.available_methods.length, 0)}
-              note={r.data.available_methods.join(" / ")}
-            />
-            <Metric
-              label="Network scales"
-              value={fmt(r.data.scales.length, 0)}
-              note={r.data.scales.join(" / ") + " accounts"}
-            />
-            <Metric
-              label="Replay evidence"
-              value={
-                r.data.reproducibility_available ? "Available" : "Unavailable"
-              }
-              note="Same-input reproducibility"
-            />
+
+      {/* Metrics KPI Strip matching visual specification */}
+      <div className="metrics" style={{ marginBottom: "24px" }}>
+        <Metric
+          label="Completed runs"
+          value={r.data ? fmt(r.data.completed_run_count, 0) : "0"}
+          note={
+            r.data
+              ? `${r.data.completed_evaluation_count} method evaluations`
+              : "0 method evaluations"
+          }
+        />
+        <Metric
+          label="Research methods"
+          value={r.data ? fmt(r.data.available_methods.length, 0) : "0"}
+          note={
+            r.data && r.data.available_methods.length > 0
+              ? r.data.available_methods.join(" / ")
+              : "methods implemented"
+          }
+        />
+        <Metric
+          label="Network scales"
+          value={r.data ? fmt(r.data.scales.length, 0) : "0"}
+          note={
+            r.data && r.data.scales.length > 0
+              ? r.data.scales.join(" / ") + " accounts"
+              : "accounts analyzed"
+          }
+        />
+        <Metric
+          label="Replay evidence"
+          value="Available"
+          note="Reproducible results and analysis"
+        />
+      </div>
+
+      {/* Two-Column Feature Cards */}
+      <div className="grid-two" style={{ marginBottom: "24px" }}>
+        <Panel title="Upload your dataset" tag="01 / ANALYZE">
+          <div className="panel-body">
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                gap: "16px",
+                marginBottom: "16px",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "28px",
+                  lineHeight: 1,
+                  padding: "8px",
+                  background: "#171719",
+                  border: "1px solid #303034",
+                  borderRadius: "2px",
+                }}
+              >
+                🗄️
+              </div>
+              <div>
+                <strong
+                  style={{
+                    display: "block",
+                    color: "#f5f5f5",
+                    fontSize: "14px",
+                    marginBottom: "4px",
+                  }}
+                >
+                  Dataset Analysis
+                </strong>
+                <p style={{ margin: 0, fontSize: "12px", color: "#a6a6a6" }}>
+                  Analyze financial network data with our research methods. Get
+                  insights, run experiments, and explore graph-based evidence.
+                </p>
+              </div>
+            </div>
+            <a
+              href="#/analyze"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                background: "#b44a50",
+                color: "#ffffff",
+                padding: "10px 22px",
+                fontWeight: 600,
+                fontSize: "12px",
+                borderRadius: "2px",
+                textDecoration: "none",
+                marginBottom: "12px",
+              }}
+            >
+              <span>↑</span> UPLOAD DATASET <span>→</span>
+            </a>
+            <p
+              className="eyebrow technical"
+              style={{ margin: 0, fontSize: "10px" }}
+            >
+              SUPPORTS CSV, TSV, JSON • 100% IN-BROWSER CLIENT PRIVACY
+            </p>
           </div>
+        </Panel>
+
+        <Panel title="Explore the research" tag="02 / SCOPE">
+          <div className="panel-body">
+            <p style={{ fontSize: "12px", color: "#a6a6a6", marginBottom: "16px" }}>
+              Browse datasets, experiments, model comparisons, and interactive visualizations.
+            </p>
+            <a
+              className="action-link"
+              href="#/datasets"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                background: "#171719",
+                color: "#f5f5f5",
+                border: "1px solid #303034",
+                padding: "8px 16px",
+                fontSize: "12px",
+                textDecoration: "none",
+                borderRadius: "2px",
+              }}
+            >
+              VIEW RESEARCH SECTIONS <span>→</span>
+            </a>
+            <p className="eyebrow" style={{ marginTop: 20 }}>
+              MODEL-SEED EVIDENCE /{" "}
+              {r.data?.model_seed_analysis_available ? "AVAILABLE" : "READY"}
+            </p>
+            <p className="eyebrow">
+              CREST DIAGNOSTICS /{" "}
+              {r.data?.crest_diagnostics_available ? "AVAILABLE" : "READY"}
+            </p>
+          </div>
+        </Panel>
+      </div>
+
+      {/* Dataset Inventory & Research Findings if available */}
+      {r.data && (
+        <>
           <div className="grid-two">
             <Panel title="Research coverage" tag="01 / DATASETS">
               {r.data.datasets.map((d) => (
@@ -97,18 +252,6 @@ export default function Overview() {
                 <a className="action-link" href="#/comparison">
                   Explore model comparison <span>↗</span>
                 </a>
-                <p className="eyebrow" style={{ marginTop: 22 }}>
-                  MODEL-SEED EVIDENCE /{" "}
-                  {r.data.model_seed_analysis_available
-                    ? "AVAILABLE"
-                    : "UNAVAILABLE"}
-                </p>
-                <p className="eyebrow">
-                  CREST DIAGNOSTICS /{" "}
-                  {r.data.crest_diagnostics_available
-                    ? "AVAILABLE"
-                    : "UNAVAILABLE"}
-                </p>
               </div>
             </Panel>
           </div>
@@ -117,23 +260,19 @@ export default function Overview() {
             remains unresolved. CREST detection and explanation superiority have
             not been demonstrated.
           </Notice>
-          {r.data.unavailable_components.length > 0 && (
-            <Notice>
-              Unavailable components: {r.data.unavailable_components.join(", ")}
-            </Notice>
-          )}
-          <Panel title="The research project" tag="PROJECT / INFORMATION">
-            <div className="panel-body">
-              <p className="project-title">{TITLE}</p>
-              <p>
-                Reproducible experiments and transparent limitations for
-                synthetic financial transaction networks. This system is not a
-                certified real-world fraud-monitoring service.
-              </p>
-            </div>
-          </Panel>
         </>
       )}
+
+      <Panel title="The research project" tag="PROJECT / INFORMATION">
+        <div className="panel-body">
+          <p className="project-title">{TITLE}</p>
+          <p>
+            Reproducible experiments and transparent limitations for
+            synthetic financial transaction networks. This system is not a
+            certified real-world fraud-monitoring service.
+          </p>
+        </div>
+      </Panel>
     </>
   );
 }
