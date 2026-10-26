@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import httpx
 
@@ -22,11 +23,11 @@ def _apply_security_headers(response):
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
     response.headers["Content-Security-Policy"] = (
         "default-src 'self'; "
-        "script-src 'self'; "
+        "script-src 'self' 'unsafe-inline'; "
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
         "font-src 'self' data: https://fonts.gstatic.com; "
         "img-src 'self' data:; "
-        "connect-src 'self'; "
+        "connect-src 'self' https://hariharasuthan1105.github.io https://graphfin.onrender.com; "
         "frame-ancestors 'none';"
     )
 
@@ -79,12 +80,31 @@ def create_gateway_app(config: GatewayConfig = None) -> FastAPI:
     # Register standard exception handlers so research errors format consistently
     register_exception_handlers(app)
 
+    # CORS support for GitHub Pages and development origins
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[
+            "https://hariharasuthan1105.github.io",
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+            "http://localhost:10000",
+            "http://127.0.0.1:10000",
+        ],
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=["*"],
+    )
+
     # Reject WebSockets with 1008
     app.add_middleware(WebSocketRejectMiddleware)
 
     # Unified Security & In-Process Route Guard Middleware
     @app.middleware("http")
     async def security_and_routing_middleware(request: Request, call_next):
+        # Allow CORS preflight requests without host or auth checks
+        if request.method == "OPTIONS":
+            return await call_next(request)
+
         # 1. Host validation
         host = request.headers.get("host", "")
         if any(c in host for c in "/\\?#@") or not host:

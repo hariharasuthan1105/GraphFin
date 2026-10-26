@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { graphExplorerUrl, ResearchError, validate } from "../client";
+import { graphExplorerUrl, ResearchError, validate, getAuthHeaders } from "../client";
 import schemas from "./contract.schema.json";
 import type { GraphCatalog } from "./contract";
 
@@ -11,11 +11,13 @@ export async function graphRequest<T>(
 ): Promise<T> {
   const response = await fetch(graphExplorerUrl(path), {
     method: "GET",
+    credentials: "include",
     cache: "no-store",
     signal,
     headers: {
       Accept: "application/json",
       ...(session ? { "X-Graph-Session": session } : {}),
+      ...getAuthHeaders(),
     },
   });
   if (!response.ok) {

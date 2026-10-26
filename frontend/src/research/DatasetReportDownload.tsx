@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { datasetReportUrl } from "./client";
+import { datasetReportUrl, getAuthHeaders } from "./client";
 
 export function DatasetReportDownload({ datasetId }: { datasetId: string }) {
   const controller = useRef<AbortController | null>(null);
@@ -18,7 +18,11 @@ export function DatasetReportDownload({ datasetId }: { datasetId: string }) {
       const response = await fetch(datasetReportUrl(datasetId), {
         method: "GET",
         signal: current.signal,
-        headers: { Accept: "application/pdf" },
+        credentials: "include",
+        headers: {
+          Accept: "application/pdf",
+          ...getAuthHeaders(),
+        },
         cache: "no-store",
       });
       if (!response.ok) {

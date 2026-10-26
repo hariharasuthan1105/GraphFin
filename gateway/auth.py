@@ -73,6 +73,10 @@ class LoginRequest(BaseModel):
 def get_current_session(request: Request, config: GatewayConfig) -> dict | None:
     token = request.cookies.get(config.cookie_name)
     if not token:
+        auth_header = request.headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            token = auth_header[7:].strip()
+    if not token:
         return None
     return verify_session(config.session_secret, token)
 
@@ -158,6 +162,7 @@ async def login(request: Request, body: LoginRequest, response: Response):
         "status": "authenticated",
         "user": input_user,
         "role": "examiner",
+        "session_token": session_token,
         "csrf_token": csrf_token,
         "message": "Examiner session established.",
     }

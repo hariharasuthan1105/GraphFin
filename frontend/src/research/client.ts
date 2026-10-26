@@ -62,11 +62,44 @@ export class ResearchError extends Error {
 const base = (
   import.meta.env.VITE_RESEARCH_API_URL ??
   import.meta.env.VITE_API_URL ??
-  ""
+  (typeof window !== "undefined" && window.location.hostname.endsWith("github.io")
+    ? "https://graphfin.onrender.com"
+    : "")
 )
   .replace(/\/$/, "")
   .replace(/\/api\/v1$/, "");
+
+export function getAuthToken(): string | null {
+  try {
+    return sessionStorage.getItem("graphfin_examiner_token");
+  } catch {
+    return null;
+  }
+}
+
+export function setAuthToken(token: string | null) {
+  try {
+    if (token) {
+      sessionStorage.setItem("graphfin_examiner_token", token);
+    } else {
+      sessionStorage.removeItem("graphfin_examiner_token");
+    }
+  } catch {
+    // Ignore storage errors in restricted contexts
+  }
+}
+
+export function getAuthHeaders(): Record<string, string> {
+  const token = getAuthToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 const cache = new Map<string, { value: unknown; expires: number }>();
+
+export function authUrl(path: string) {
+  return base + "/api/auth" + path;
+}
+
 export function researchUrl(path: string) {
   return base + "/api/v1/research" + path;
 }
@@ -113,7 +146,11 @@ export function getResearch<T>(
     const promise = fetch(researchUrl(path), {
       method: "GET",
       signal: controller.signal,
-      headers: { Accept: "application/json" },
+      credentials: "include",
+      headers: {
+        Accept: "application/json",
+        ...getAuthHeaders(),
+      },
     })
       .then(async (r) => {
         if (!r.ok) {

@@ -168,3 +168,33 @@ def test_single_service_security_headers(single_service_client):
     assert res.headers.get("X-Frame-Options") == "DENY"
     assert res.headers.get("Referrer-Policy") == "strict-origin-when-cross-origin"
     assert "default-src 'self'" in res.headers.get("Content-Security-Policy", "")
+
+
+def test_single_service_bearer_auth_and_cors(single_service_client):
+    client, _ = single_service_client
+
+    # 1. CORS preflight (OPTIONS)
+    r_opts = client.options(
+        "/api/v1/research/overview",
+        headers={
+            "Origin": "https://hariharasuthan1105.github.io",
+            "Access-Control-Request-Method": "GET",
+        },
+    )
+    assert r_opts.status_code == 200
+    assert r_opts.headers.get("access-control-allow-origin") == "https://hariharasuthan1105.github.io"
+
+    # 2. Login returns session_token
+    r_login = client.post("/api/auth/login", json={"username": TEST_EXAMINER_USER, "password": TEST_EXAMINER_PWD})
+    assert r_login.status_code == 200
+    session_token = r_login.json()["session_token"]
+    assert session_token is not None
+
+    # 3. Access protected route using Authorization: Bearer <session_token> without cookies
+    client_no_cookie = TestClient(client.app, base_url="http://testserver")
+    r_bearer = client_no_cookie.get(
+        "/api/v1/graph-explorer/catalog",
+        headers={"Authorization": f"Bearer {session_token}"},
+    )
+    assert r_bearer.status_code == 200
+    assert "datasets" in r_bearer.json()

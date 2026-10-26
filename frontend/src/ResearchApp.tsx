@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { TITLE } from "./research/state";
+import { authUrl, getAuthHeaders, setAuthToken } from "./research/client";
 import "./research/research.css";
 
 const pages = {
@@ -61,8 +62,12 @@ export function App() {
 
   const refreshSession = async () => {
     try {
-      const res = await fetch("/api/auth/session", {
-        headers: { Accept: "application/json" },
+      const res = await fetch(authUrl("/session"), {
+        headers: {
+          Accept: "application/json",
+          ...getAuthHeaders(),
+        },
+        credentials: "include",
         cache: "no-store",
       });
       if (res.ok) {
@@ -101,12 +106,14 @@ export function App() {
     setLoginBusy(true);
     setLoginError("");
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch(authUrl("/login"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
+          ...getAuthHeaders(),
         },
+        credentials: "include",
         body: JSON.stringify({
           username: loginUsername.trim(),
           password: loginPassword,
@@ -116,6 +123,9 @@ export function App() {
       if (!res.ok) {
         setLoginError(data?.message || "Invalid examiner username or password.");
         return;
+      }
+      if (data?.session_token) {
+        setAuthToken(data.session_token);
       }
       setSession({
         authenticated: true,
@@ -134,14 +144,17 @@ export function App() {
 
   const handleLogout = async () => {
     try {
-      await fetch("/api/auth/logout", {
+      await fetch(authUrl("/logout"), {
         method: "POST",
         headers: {
           Accept: "application/json",
           ...(session.csrf_token ? { "X-CSRF-Token": session.csrf_token } : {}),
+          ...getAuthHeaders(),
         },
+        credentials: "include",
       });
     } finally {
+      setAuthToken(null);
       setSession({
         authenticated: false,
         role: "public",

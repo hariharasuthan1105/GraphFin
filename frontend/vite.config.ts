@@ -5,8 +5,8 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
 
-  // Root base URL for single-service deployment
-  base: '/',
+  // Universal base URL for both Render root (/) and GitHub Pages (/GraphFin/)
+  base: './',
 
   server: {
     port: 5173,
