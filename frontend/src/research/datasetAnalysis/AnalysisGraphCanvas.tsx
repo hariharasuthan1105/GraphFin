@@ -15,6 +15,7 @@ interface Props {
   edges: TransferEdge[];
   selectedNode: string | null;
   onSelectNode: (id: string) => void;
+  preset?: string;
   maxRenderNodes?: number;
   modeBadge?: string;
 }
@@ -44,6 +45,7 @@ export function AnalysisGraphCanvas({
   edges,
   selectedNode,
   onSelectNode,
+  preset,
   maxRenderNodes = 60,
   modeBadge,
 }: Props) {
@@ -56,7 +58,7 @@ export function AnalysisGraphCanvas({
   const [isPanning, setIsPanning] = useState(false);
   const panStartRef = useRef({ x: 0, y: 0 });
 
-  // Compute collision-aware d3-force layout with automatic fit-to-view bounding
+  // Compute collision-aware layout with structured preset geometries and automatic fit-to-view
   useEffect(() => {
     const activeNodes = accounts.slice(0, maxRenderNodes);
     const activeIds = new Set(activeNodes.map((a) => a.id));
@@ -66,13 +68,82 @@ export function AnalysisGraphCanvas({
     const cx = W / 2;
     const cy = H / 2;
 
+    // Structured geometric initial positions based on AML preset
     const simNodes: SimNode[] = activeNodes.map((acc, idx) => {
-      const angle = (idx / activeNodes.length) * 2 * Math.PI;
-      const dist = 160 + (1 - acc.anomalyScore * 0.5) * 80;
+      let initX = cx;
+      let initY = cy;
+
+      if (preset === "mule-ring") {
+        if (idx === 0) {
+          // Source origin on left
+          initX = cx - 220;
+          initY = cy;
+        } else if (idx <= 8) {
+          // Ring of mule intermediaries in center
+          const angle = ((idx - 1) / 8) * 2 * Math.PI;
+          initX = cx - 20 + Math.cos(angle) * 120;
+          initY = cy + Math.sin(angle) * 120;
+        } else if (idx <= 10) {
+          // Offshore collection sinks on right
+          initX = cx + 220;
+          initY = cy + (idx === 9 ? -70 : 70);
+        } else {
+          // Background counterparties on periphery
+          const angle = (idx / activeNodes.length) * 2 * Math.PI;
+          initX = cx + Math.cos(angle) * 220;
+          initY = cy + Math.sin(angle) * 170;
+        }
+      } else if (preset === "ponzi-cycle") {
+        if (acc.patterns.includes("CYCLE") || idx < 4) {
+          // Central directed cycle ring
+          const angle = (idx / 4) * 2 * Math.PI;
+          initX = cx + Math.cos(angle) * 100;
+          initY = cy + Math.sin(angle) * 100;
+        } else {
+          // Peripheral wash traders radiating outward
+          const angle = (idx / activeNodes.length) * 2 * Math.PI;
+          initX = cx + Math.cos(angle) * 210;
+          initY = cy + Math.sin(angle) * 180;
+        }
+      } else if (preset === "smurfing-fanout") {
+        if (idx === 0) {
+          // Central Treasury Hub
+          initX = cx;
+          initY = cy;
+        } else {
+          // Structured radial fan-out
+          const angle = ((idx - 1) / (activeNodes.length - 1)) * 2 * Math.PI;
+          initX = cx + Math.cos(angle) * 180;
+          initY = cy + Math.sin(angle) * 180;
+        }
+      } else if (preset === "fanin-aggregation") {
+        if (idx === 0) {
+          // Central Aggregator / Exit
+          initX = cx;
+          initY = cy;
+        } else if (idx <= 5) {
+          // Layer 1 collection
+          const angle = ((idx - 1) / 5) * 2 * Math.PI;
+          initX = cx + Math.cos(angle) * 110;
+          initY = cy + Math.sin(angle) * 110;
+        } else {
+          // Outer feeder ring
+          const angle = ((idx - 6) / (activeNodes.length - 6)) * 2 * Math.PI;
+          initX = cx + Math.cos(angle) * 210;
+          initY = cy + Math.sin(angle) * 200;
+        }
+      } else {
+        // General uploaded graph: balanced radial dispersion
+        const angle = (idx / activeNodes.length) * 2 * Math.PI;
+        const dist = 140 + (1 - acc.anomalyScore * 0.4) * 80;
+        initX = cx + Math.cos(angle) * dist;
+        initY = cy + Math.sin(angle) * dist;
+      }
+
       return {
         id: acc.id,
-        x: cx + Math.cos(angle) * dist,
-        y: cy + Math.sin(angle) * dist,
+        x: initX,
+        y: initY,
         radius: Math.max(7, Math.min(18, 7 + Math.log10(Math.max(1, acc.totalDegree)) * 4.5)),
         score: acc.anomalyScore,
         inDegree: acc.inDegree,
@@ -93,26 +164,26 @@ export function AnalysisGraphCanvas({
         isReciprocal: e.isReciprocal,
       }));
 
-    // Run d3-force simulation with generous collision avoidance (+28px buffer)
+    // Run d3-force with strong collision avoidance (+32px buffer) and repulsion
     const simulation = forceSimulation<SimNode>(simNodes)
       .force(
         "link",
         forceLink<SimNode, SimEdge>(activeEdges)
           .id((d) => d.id)
-          .distance(130),
+          .distance(preset ? 110 : 130),
       )
-      .force("charge", forceManyBody().strength(-380).distanceMax(600))
+      .force("charge", forceManyBody().strength(preset ? -320 : -420).distanceMax(650))
       .force(
         "collide",
-        forceCollide<SimNode>().radius((d) => d.radius + 28),
+        forceCollide<SimNode>().radius((d) => d.radius + 32),
       )
       .force("center", forceCenter(cx, cy))
       .stop();
 
-    // Run 260 iterations synchronously for instant stable placement
-    for (let i = 0; i < 260; ++i) simulation.tick();
+    // Run 280 iterations for stable node placement
+    for (let i = 0; i < 280; ++i) simulation.tick();
 
-    // Fit-to-view calculation
+    // Automatic fit-to-view bounding calculation
     if (simNodes.length > 0) {
       let minX = Infinity,
         maxX = -Infinity,
@@ -141,9 +212,9 @@ export function AnalysisGraphCanvas({
     setLinks(activeEdges);
     setZoom(1.0);
     setPan({ x: 0, y: 0 });
-  }, [accounts, edges, maxRenderNodes]);
+  }, [accounts, edges, preset, maxRenderNodes]);
 
-  // Handle Pan Interaction
+  // Handle Pan Drag
   const handleMouseDown = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).tagName === "svg" || (e.target as HTMLElement).tagName === "rect") {
       setIsPanning(true);
@@ -162,15 +233,25 @@ export function AnalysisGraphCanvas({
 
   const handleMouseUp = () => setIsPanning(false);
 
-  // Semantic color selector
+  // Original GraphFin Semantic Colors (Black / White / Red)
   const getNodeColor = (n: SimNode) => {
-    if (n.score >= 0.7) return { fill: "#f43f5e", stroke: "#e11d48", label: "Critical Anomaly" };
-    if (n.patterns.includes("CYCLE")) return { fill: "#a855f7", stroke: "#9333ea", label: "Cycle Node" };
-    if (n.patterns.includes("FAN_OUT") || n.patterns.includes("FAN_IN"))
-      return { fill: "#f59e0b", stroke: "#d97706", label: "Mule / Hub" };
-    if (n.score >= 0.45) return { fill: "#fb923c", stroke: "#ea580c", label: "Suspicious" };
-    return { fill: "#38bdf8", stroke: "#0284c7", label: "Standard Account" };
+    if (n.score >= 0.7) {
+      return { fill: "#ef4444", stroke: "#b91c1c", label: "Critical Anomaly" };
+    }
+    if (n.score >= 0.45 || n.patterns.length > 0) {
+      return { fill: "#b44a50", stroke: "#842d35", label: "Suspicious Account" };
+    }
+    return { fill: "#e5e7eb", stroke: "#9ca3af", label: "Standard Account" };
   };
+
+  // Top 3 anomalies to optionally show badges for when unselected
+  const topAnomalyIds = new Set(
+    [...nodes]
+      .filter((n) => n.score >= 0.6)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3)
+      .map((n) => n.id),
+  );
 
   return (
     <div
@@ -182,8 +263,8 @@ export function AnalysisGraphCanvas({
       onMouseLeave={handleMouseUp}
       style={{
         position: "relative",
-        background: "#08090d",
-        border: "1px solid #1a1e28",
+        background: "#080809",
+        border: "1px solid #303034",
         borderRadius: "6px",
         overflow: "hidden",
         width: "100%",
@@ -215,19 +296,19 @@ export function AnalysisGraphCanvas({
                 fontWeight: 600,
                 padding: "3px 8px",
                 borderRadius: "3px",
-                background: "#12151e",
-                border: "1px solid #283144",
-                color: "#38bdf8",
+                background: "#171719",
+                border: "1px solid #303034",
+                color: "#f5f5f5",
               }}
             >
-              {modeBadge}
+              <b style={{ color: "#c04b52" }}>●</b> {modeBadge}
             </span>
           )}
           <span
             style={{
               fontFamily: "IBM Plex Mono, monospace",
               fontSize: "11px",
-              color: "#64748b",
+              color: "#77777d",
             }}
           >
             {nodes.length} accounts · {links.length} transfers
@@ -239,9 +320,9 @@ export function AnalysisGraphCanvas({
           style={{
             display: "inline-flex",
             alignItems: "center",
-            gap: "4px",
-            background: "#0e111a",
-            border: "1px solid #1e2434",
+            gap: "3px",
+            background: "#101012",
+            border: "1px solid #303034",
             borderRadius: "4px",
             padding: "2px",
             pointerEvents: "auto",
@@ -254,7 +335,7 @@ export function AnalysisGraphCanvas({
             style={{
               background: "transparent",
               border: "none",
-              color: "#94a3b8",
+              color: "#a6a6a6",
               cursor: "pointer",
               padding: "4px 8px",
               fontSize: "12px",
@@ -268,7 +349,7 @@ export function AnalysisGraphCanvas({
             style={{
               fontFamily: "IBM Plex Mono, monospace",
               fontSize: "10px",
-              color: "#e2e8f0",
+              color: "#f5f5f5",
               minWidth: "42px",
               textAlign: "center",
             }}
@@ -282,7 +363,7 @@ export function AnalysisGraphCanvas({
             style={{
               background: "transparent",
               border: "none",
-              color: "#94a3b8",
+              color: "#a6a6a6",
               cursor: "pointer",
               padding: "4px 8px",
               fontSize: "12px",
@@ -300,9 +381,9 @@ export function AnalysisGraphCanvas({
             }}
             aria-label="Reset zoom and pan"
             style={{
-              background: "#161b26",
-              border: "1px solid #252e42",
-              color: "#38bdf8",
+              background: "#171719",
+              border: "1px solid #303034",
+              color: "#ffffff",
               cursor: "pointer",
               padding: "3px 8px",
               fontSize: "10px",
@@ -322,8 +403,14 @@ export function AnalysisGraphCanvas({
         style={{ width: "100%", height: "100%", display: "block" }}
       >
         <defs>
+          {/* Subtle grid pattern */}
+          <pattern id="graph-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#141416" strokeWidth="0.8" />
+          </pattern>
+
+          {/* Directional arrowheads */}
           <marker
-            id="arrow-norm"
+            id="arrow-gray"
             viewBox="0 0 10 10"
             refX="17"
             refY="5"
@@ -331,10 +418,10 @@ export function AnalysisGraphCanvas({
             markerHeight="4.5"
             orient="auto-start-reverse"
           >
-            <path d="M 0 1 L 10 5 L 0 9 z" fill="#334155" />
+            <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#4a4a52" />
           </marker>
           <marker
-            id="arrow-amber"
+            id="arrow-red"
             viewBox="0 0 10 10"
             refX="18"
             refY="5"
@@ -342,31 +429,23 @@ export function AnalysisGraphCanvas({
             markerHeight="5"
             orient="auto-start-reverse"
           >
-            <path d="M 0 1 L 10 5 L 0 9 z" fill="#f59e0b" />
+            <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#842d35" />
           </marker>
           <marker
-            id="arrow-violet"
-            viewBox="0 0 10 10"
-            refX="18"
-            refY="5"
-            markerWidth="5"
-            markerHeight="5"
-            orient="auto-start-reverse"
-          >
-            <path d="M 0 1 L 10 5 L 0 9 z" fill="#a855f7" />
-          </marker>
-          <marker
-            id="arrow-risk"
+            id="arrow-alert"
             viewBox="0 0 10 10"
             refX="19"
             refY="5"
-            markerWidth="5"
-            markerHeight="5"
+            markerWidth="5.5"
+            markerHeight="5.5"
             orient="auto-start-reverse"
           >
-            <path d="M 0 1 L 10 5 L 0 9 z" fill="#f43f5e" />
+            <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#ef4444" />
           </marker>
         </defs>
+
+        {/* Background Grid */}
+        <rect width="100%" height="100%" fill="url(#graph-grid)" />
 
         {/* Pan & Zoom Transform Container */}
         <g
@@ -374,7 +453,7 @@ export function AnalysisGraphCanvas({
             pan.y + 290 * (1 - zoom)
           }) scale(${zoom})`}
         >
-          {/* Edges */}
+          {/* Directed Edges */}
           {links.map((link, idx) => {
             const u =
               typeof link.source === "object"
@@ -386,30 +465,34 @@ export function AnalysisGraphCanvas({
                 : nodes.find((n) => n.id === link.target);
             if (!u || !v) return null;
 
-            const isSelected = selectedNode === u.id || selectedNode === v.id;
-            const isHighRisk = u.isHighRisk && v.isHighRisk;
-            const isReciprocal = link.isReciprocal;
+            const isConnectedToSelected = selectedNode === u.id || selectedNode === v.id;
+            const isSuspiciousEdge = u.isHighRisk || v.isHighRisk;
+            const isCriticalEdge = u.score >= 0.7 && v.score >= 0.7;
 
-            let strokeColor = "#1e293b";
-            let marker = "url(#arrow-norm)";
+            let strokeColor = "#383840";
+            let marker = "url(#arrow-gray)";
             let strokeWidth = 1.2;
+            let opacity = 0.55;
 
-            if (isSelected) {
-              strokeColor = "#38bdf8";
-              marker = "url(#arrow-norm)";
-              strokeWidth = 2.2;
-            } else if (isHighRisk) {
-              strokeColor = "#f43f5e";
-              marker = "url(#arrow-risk)";
+            if (selectedNode) {
+              if (isConnectedToSelected) {
+                strokeColor = "#ef4444";
+                marker = "url(#arrow-alert)";
+                strokeWidth = 2.2;
+                opacity = 1.0;
+              } else {
+                opacity = 0.15; // Dim non-connected edges to focus on selected account's counterparties
+              }
+            } else if (isCriticalEdge) {
+              strokeColor = "#ef4444";
+              marker = "url(#arrow-alert)";
               strokeWidth = 1.8;
-            } else if (isReciprocal) {
-              strokeColor = "#a855f7";
-              marker = "url(#arrow-violet)";
-              strokeWidth = 1.6;
-            } else if (u.patterns.length > 0 || v.patterns.length > 0) {
-              strokeColor = "#f59e0b";
-              marker = "url(#arrow-amber)";
-              strokeWidth = 1.4;
+              opacity = 0.9;
+            } else if (isSuspiciousEdge) {
+              strokeColor = "#842d35";
+              marker = "url(#arrow-red)";
+              strokeWidth = 1.5;
+              opacity = 0.75;
             }
 
             return (
@@ -421,18 +504,18 @@ export function AnalysisGraphCanvas({
                 y2={v.y}
                 stroke={strokeColor}
                 strokeWidth={strokeWidth}
-                strokeDasharray={isReciprocal ? "4,4" : undefined}
                 markerEnd={marker}
-                opacity={isSelected ? 1.0 : isHighRisk ? 0.85 : 0.55}
+                opacity={opacity}
               />
             );
           })}
 
-          {/* Nodes */}
+          {/* Account Nodes */}
           {nodes.map((n) => {
             const isSelected = selectedNode === n.id;
             const isHovered = hoveredNode?.id === n.id;
             const style = getNodeColor(n);
+            const showBadge = isSelected || isHovered || (!selectedNode && topAnomalyIds.has(n.id));
 
             return (
               <g
@@ -443,39 +526,39 @@ export function AnalysisGraphCanvas({
                 onMouseLeave={() => setHoveredNode(null)}
                 style={{ cursor: "pointer" }}
               >
-                {/* Glow Ring for Selected Node */}
+                {/* Selection Rings */}
                 {isSelected && (
                   <>
                     <circle
                       r={n.radius + 10}
                       fill="none"
-                      stroke="#00f0ff"
+                      stroke="#c04b52"
                       strokeWidth={1.5}
                       strokeDasharray="4,4"
                       opacity={0.8}
                     />
                     <circle
-                      r={n.radius + 5}
+                      r={n.radius + 4}
                       fill="none"
                       stroke="#ffffff"
-                      strokeWidth={2}
+                      strokeWidth={2.2}
                       opacity={0.95}
                     />
                   </>
                 )}
 
-                {/* Warning Pulse for High Risk */}
-                {!isSelected && n.isHighRisk && (
+                {/* Warning Pulse for High Risk Anomalies */}
+                {!isSelected && n.score >= 0.7 && (
                   <circle
-                    r={n.radius + 4}
+                    r={n.radius + 5}
                     fill="none"
-                    stroke={style.fill}
+                    stroke="#ef4444"
                     strokeWidth={1}
-                    opacity={0.4}
+                    opacity={0.45}
                   />
                 )}
 
-                {/* Node Circle */}
+                {/* Core Node Circle */}
                 <circle
                   r={n.radius}
                   fill={style.fill}
@@ -484,24 +567,24 @@ export function AnalysisGraphCanvas({
                   opacity={0.95}
                 />
 
-                {/* Badge Label: only for Selected or Hovered nodes */}
-                {(isSelected || isHovered) && (
+                {/* Clean Label: Only for Hovered, Selected, or Top 3 Anomalies */}
+                {showBadge && (
                   <g transform={`translate(${n.radius + 8}, -11)`}>
                     <rect
                       x={-4}
                       y={-2}
-                      width={Math.max(70, n.id.length * 7.5 + 16)}
-                      height={24}
-                      fill="#0d1017"
-                      stroke={isSelected ? "#00f0ff" : style.stroke}
+                      width={Math.max(65, n.id.length * 7.2 + 14)}
+                      height={22}
+                      fill="#101012"
+                      stroke={isSelected ? "#ffffff" : n.score >= 0.7 ? "#ef4444" : "#303034"}
                       strokeWidth={1}
                       rx={3}
-                      opacity={0.95}
+                      opacity={0.96}
                     />
                     <text
                       x={4}
-                      y={14}
-                      fill="#ffffff"
+                      y={13}
+                      fill={isSelected ? "#ffffff" : n.score >= 0.7 ? "#fca5a5" : "#e5e7eb"}
                       fontSize={10}
                       fontFamily="IBM Plex Mono, monospace"
                       fontWeight={600}
@@ -523,11 +606,11 @@ export function AnalysisGraphCanvas({
             position: "absolute",
             bottom: "16px",
             right: "16px",
-            background: "rgba(10, 13, 20, 0.95)",
-            border: "1px solid #1f2738",
+            background: "rgba(16, 16, 18, 0.96)",
+            border: "1px solid #b44a50",
             borderRadius: "6px",
             padding: "10px 14px",
-            boxShadow: "0 8px 24px rgba(0, 0, 0, 0.6)",
+            boxShadow: "0 8px 24px rgba(0, 0, 0, 0.7)",
             pointerEvents: "none",
             zIndex: 20,
             maxWidth: "260px",
@@ -538,7 +621,7 @@ export function AnalysisGraphCanvas({
               fontFamily: "IBM Plex Mono, monospace",
               fontSize: "11px",
               fontWeight: 700,
-              color: "#38bdf8",
+              color: "#ffffff",
               marginBottom: "6px",
             }}
           >
@@ -549,7 +632,7 @@ export function AnalysisGraphCanvas({
               display: "flex",
               justifyContent: "space-between",
               fontSize: "11px",
-              color: "#94a3b8",
+              color: "#a6a6a6",
               marginBottom: "3px",
             }}
           >
@@ -558,7 +641,7 @@ export function AnalysisGraphCanvas({
               style={{
                 fontFamily: "IBM Plex Mono, monospace",
                 fontWeight: 600,
-                color: hoveredNode.isHighRisk ? "#f43f5e" : "#10b981",
+                color: hoveredNode.score >= 0.7 ? "#ef4444" : hoveredNode.score >= 0.45 ? "#b44a50" : "#f5f5f5",
               }}
             >
               {(hoveredNode.score * 100).toFixed(1)}%
@@ -569,12 +652,12 @@ export function AnalysisGraphCanvas({
               display: "flex",
               justifyContent: "space-between",
               fontSize: "11px",
-              color: "#94a3b8",
+              color: "#a6a6a6",
               marginBottom: "4px",
             }}
           >
             <span>Topology Degree:</span>
-            <span style={{ fontFamily: "IBM Plex Mono, monospace", color: "#e2e8f0" }}>
+            <span style={{ fontFamily: "IBM Plex Mono, monospace", color: "#f5f5f5" }}>
               {hoveredNode.inDegree} in / {hoveredNode.outDegree} out
             </span>
           </div>
@@ -587,9 +670,9 @@ export function AnalysisGraphCanvas({
                     fontSize: "9px",
                     fontFamily: "IBM Plex Mono, monospace",
                     padding: "2px 5px",
-                    background: "#2a151b",
-                    color: "#f43f5e",
-                    border: "1px solid #4c1d24",
+                    background: "rgba(180, 74, 80, 0.2)",
+                    color: "#fca5a5",
+                    border: "1px solid #b44a50",
                     borderRadius: "2px",
                   }}
                 >
@@ -610,39 +693,39 @@ export function AnalysisGraphCanvas({
           display: "flex",
           gap: "12px",
           alignItems: "center",
-          background: "rgba(10, 13, 20, 0.85)",
+          background: "rgba(16, 16, 18, 0.92)",
           padding: "5px 10px",
           borderRadius: "4px",
-          border: "1px solid #1a202c",
+          border: "1px solid #303034",
           fontSize: "10px",
           fontFamily: "IBM Plex Mono, monospace",
-          color: "#94a3b8",
+          color: "#a6a6a6",
           zIndex: 10,
         }}
       >
         <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
           <span
-            style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#38bdf8" }}
+            style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#e5e7eb", border: "1px solid #9ca3af" }}
           />
           Standard
         </span>
         <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
           <span
-            style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#f59e0b" }}
+            style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#b44a50", border: "1px solid #842d35" }}
           />
-          Mule / Hub
+          Suspicious
         </span>
         <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
           <span
-            style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#a855f7" }}
+            style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#ef4444", border: "1px solid #b91c1c" }}
           />
-          Cycle
+          Critical Anomaly
         </span>
         <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
           <span
-            style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#f43f5e" }}
+            style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#ef4444", border: "2px solid #ffffff" }}
           />
-          Anomaly
+          Selected
         </span>
       </div>
     </div>

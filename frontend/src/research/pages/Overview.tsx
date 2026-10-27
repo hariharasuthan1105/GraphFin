@@ -16,7 +16,7 @@ export default function Overview() {
             <g fill="none" stroke="#334155" strokeWidth=".8">
               <path d="M20 220L100 100 220 50 300 180 440 80M100 100L170 260 300 180 420 300M220 50L170 260 420 300 440 80M20 220L300 180 480 220M100 100L440 80" />
             </g>
-            <g fill="#38bdf8">
+            <g fill="#b44a50">
               {[
                 [20, 220],
                 [100, 100],
@@ -35,7 +35,7 @@ export default function Overview() {
         <div className="hero-copy">
           <span className="eyebrow">SYSTEM / 008 — ADVANCED GRAPH INTELLIGENCE</span>
           <div className="hero-word">
-            GRAPHFIN<span style={{ color: "#38bdf8" }}>_</span>
+            GRAPHFIN<span style={{ color: "#c04b52" }}>_</span>
           </div>
           <h1>Financial Network Intelligence</h1>
           <p>
@@ -53,9 +53,9 @@ export default function Overview() {
                 display: "inline-flex",
                 alignItems: "center",
                 gap: "8px",
-                background: appMode === "interactive" ? "#0284c7" : "#12151e",
-                color: appMode === "interactive" ? "#ffffff" : "#94a3b8",
-                border: appMode === "interactive" ? "1px solid #38bdf8" : "1px solid #232a3b",
+                background: appMode === "interactive" ? "#842d35" : "#101012",
+                color: appMode === "interactive" ? "#ffffff" : "#a6a6a6",
+                border: appMode === "interactive" ? "1px solid #b44a50" : "1px solid #303034",
                 padding: "8px 18px",
                 fontWeight: 600,
                 fontSize: "12px",
@@ -74,9 +74,9 @@ export default function Overview() {
                 display: "inline-flex",
                 alignItems: "center",
                 gap: "8px",
-                background: appMode === "research" ? "#134e48" : "#12151e",
-                color: appMode === "research" ? "#ffffff" : "#94a3b8",
-                border: appMode === "research" ? "1px solid #2dd4bf" : "1px solid #232a3b",
+                background: appMode === "research" ? "#842d35" : "#101012",
+                color: appMode === "research" ? "#ffffff" : "#a6a6a6",
+                border: appMode === "research" ? "1px solid #b44a50" : "1px solid #303034",
                 padding: "8px 18px",
                 fontWeight: 600,
                 fontSize: "12px",
@@ -154,9 +154,9 @@ export default function Overview() {
                 type="button"
                 onClick={loadBenchmarkSample}
                 style={{
-                  background: "#0284c7",
+                  background: "#b44a50",
                   color: "#ffffff",
-                  border: "none",
+                  border: "1px solid #842d35",
                   padding: "7px 16px",
                   borderRadius: "4px",
                   fontSize: "11px",
@@ -170,9 +170,9 @@ export default function Overview() {
               <a
                 href="#/analyze"
                 style={{
-                  background: "#161b26",
-                  color: "#38bdf8",
-                  border: "1px solid #283144",
+                  background: "#171719",
+                  color: "#f5f5f5",
+                  border: "1px solid #303034",
                   padding: "7px 16px",
                   borderRadius: "4px",
                   fontSize: "11px",
@@ -303,7 +303,7 @@ export default function Overview() {
                   display: "inline-flex",
                   alignItems: "center",
                   gap: "6px",
-                  background: "#0284c7",
+                  background: "#b44a50",
                   color: "#ffffff",
                   padding: "8px 16px",
                   fontWeight: 600,
@@ -321,9 +321,9 @@ export default function Overview() {
                   display: "inline-flex",
                   alignItems: "center",
                   gap: "6px",
-                  background: "#161b26",
-                  color: "#38bdf8",
-                  border: "1px solid #232d42",
+                  background: "#171719",
+                  color: "#f5f5f5",
+                  border: "1px solid #303034",
                   padding: "8px 16px",
                   fontSize: "11px",
                   fontFamily: "IBM Plex Mono, monospace",
@@ -467,15 +467,15 @@ export default function Overview() {
                         style={{
                           color:
                             d.provenance_status === "partially_verified"
-                              ? "#38bdf8"
-                              : "#f59e0b",
+                              ? "#f5f5f5"
+                              : "#a6a6a6",
                         }}
                       >
                         {d.provenance_status}
                       </span>
                     </div>
                   </div>
-                  <p style={{ margin: "0 0 12px 0", fontSize: "11px", color: "#64748b", lineHeight: 1.4 }}>
+                  <p style={{ margin: "0 0 12px 0", fontSize: "11px", color: "#77777d", lineHeight: 1.4 }}>
                     {d.time_semantics}
                   </p>
                   <a
@@ -483,7 +483,7 @@ export default function Overview() {
                     style={{
                       fontSize: "11px",
                       fontFamily: "IBM Plex Mono, monospace",
-                      color: "#38bdf8",
+                      color: "#c04b52",
                       textDecoration: "none",
                     }}
                   >

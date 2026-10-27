@@ -78,32 +78,32 @@ export default function Comparison() {
               }}
             >
               <div style={{ background: "#08090d", padding: "10px", borderRadius: "4px" }}>
-                <span style={{ fontSize: "10px", color: "#64748b", display: "block" }}>FAN-OUT</span>
-                <strong style={{ fontSize: "14px", color: "#f59e0b" }}>
+                <span style={{ fontSize: "10px", color: "#77777d", display: "block" }}>FAN-OUT</span>
+                <strong style={{ fontSize: "14px", color: "#f5f5f5" }}>
                   {activeSession.summary.patternsDetected.fanOutCount} detected
                 </strong>
-                <span style={{ fontSize: "10px", color: "#94a3b8", display: "block" }}>Rapid dispersal</span>
+                <span style={{ fontSize: "10px", color: "#a6a6a6", display: "block" }}>Rapid dispersal</span>
               </div>
               <div style={{ background: "#08090d", padding: "10px", borderRadius: "4px" }}>
-                <span style={{ fontSize: "10px", color: "#64748b", display: "block" }}>FAN-IN</span>
-                <strong style={{ fontSize: "14px", color: "#f59e0b" }}>
+                <span style={{ fontSize: "10px", color: "#77777d", display: "block" }}>FAN-IN</span>
+                <strong style={{ fontSize: "14px", color: "#f5f5f5" }}>
                   {activeSession.summary.patternsDetected.fanInCount} detected
                 </strong>
-                <span style={{ fontSize: "10px", color: "#94a3b8", display: "block" }}>Mule aggregation</span>
+                <span style={{ fontSize: "10px", color: "#a6a6a6", display: "block" }}>Mule aggregation</span>
               </div>
               <div style={{ background: "#08090d", padding: "10px", borderRadius: "4px" }}>
-                <span style={{ fontSize: "10px", color: "#64748b", display: "block" }}>CYCLES</span>
-                <strong style={{ fontSize: "14px", color: "#a855f7" }}>
+                <span style={{ fontSize: "10px", color: "#77777d", display: "block" }}>CYCLES</span>
+                <strong style={{ fontSize: "14px", color: "#f5f5f5" }}>
                   {activeSession.summary.patternsDetected.cycleCount} detected
                 </strong>
-                <span style={{ fontSize: "10px", color: "#94a3b8", display: "block" }}>Reciprocal loops</span>
+                <span style={{ fontSize: "10px", color: "#a6a6a6", display: "block" }}>Reciprocal loops</span>
               </div>
               <div style={{ background: "#08090d", padding: "10px", borderRadius: "4px" }}>
-                <span style={{ fontSize: "10px", color: "#64748b", display: "block" }}>VOL OUTLIERS</span>
-                <strong style={{ fontSize: "14px", color: "#f43f5e" }}>
+                <span style={{ fontSize: "10px", color: "#77777d", display: "block" }}>VOL OUTLIERS</span>
+                <strong style={{ fontSize: "14px", color: "#ef4444" }}>
                   {activeSession.summary.patternsDetected.volumeOutlierCount} detected
                 </strong>
-                <span style={{ fontSize: "10px", color: "#94a3b8", display: "block" }}>Extreme values</span>
+                <span style={{ fontSize: "10px", color: "#a6a6a6", display: "block" }}>Extreme values</span>
               </div>
             </div>
             <p style={{ margin: 0, fontSize: "11px", color: "#64748b", lineHeight: 1.4 }}>

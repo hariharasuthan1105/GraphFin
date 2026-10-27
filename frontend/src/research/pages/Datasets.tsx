@@ -74,9 +74,9 @@ export default function Datasets() {
           type="button"
           onClick={() => setActiveTab("custom")}
           style={{
-            background: activeTab === "custom" ? "#162238" : "transparent",
-            color: activeTab === "custom" ? "#38bdf8" : "#94a3b8",
-            border: activeTab === "custom" ? "1px solid #0284c7" : "1px solid transparent",
+            background: activeTab === "custom" ? "#842d35" : "transparent",
+            color: activeTab === "custom" ? "#ffffff" : "#a6a6a6",
+            border: activeTab === "custom" ? "1px solid #b44a50" : "1px solid transparent",
             borderRadius: "4px",
             padding: "8px 16px",
             fontFamily: "IBM Plex Mono, monospace",
@@ -92,9 +92,9 @@ export default function Datasets() {
           type="button"
           onClick={() => setActiveTab("historical")}
           style={{
-            background: activeTab === "historical" ? "#102320" : "transparent",
-            color: activeTab === "historical" ? "#2dd4bf" : "#94a3b8",
-            border: activeTab === "historical" ? "1px solid #0d9488" : "1px solid transparent",
+            background: activeTab === "historical" ? "#842d35" : "transparent",
+            color: activeTab === "historical" ? "#ffffff" : "#a6a6a6",
+            border: activeTab === "historical" ? "1px solid #b44a50" : "1px solid transparent",
             borderRadius: "4px",
             padding: "8px 16px",
             fontFamily: "IBM Plex Mono, monospace",
@@ -143,14 +143,14 @@ export default function Datasets() {
                       style={{
                         fontFamily: "IBM Plex Mono, monospace",
                         fontSize: "10px",
-                        color: "#38bdf8",
+                        color: "#f5f5f5",
                         padding: "3px 8px",
-                        background: "#0c1828",
-                        border: "1px solid #0369a1",
+                        background: "#171719",
+                        border: "1px solid #303034",
                         borderRadius: "3px",
                       }}
                     >
-                      SESSION ACTIVE
+                      <b style={{ color: "#c04b52" }}>●</b> SESSION ACTIVE
                     </span>
                   </div>
 
@@ -192,7 +192,7 @@ export default function Datasets() {
                       <span style={{ fontSize: "10px", color: "#64748b", display: "block" }}>
                         ANOMALIES
                       </span>
-                      <strong style={{ fontSize: "16px", color: "#f43f5e" }}>
+                      <strong style={{ fontSize: "16px", color: "#c04b52" }}>
                         {activeSession.summary.suspiciousAccountCount}
                       </strong>
                     </div>
@@ -202,7 +202,7 @@ export default function Datasets() {
                     <a
                       href="#/analyze"
                       style={{
-                        background: "#0284c7",
+                        background: "#b44a50",
                         color: "#ffffff",
                         padding: "8px 16px",
                         borderRadius: "4px",
@@ -217,9 +217,9 @@ export default function Datasets() {
                     <a
                       href="#/graph"
                       style={{
-                        background: "#161b26",
-                        color: "#38bdf8",
-                        border: "1px solid #283144",
+                        background: "#171719",
+                        color: "#f5f5f5",
+                        border: "1px solid #303034",
                         padding: "8px 16px",
                         borderRadius: "4px",
                         fontFamily: "IBM Plex Mono, monospace",
@@ -232,9 +232,9 @@ export default function Datasets() {
                     <a
                       href="#/reports"
                       style={{
-                        background: "#161b26",
-                        color: "#e2e8f0",
-                        border: "1px solid #283144",
+                        background: "#171719",
+                        color: "#f5f5f5",
+                        border: "1px solid #303034",
                         padding: "8px 16px",
                         borderRadius: "4px",
                         fontFamily: "IBM Plex Mono, monospace",
@@ -257,9 +257,9 @@ export default function Datasets() {
                       type="button"
                       onClick={loadBenchmarkSample}
                       style={{
-                        background: "#0284c7",
+                        background: "#b44a50",
                         color: "#ffffff",
-                        border: "none",
+                        border: "1px solid #842d35",
                         padding: "8px 18px",
                         borderRadius: "4px",
                         fontFamily: "IBM Plex Mono, monospace",
@@ -273,9 +273,9 @@ export default function Datasets() {
                     <a
                       href="#/analyze"
                       style={{
-                        background: "#161b26",
-                        color: "#38bdf8",
-                        border: "1px solid #283144",
+                        background: "#171719",
+                        color: "#f5f5f5",
+                        border: "1px solid #303034",
                         padding: "8px 18px",
                         borderRadius: "4px",
                         fontFamily: "IBM Plex Mono, monospace",
@@ -316,9 +316,9 @@ export default function Datasets() {
                       onClick={() => setId(d.dataset_id)}
                       aria-pressed={id === d.dataset_id}
                       style={{
-                        background: id === d.dataset_id ? "#162238" : "transparent",
-                        color: id === d.dataset_id ? "#38bdf8" : "#f8fafc",
-                        border: id === d.dataset_id ? "1px solid #0284c7" : "none",
+                        background: id === d.dataset_id ? "#842d35" : "transparent",
+                        color: id === d.dataset_id ? "#ffffff" : "#f8fafc",
+                        border: id === d.dataset_id ? "1px solid #b44a50" : "none",
                         padding: "4px 8px",
                         borderRadius: "3px",
                         fontFamily: "IBM Plex Mono, monospace",

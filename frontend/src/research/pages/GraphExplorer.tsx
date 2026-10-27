@@ -81,8 +81,8 @@ export default function GraphExplorer() {
           alignItems: "center",
           flexWrap: "wrap",
           gap: "12px",
-          background: "#0c0e14",
-          border: "1px solid #1c2230",
+          background: "#101012",
+          border: "1px solid #303034",
           borderRadius: "6px",
           padding: "8px 12px",
           marginBottom: "16px",
@@ -93,7 +93,7 @@ export default function GraphExplorer() {
             style={{
               fontFamily: "IBM Plex Mono, monospace",
               fontSize: "10px",
-              color: "#64748b",
+              color: "#77777d",
               marginRight: "6px",
               letterSpacing: "0.08em",
             }}
@@ -105,9 +105,9 @@ export default function GraphExplorer() {
             type="button"
             onClick={() => setGraphMode("uploaded")}
             style={{
-              background: graphMode === "uploaded" ? "#162238" : "transparent",
-              color: graphMode === "uploaded" ? "#38bdf8" : "#94a3b8",
-              border: graphMode === "uploaded" ? "1px solid #0284c7" : "1px solid #232a3b",
+              background: graphMode === "uploaded" ? "#842d35" : "transparent",
+              color: graphMode === "uploaded" ? "#ffffff" : "#a6a6a6",
+              border: graphMode === "uploaded" ? "1px solid #b44a50" : "1px solid transparent",
               borderRadius: "4px",
               padding: "6px 12px",
               fontSize: "11px",
@@ -123,9 +123,9 @@ export default function GraphExplorer() {
             type="button"
             onClick={() => setGraphMode("simulated")}
             style={{
-              background: graphMode === "simulated" ? "#221c38" : "transparent",
-              color: graphMode === "simulated" ? "#c084fc" : "#94a3b8",
-              border: graphMode === "simulated" ? "1px solid #9333ea" : "1px solid #232a3b",
+              background: graphMode === "simulated" ? "#842d35" : "transparent",
+              color: graphMode === "simulated" ? "#ffffff" : "#a6a6a6",
+              border: graphMode === "simulated" ? "1px solid #b44a50" : "1px solid transparent",
               borderRadius: "4px",
               padding: "6px 12px",
               fontSize: "11px",
@@ -141,9 +141,9 @@ export default function GraphExplorer() {
             type="button"
             onClick={() => setGraphMode("research")}
             style={{
-              background: graphMode === "research" ? "#1a221f" : "transparent",
-              color: graphMode === "research" ? "#2dd4bf" : "#94a3b8",
-              border: graphMode === "research" ? "1px solid #0d9488" : "1px solid #232a3b",
+              background: graphMode === "research" ? "#842d35" : "transparent",
+              color: graphMode === "research" ? "#ffffff" : "#a6a6a6",
+              border: graphMode === "research" ? "1px solid #b44a50" : "1px solid transparent",
               borderRadius: "4px",
               padding: "6px 12px",
               fontSize: "11px",
@@ -163,14 +163,20 @@ export default function GraphExplorer() {
               style={{
                 fontSize: "10px",
                 fontFamily: "IBM Plex Mono, monospace",
-                color: activeSession ? "#38bdf8" : "#f59e0b",
+                color: "#f5f5f5",
                 padding: "3px 8px",
-                background: "#0f172a",
-                border: "1px solid #1e293b",
+                background: "#171719",
+                border: "1px solid #303034",
                 borderRadius: "3px",
               }}
             >
-              {activeSession ? `● Active: ${activeSession.summary.datasetName}` : "○ No dataset loaded"}
+              {activeSession ? (
+                <>
+                  <b style={{ color: "#c04b52" }}>●</b> Active: {activeSession.summary.datasetName}
+                </>
+              ) : (
+                "○ No dataset loaded"
+              )}
             </span>
           )}
 
@@ -179,14 +185,14 @@ export default function GraphExplorer() {
               style={{
                 fontSize: "10px",
                 fontFamily: "IBM Plex Mono, monospace",
-                color: "#c084fc",
+                color: "#f5f5f5",
                 padding: "3px 8px",
-                background: "#1c142c",
-                border: "1px solid #3b2164",
+                background: "#171719",
+                border: "1px solid #303034",
                 borderRadius: "3px",
               }}
             >
-              ◈ SIMULATED SHOWCASE (NON-REAL DATA)
+              <b style={{ color: "#c04b52" }}>◈</b> SIMULATED DEMO (NON-REAL DATA)
             </span>
           )}
 
@@ -195,14 +201,14 @@ export default function GraphExplorer() {
               style={{
                 fontSize: "10px",
                 fontFamily: "IBM Plex Mono, monospace",
-                color: "#2dd4bf",
+                color: "#f5f5f5",
                 padding: "3px 8px",
-                background: "#0a1f1d",
-                border: "1px solid #134e48",
+                background: "#171719",
+                border: "1px solid #303034",
                 borderRadius: "3px",
               }}
             >
-              ⚲ HISTORICAL CATALOG
+              <b style={{ color: "#c04b52" }}>⚲</b> HISTORICAL CATALOG
             </span>
           )}
         </div>
@@ -212,8 +218,8 @@ export default function GraphExplorer() {
       {graphMode === "simulated" && (
         <div
           style={{
-            background: "#090a0f",
-            border: "1px solid #1c2130",
+            background: "#101012",
+            border: "1px solid #303034",
             borderRadius: "6px",
             padding: "12px 14px",
             marginBottom: "16px",
@@ -243,9 +249,9 @@ export default function GraphExplorer() {
                         setSelectedNodeId(null);
                       }}
                       style={{
-                        background: isSelected ? "#2a1b42" : "#11141c",
-                        color: isSelected ? "#e9d5ff" : "#94a3b8",
-                        border: isSelected ? "1px solid #a855f7" : "1px solid #202738",
+                        background: isSelected ? "#842d35" : "#171719",
+                        color: isSelected ? "#ffffff" : "#a6a6a6",
+                        border: isSelected ? "1px solid #b44a50" : "1px solid #303034",
                         borderRadius: "4px",
                         padding: "5px 10px",
                         fontSize: "11px",
@@ -264,17 +270,17 @@ export default function GraphExplorer() {
               style={{
                 fontFamily: "IBM Plex Mono, monospace",
                 fontSize: "11px",
-                color: "#94a3b8",
+                color: "#a6a6a6",
               }}
             >
               Volume:{" "}
-              <b style={{ color: "#f8fafc" }}>
+              <b style={{ color: "#f5f5f5" }}>
                 {SIMULATED_PRESETS_META[simulatedPreset].totalVolumeFormatted}
               </b>
             </span>
           </div>
 
-          <p style={{ margin: 0, fontSize: "12px", color: "#94a3b8", lineHeight: 1.5 }}>
+          <p style={{ margin: 0, fontSize: "12px", color: "#a6a6a6", lineHeight: 1.5 }}>
             {SIMULATED_PRESETS_META[simulatedPreset].description}
           </p>
         </div>
@@ -284,8 +290,8 @@ export default function GraphExplorer() {
       {graphMode === "research" && (
         <div
           style={{
-            background: "#0c0e14",
-            border: "1px solid #232938",
+            background: "#101012",
+            border: "1px solid #303034",
             borderRadius: "6px",
             padding: "20px",
             marginBottom: "20px",
@@ -302,16 +308,16 @@ export default function GraphExplorer() {
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <label style={{ fontSize: "12px", color: "#94a3b8" }}>
+              <label style={{ fontSize: "12px", color: "#a6a6a6" }}>
                 Select Dataset:
                 <select
                   value={researchDataset}
                   onChange={(e) => setResearchDataset(e.target.value)}
                   style={{
                     marginLeft: "8px",
-                    background: "#121622",
-                    color: "#f8fafc",
-                    border: "1px solid #2a344a",
+                    background: "#171719",
+                    color: "#f5f5f5",
+                    border: "1px solid #303034",
                     padding: "4px 8px",
                     borderRadius: "4px",
                     fontFamily: "IBM Plex Mono, monospace",
@@ -328,33 +334,33 @@ export default function GraphExplorer() {
               style={{
                 fontFamily: "IBM Plex Mono, monospace",
                 fontSize: "10px",
-                color: "#f59e0b",
+                color: "#f5f5f5",
                 padding: "3px 8px",
-                background: "#241808",
-                border: "1px solid #452c08",
+                background: "#171719",
+                border: "1px solid #b44a50",
                 borderRadius: "3px",
               }}
             >
-              TOPOLOGY RESTRICTED BY RESEARCH SAFEGUARDS
+              <b style={{ color: "#c04b52" }}>⚠</b> TOPOLOGY RESTRICTED BY RESEARCH SAFEGUARDS
             </span>
           </div>
 
           <div
             style={{
-              background: "#08090d",
-              border: "1px dashed #283144",
+              background: "#080809",
+              border: "1px dashed #303034",
               borderRadius: "6px",
               padding: "24px",
               textAlign: "center",
             }}
           >
-            <h3 style={{ fontSize: "16px", color: "#f8fafc", margin: "0 0 8px 0" }}>
+            <h3 style={{ fontSize: "16px", color: "#f5f5f5", margin: "0 0 8px 0" }}>
               {dsMeta?.name ?? researchDataset} — Aggregate Evidence Validated
             </h3>
             <p
               style={{
                 fontSize: "13px",
-                color: "#94a3b8",
+                color: "#a6a6a6",
                 maxWidth: "680px",
                 margin: "0 auto 16px auto",
                 lineHeight: 1.6,
@@ -378,9 +384,9 @@ export default function GraphExplorer() {
                 type="button"
                 onClick={() => setGraphMode("simulated")}
                 style={{
-                  background: "#221c38",
-                  color: "#c084fc",
-                  border: "1px solid #9333ea",
+                  background: "#842d35",
+                  color: "#ffffff",
+                  border: "1px solid #b44a50",
                   padding: "8px 16px",
                   borderRadius: "4px",
                   fontSize: "12px",
@@ -399,9 +405,9 @@ export default function GraphExplorer() {
                   setGraphMode("uploaded");
                 }}
                 style={{
-                  background: "#162238",
-                  color: "#38bdf8",
-                  border: "1px solid #0284c7",
+                  background: "#171719",
+                  color: "#f5f5f5",
+                  border: "1px solid #303034",
                   padding: "8px 16px",
                   borderRadius: "4px",
                   fontSize: "12px",
@@ -429,21 +435,21 @@ export default function GraphExplorer() {
       {graphMode === "uploaded" && !activeSession && (
         <div
           style={{
-            background: "#0c0e14",
-            border: "1px dashed #242c3c",
+            background: "#101012",
+            border: "1px dashed #303034",
             borderRadius: "6px",
             padding: "36px 20px",
             textAlign: "center",
             marginBottom: "20px",
           }}
         >
-          <h3 style={{ fontSize: "16px", color: "#f8fafc", margin: "0 0 8px 0" }}>
+          <h3 style={{ fontSize: "16px", color: "#f5f5f5", margin: "0 0 8px 0" }}>
             No User Dataset Loaded in Current Session
           </h3>
           <p
             style={{
               fontSize: "13px",
-              color: "#94a3b8",
+              color: "#a6a6a6",
               maxWidth: "580px",
               margin: "0 auto 16px auto",
               lineHeight: 1.6,
@@ -459,9 +465,9 @@ export default function GraphExplorer() {
               type="button"
               onClick={loadBenchmarkSample}
               style={{
-                background: "#0284c7",
+                background: "#b44a50",
                 color: "#ffffff",
-                border: "none",
+                border: "1px solid #842d35",
                 padding: "8px 18px",
                 borderRadius: "4px",
                 fontSize: "12px",
@@ -475,9 +481,9 @@ export default function GraphExplorer() {
             <a
               href="#/analyze"
               style={{
-                background: "#161b26",
-                color: "#38bdf8",
-                border: "1px solid #232d42",
+                background: "#171719",
+                color: "#f5f5f5",
+                border: "1px solid #303034",
                 padding: "8px 18px",
                 borderRadius: "4px",
                 fontSize: "12px",
@@ -506,14 +512,14 @@ export default function GraphExplorer() {
                 marginBottom: "8px",
               }}
             >
-              <h3 style={{ margin: 0, fontSize: "13px", color: "#f8fafc" }}>
+              <h3 style={{ margin: 0, fontSize: "13px", color: "#f5f5f5" }}>
                 Flagged Accounts & Risk Ranking
               </h3>
               <span
                 style={{
                   fontFamily: "IBM Plex Mono, monospace",
                   fontSize: "10px",
-                  color: "#64748b",
+                  color: "#77777d",
                 }}
               >
                 {filteredAccounts.length} accounts
@@ -528,13 +534,13 @@ export default function GraphExplorer() {
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
                 width: "100%",
-                background: "#0c0e14",
-                border: "1px solid #1e2434",
+                background: "#101012",
+                border: "1px solid #303034",
                 borderRadius: "4px",
                 padding: "6px 10px",
                 fontSize: "11px",
                 fontFamily: "IBM Plex Mono, monospace",
-                color: "#f8fafc",
+                color: "#f5f5f5",
                 marginBottom: "8px",
                 boxSizing: "border-box",
               }}
@@ -562,10 +568,10 @@ export default function GraphExplorer() {
                   type="button"
                   onClick={() => setPatternFilter(pill.key)}
                   style={{
-                    background: patternFilter === pill.key ? "#1e293b" : "#0d1017",
-                    color: patternFilter === pill.key ? "#38bdf8" : "#64748b",
+                    background: patternFilter === pill.key ? "#842d35" : "#101012",
+                    color: patternFilter === pill.key ? "#ffffff" : "#a6a6a6",
                     border:
-                      patternFilter === pill.key ? "1px solid #0284c7" : "1px solid #1a202c",
+                      patternFilter === pill.key ? "1px solid #b44a50" : "1px solid #303034",
                     borderRadius: "3px",
                     padding: "3px 6px",
                     fontSize: "10px",
@@ -583,20 +589,20 @@ export default function GraphExplorer() {
               style={{
                 maxHeight: "440px",
                 overflowY: "auto",
-                border: "1px solid #1a202c",
+                border: "1px solid #303034",
                 borderRadius: "4px",
-                background: "#08090d",
+                background: "#080809",
               }}
             >
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "11px" }}>
                 <thead>
                   <tr
                     style={{
-                      borderBottom: "1px solid #1e2434",
-                      color: "#64748b",
+                      borderBottom: "1px solid #303034",
+                      color: "#a6a6a6",
                       fontFamily: "IBM Plex Mono, monospace",
                       textAlign: "left",
-                      background: "#0d1017",
+                      background: "#171719",
                     }}
                   >
                     <th style={{ padding: "6px 8px" }}>ACCOUNT ID</th>
@@ -614,12 +620,12 @@ export default function GraphExplorer() {
                         key={acc.id}
                         onClick={() => setSelectedNodeId(acc.id)}
                         style={{
-                          borderBottom: "1px solid #131620",
+                          borderBottom: "1px solid #1a1a1d",
                           cursor: "pointer",
                           background: isSelected
-                            ? "#162238"
+                            ? "#241315"
                             : isHigh
-                            ? "rgba(244, 63, 94, 0.05)"
+                            ? "rgba(180, 74, 80, 0.12)"
                             : "transparent",
                         }}
                       >
@@ -628,7 +634,7 @@ export default function GraphExplorer() {
                             padding: "6px 8px",
                             fontFamily: "IBM Plex Mono, monospace",
                             fontWeight: isSelected ? 700 : 400,
-                            color: isSelected ? "#38bdf8" : "#e2e8f0",
+                            color: isSelected ? "#ffffff" : isHigh ? "#fca5a5" : "#e5e7eb",
                           }}
                         >
                           {acc.id}
@@ -637,7 +643,7 @@ export default function GraphExplorer() {
                           style={{
                             padding: "6px 8px",
                             fontFamily: "IBM Plex Mono, monospace",
-                            color: isHigh ? "#f43f5e" : isMed ? "#f59e0b" : "#38bdf8",
+                            color: isHigh ? "#ef4444" : isMed ? "#b44a50" : "#a6a6a6",
                             fontWeight: 600,
                           }}
                         >
@@ -649,19 +655,17 @@ export default function GraphExplorer() {
                               style={{
                                 fontSize: "9px",
                                 fontFamily: "IBM Plex Mono, monospace",
-                                padding: "1px 4px",
+                                padding: "1px 5px",
                                 borderRadius: "2px",
-                                background: acc.patterns.includes("CYCLE")
-                                  ? "#2d163d"
-                                  : "#2a151b",
-                                color: acc.patterns.includes("CYCLE") ? "#c084fc" : "#f43f5e",
-                                border: "1px solid rgba(255,255,255,0.1)",
+                                background: "rgba(180, 74, 80, 0.15)",
+                                color: "#fca5a5",
+                                border: "1px solid #b44a50",
                               }}
                             >
                               {acc.patterns[0]}
                             </span>
                           ) : (
-                            <span style={{ color: "#475569", fontSize: "10px" }}>—</span>
+                            <span style={{ color: "#77777d", fontSize: "10px" }}>—</span>
                           )}
                         </td>
                       </tr>
@@ -679,10 +683,11 @@ export default function GraphExplorer() {
               edges={activeGraphResult.edges}
               selectedNode={selectedAccount?.id || null}
               onSelectNode={(id) => setSelectedNodeId(id)}
+              preset={graphMode === "simulated" ? simulatedPreset : undefined}
               modeBadge={
                 graphMode === "uploaded"
                   ? `✦ UPLOADED: ${activeGraphResult.summary.datasetName}`
-                  : `◈ SIMULATION: ${SIMULATED_PRESETS_META[simulatedPreset].badge}`
+                  : `◈ SIMULATED: ${SIMULATED_PRESETS_META[simulatedPreset].badge}`
               }
             />
 
@@ -691,8 +696,8 @@ export default function GraphExplorer() {
               <div
                 style={{
                   marginTop: "16px",
-                  background: "#0c0e14",
-                  border: "1px solid #1c2230",
+                  background: "#101012",
+                  border: "1px solid #303034",
                   borderRadius: "6px",
                   padding: "16px",
                 }}
@@ -712,7 +717,7 @@ export default function GraphExplorer() {
                       style={{
                         fontFamily: "IBM Plex Mono, monospace",
                         fontSize: "11px",
-                        color: "#64748b",
+                        color: "#77777d",
                       }}
                     >
                       ENTITY INSPECTION:
@@ -723,7 +728,14 @@ export default function GraphExplorer() {
                         fontSize: "14px",
                         fontWeight: 700,
                         color: "#ffffff",
+                        maxWidth: "340px",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        display: "inline-block",
+                        verticalAlign: "middle",
                       }}
+                      title={selectedAccount.id}
                     >
                       {selectedAccount.id}
                     </span>
@@ -733,20 +745,8 @@ export default function GraphExplorer() {
                   <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
                     {selectedAccount.patterns.length > 0 ? (
                       selectedAccount.patterns.map((p) => (
-                        <span
-                          key={p}
-                          style={{
-                            fontSize: "10px",
-                            fontFamily: "IBM Plex Mono, monospace",
-                            padding: "3px 8px",
-                            background: p === "CYCLE" ? "#2b1438" : "#321319",
-                            color: p === "CYCLE" ? "#c084fc" : "#f43f5e",
-                            border: p === "CYCLE" ? "1px solid #6b21a8" : "1px solid #881337",
-                            borderRadius: "3px",
-                            fontWeight: 600,
-                          }}
-                        >
-                          ⚠ {p.replace("_", " ")}
+                        <span key={p} className="inspector-pattern-badge">
+                          <b style={{ color: "#ef4444" }}>⚠</b> {p.replace("_", " ")}
                         </span>
                       ))
                     ) : (
@@ -755,13 +755,13 @@ export default function GraphExplorer() {
                           fontSize: "10px",
                           fontFamily: "IBM Plex Mono, monospace",
                           padding: "3px 8px",
-                          background: "#0a1f1d",
-                          color: "#10b981",
-                          border: "1px solid #064e3b",
+                          background: "#171719",
+                          color: "#f5f5f5",
+                          border: "1px solid #303034",
                           borderRadius: "3px",
                         }}
                       >
-                        ✓ STANDARD METRICS
+                        <b style={{ color: "#c04b52" }}>✓</b> STANDARD METRICS
                       </span>
                     )}
                   </div>
@@ -769,63 +769,70 @@ export default function GraphExplorer() {
 
                 {/* 3 Metric Cards */}
                 <div className="inspector-metrics-grid" style={{ marginBottom: "16px" }}>
-                  <div className="inspector-metric-card">
+                  <div
+                    className={`inspector-metric-card ${
+                      selectedAccount.anomalyScore >= 0.5 ? "alert" : ""
+                    }`}
+                  >
                     <span className="metric-label">ANOMALY SCORE</span>
                     <span
-                      className="metric-val"
+                      className="metric-number"
                       style={{
                         color:
                           selectedAccount.anomalyScore >= 0.7
-                            ? "#f43f5e"
+                            ? "#ef4444"
                             : selectedAccount.anomalyScore >= 0.45
-                            ? "#f59e0b"
-                            : "#38bdf8",
+                            ? "#b44a50"
+                            : "#f5f5f5",
                       }}
                     >
                       {selectedAccount.anomalyScore.toFixed(3)}
                     </span>
-                    <span className="metric-sub">
+                    <span className="metric-hint">
                       {selectedAccount.anomalyScore >= 0.7
-                        ? "Critical Risk Tier"
+                        ? "Critical Anomaly Tier"
                         : selectedAccount.anomalyScore >= 0.45
                         ? "Elevated Structural Risk"
-                        : "Low Statistical Deviation"}
+                        : "Standard Baseline"}
                     </span>
                   </div>
 
                   <div className="inspector-metric-card">
                     <span className="metric-label">TOPOLOGICAL DEGREE</span>
-                    <span className="metric-val" style={{ color: "#f8fafc" }}>
-                      {selectedAccount.inDegree} <small style={{ fontSize: "14px", color: "#64748b" }}>IN</small> /{" "}
-                      {selectedAccount.outDegree} <small style={{ fontSize: "14px", color: "#64748b" }}>OUT</small>
+                    <span className="metric-number">
+                      {selectedAccount.inDegree}{" "}
+                      <small style={{ fontSize: "12px", color: "#a6a6a6" }}>IN</small> /{" "}
+                      {selectedAccount.outDegree}{" "}
+                      <small style={{ fontSize: "12px", color: "#a6a6a6" }}>OUT</small>
                     </span>
-                    <span className="metric-sub">
-                      {selectedAccount.totalDegree} total transfer relationships
+                    <span className="metric-hint">
+                      {selectedAccount.totalDegree} total counterparties
                     </span>
                   </div>
 
-                  <div className="inspector-metric-card">
+                  <div
+                    className={`inspector-metric-card ${
+                      Math.abs(selectedAccount.netFlow) > 10000 ? "alert" : ""
+                    }`}
+                  >
                     <span className="metric-label">NET FLOW VOLUME</span>
                     <span
-                      className="metric-val"
+                      className="metric-number"
                       style={{
-                        color:
-                          selectedAccount.netFlow < 0
-                            ? "#f43f5e"
-                            : selectedAccount.netFlow > 0
-                            ? "#10b981"
-                            : "#94a3b8",
+                        color: selectedAccount.netFlow < 0 ? "#ef4444" : "#f5f5f5",
                       }}
                     >
                       {selectedAccount.netFlow < 0 ? "-" : selectedAccount.netFlow > 0 ? "+" : ""}
-                      ${Math.abs(selectedAccount.netFlow).toLocaleString("en-US")}
+                      ${Math.abs(selectedAccount.netFlow).toLocaleString("en-US", {
+                        maximumFractionDigits: 0,
+                      })}
                     </span>
-                    <span className="metric-sub">
+                    <span className="metric-hint">
                       {selectedAccount.netFlow < 0
-                        ? "Net Outflow (Dispersal/Smurfing)"
+                        ? "Net Outflow (Dispersal)"
                         : selectedAccount.netFlow > 0
-                        ? "Net Inflow (Aggregation/Sink)"
-                        : "Balanced In/Out Transfers"}
+                        ? "Net Inflow (Aggregation)"
+                        : "Balanced Flow"}
                     </span>
                   </div>
                 </div>
@@ -836,37 +843,24 @@ export default function GraphExplorer() {
                     style={{
                       fontFamily: "IBM Plex Mono, monospace",
                       fontSize: "11px",
-                      color: "#64748b",
-                      marginBottom: "6px",
+                      color: "#a6a6a6",
+                      marginBottom: "8px",
                       letterSpacing: "0.06em",
                     }}
                   >
                     TOP COUNTERPARTIES ({selectedAccount.counterparties.length})
                   </div>
                   <div
-                    style={{
-                      maxHeight: "180px",
-                      overflowY: "auto",
-                      border: "1px solid #1a202c",
-                      borderRadius: "4px",
-                      background: "#08090d",
-                    }}
+                    className="counterparties-list-container"
+                    style={{ borderRadius: "4px", border: "1px solid #303034" }}
                   >
-                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "11px" }}>
+                    <table className="counterparty-table">
                       <thead>
-                        <tr
-                          style={{
-                            borderBottom: "1px solid #1a202c",
-                            color: "#64748b",
-                            fontFamily: "IBM Plex Mono, monospace",
-                            textAlign: "left",
-                            background: "#0e111a",
-                          }}
-                        >
-                          <th style={{ padding: "5px 8px" }}>DIRECTION</th>
-                          <th style={{ padding: "5px 8px" }}>COUNTERPARTY ID</th>
-                          <th style={{ padding: "5px 8px", textAlign: "right" }}>VOLUME</th>
-                          <th style={{ padding: "5px 8px", textAlign: "right" }}>COUNT</th>
+                        <tr>
+                          <th style={{ width: "90px" }}>DIRECTION</th>
+                          <th>COUNTERPARTY ID</th>
+                          <th style={{ textAlign: "right" }}>VOLUME</th>
+                          <th style={{ textAlign: "right", width: "70px" }}>COUNT</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -874,58 +868,18 @@ export default function GraphExplorer() {
                           <tr
                             key={`${cp.id}-${idx}`}
                             onClick={() => setSelectedNodeId(cp.id)}
-                            style={{
-                              borderBottom: "1px solid #12151e",
-                              cursor: "pointer",
-                            }}
+                            style={{ cursor: "pointer" }}
                           >
-                            <td style={{ padding: "5px 8px" }}>
-                              <span
-                                style={{
-                                  fontSize: "9px",
-                                  fontFamily: "IBM Plex Mono, monospace",
-                                  padding: "2px 5px",
-                                  borderRadius: "2px",
-                                  background: cp.direction === "out" ? "#2a151b" : "#0d221e",
-                                  color: cp.direction === "out" ? "#f43f5e" : "#2dd4bf",
-                                  border:
-                                    cp.direction === "out"
-                                      ? "1px solid #5c1d28"
-                                      : "1px solid #134e48",
-                                }}
-                              >
+                            <td>
+                              <span className={`direction-badge ${cp.direction}`}>
                                 {cp.direction === "out" ? "OUT →" : "← IN"}
                               </span>
                             </td>
-                            <td
-                              style={{
-                                padding: "5px 8px",
-                                fontFamily: "IBM Plex Mono, monospace",
-                                color: "#38bdf8",
-                              }}
-                            >
-                              {cp.id}
+                            <td style={{ color: "#f5f5f5", fontWeight: 500 }}>{cp.id}</td>
+                            <td style={{ textAlign: "right", color: "#ffffff", fontWeight: 600 }}>
+                              ${cp.amount.toLocaleString("en-US", { maximumFractionDigits: 2 })}
                             </td>
-                            <td
-                              style={{
-                                padding: "5px 8px",
-                                fontFamily: "IBM Plex Mono, monospace",
-                                textAlign: "right",
-                                color: "#f8fafc",
-                              }}
-                            >
-                              ${cp.amount.toLocaleString("en-US")}
-                            </td>
-                            <td
-                              style={{
-                                padding: "5px 8px",
-                                fontFamily: "IBM Plex Mono, monospace",
-                                textAlign: "right",
-                                color: "#94a3b8",
-                              }}
-                            >
-                              {cp.count} tx
-                            </td>
+                            <td style={{ textAlign: "right", color: "#a6a6a6" }}>{cp.count} tx</td>
                           </tr>
                         ))}
                       </tbody>

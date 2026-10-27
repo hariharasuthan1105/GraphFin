@@ -90,9 +90,7 @@ function MainShell() {
       >
         <a className="brand" href="#/overview" aria-label="GraphFin overview">
           <span>GRAPHFIN</span>
-          <b aria-hidden="true" style={{ color: "#38bdf8" }}>
-            _
-          </b>
+          <b aria-hidden="true">_</b>
         </a>
 
         {/* Sidebar Mode Toggle */}
@@ -102,8 +100,8 @@ function MainShell() {
               display: "flex",
               flexDirection: "column",
               gap: "4px",
-              background: "#0a0c12",
-              border: "1px solid #1c2230",
+              background: "#101012",
+              border: "1px solid #303034",
               borderRadius: "4px",
               padding: "4px",
             }}
@@ -112,9 +110,9 @@ function MainShell() {
               type="button"
               onClick={() => setAppMode("interactive")}
               style={{
-                background: appMode === "interactive" ? "#0284c7" : "transparent",
-                color: appMode === "interactive" ? "#ffffff" : "#94a3b8",
-                border: "none",
+                background: appMode === "interactive" ? "#842d35" : "transparent",
+                color: appMode === "interactive" ? "#ffffff" : "#a6a6a6",
+                border: appMode === "interactive" ? "1px solid #b44a50" : "1px solid transparent",
                 borderRadius: "3px",
                 padding: "6px 8px",
                 fontSize: "10px",
@@ -133,9 +131,9 @@ function MainShell() {
               type="button"
               onClick={() => setAppMode("research")}
               style={{
-                background: appMode === "research" ? "#134e48" : "transparent",
-                color: appMode === "research" ? "#ffffff" : "#94a3b8",
-                border: "none",
+                background: appMode === "research" ? "#842d35" : "transparent",
+                color: appMode === "research" ? "#ffffff" : "#a6a6a6",
+                border: appMode === "research" ? "1px solid #b44a50" : "1px solid transparent",
                 borderRadius: "3px",
                 padding: "6px 8px",
                 fontSize: "10px",
@@ -175,8 +173,8 @@ function MainShell() {
           <p>
             {appMode === "interactive" ? (
               activeSession ? (
-                <span style={{ color: "#38bdf8", wordBreak: "break-all" }}>
-                  ● {activeSession.summary.datasetName} ({activeSession.accounts.length} acc)
+                <span style={{ color: "#f5f5f5", wordBreak: "break-all" }}>
+                  <b style={{ color: "#c04b52" }}>●</b> {activeSession.summary.datasetName} ({activeSession.accounts.length} acc)
                 </span>
               ) : (
                 "No custom dataset uploaded yet."
@@ -215,9 +213,9 @@ function MainShell() {
               style={{
                 display: "inline-flex",
                 alignItems: "center",
-                gap: "2px",
-                background: "#0c0e14",
-                border: "1px solid #1e2434",
+                gap: "3px",
+                background: "#101012",
+                border: "1px solid #303034",
                 borderRadius: "4px",
                 padding: "2px",
               }}
@@ -226,9 +224,9 @@ function MainShell() {
                 type="button"
                 onClick={() => setAppMode("interactive")}
                 style={{
-                  background: appMode === "interactive" ? "#162238" : "transparent",
-                  color: appMode === "interactive" ? "#38bdf8" : "#64748b",
-                  border: appMode === "interactive" ? "1px solid #0284c7" : "none",
+                  background: appMode === "interactive" ? "#842d35" : "transparent",
+                  color: appMode === "interactive" ? "#ffffff" : "#a6a6a6",
+                  border: appMode === "interactive" ? "1px solid #b44a50" : "1px solid transparent",
                   borderRadius: "3px",
                   padding: "4px 8px",
                   fontSize: "10px",
@@ -243,9 +241,9 @@ function MainShell() {
                 type="button"
                 onClick={() => setAppMode("research")}
                 style={{
-                  background: appMode === "research" ? "#102320" : "transparent",
-                  color: appMode === "research" ? "#2dd4bf" : "#64748b",
-                  border: appMode === "research" ? "1px solid #0d9488" : "none",
+                  background: appMode === "research" ? "#842d35" : "transparent",
+                  color: appMode === "research" ? "#ffffff" : "#a6a6a6",
+                  border: appMode === "research" ? "1px solid #b44a50" : "1px solid transparent",
                   borderRadius: "3px",
                   padding: "4px 8px",
                   fontSize: "10px",
@@ -258,7 +256,7 @@ function MainShell() {
               </button>
             </div>
 
-            <span style={{ color: "#232938" }}>|</span>
+            <span style={{ color: "#303034" }}>|</span>
 
             {/* Active Session Indicator */}
             {activeSession ? (
@@ -267,21 +265,21 @@ function MainShell() {
                   fontFamily: "IBM Plex Mono, monospace",
                   fontSize: "10px",
                   letterSpacing: "0.04em",
-                  color: "#38bdf8",
+                  color: "#f5f5f5",
                   display: "inline-flex",
                   alignItems: "center",
                   gap: "6px",
-                  background: "#0c1828",
+                  background: "#171719",
                   padding: "4px 8px",
                   borderRadius: "3px",
-                  border: "1px solid #1e3a5f",
+                  border: "1px solid #303034",
                 }}
               >
                 <span
                   style={{
                     width: "6px",
                     height: "6px",
-                    background: "#38bdf8",
+                    background: "#c04b52",
                     borderRadius: "50%",
                     display: "inline-block",
                   }}
@@ -294,17 +292,21 @@ function MainShell() {
                   fontFamily: "IBM Plex Mono, monospace",
                   fontSize: "10px",
                   letterSpacing: "0.04em",
-                  color: "#94a3b8",
+                  color: "#77777d",
                   display: "inline-flex",
                   alignItems: "center",
                   gap: "6px",
+                  background: "#101012",
+                  padding: "4px 8px",
+                  borderRadius: "3px",
+                  border: "1px solid #303034",
                 }}
               >
                 <span
                   style={{
                     width: "6px",
                     height: "6px",
-                    background: "#475569",
+                    background: "#303034",
                     borderRadius: "50%",
                     display: "inline-block",
                   }}

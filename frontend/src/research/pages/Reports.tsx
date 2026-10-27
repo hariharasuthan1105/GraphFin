@@ -199,9 +199,9 @@ export default function Reports() {
       {downloadSuccess && (
         <div
           style={{
-            background: "#062822",
-            color: "#2dd4bf",
-            border: "1px solid #134e48",
+            background: "#171719",
+            color: "#ffffff",
+            border: "1px solid #b44a50",
             borderRadius: "4px",
             padding: "10px 14px",
             marginBottom: "16px",
@@ -249,14 +249,14 @@ export default function Reports() {
                   style={{
                     fontFamily: "IBM Plex Mono, monospace",
                     fontSize: "10px",
-                    color: "#38bdf8",
+                    color: "#f5f5f5",
                     padding: "3px 8px",
-                    background: "#0c1f30",
-                    border: "1px solid #0369a1",
+                    background: "#171719",
+                    border: "1px solid #303034",
                     borderRadius: "3px",
                   }}
                 >
-                  AUDIT READY
+                  <b style={{ color: "#c04b52" }}>●</b> AUDIT READY
                 </span>
               </div>
 
@@ -277,9 +277,9 @@ export default function Reports() {
                   type="button"
                   onClick={exportSessionJson}
                   style={{
-                    background: "#0284c7",
+                    background: "#b44a50",
                     color: "#ffffff",
-                    border: "none",
+                    border: "1px solid #842d35",
                     padding: "8px 16px",
                     borderRadius: "4px",
                     fontFamily: "IBM Plex Mono, monospace",
@@ -295,9 +295,9 @@ export default function Reports() {
                   type="button"
                   onClick={exportAnomaliesCsv}
                   style={{
-                    background: "#161b26",
-                    color: "#38bdf8",
-                    border: "1px solid #283144",
+                    background: "#171719",
+                    color: "#f5f5f5",
+                    border: "1px solid #303034",
                     padding: "8px 16px",
                     borderRadius: "4px",
                     fontFamily: "IBM Plex Mono, monospace",
@@ -312,9 +312,9 @@ export default function Reports() {
                   type="button"
                   onClick={printExecutiveSummary}
                   style={{
-                    background: "#161b26",
-                    color: "#e2e8f0",
-                    border: "1px solid #283144",
+                    background: "#171719",
+                    color: "#f5f5f5",
+                    border: "1px solid #303034",
                     padding: "8px 16px",
                     borderRadius: "4px",
                     fontFamily: "IBM Plex Mono, monospace",
@@ -336,9 +336,9 @@ export default function Reports() {
                 type="button"
                 onClick={loadBenchmarkSample}
                 style={{
-                  background: "#0284c7",
+                  background: "#b44a50",
                   color: "#ffffff",
-                  border: "none",
+                  border: "1px solid #842d35",
                   padding: "6px 14px",
                   borderRadius: "4px",
                   fontFamily: "IBM Plex Mono, monospace",

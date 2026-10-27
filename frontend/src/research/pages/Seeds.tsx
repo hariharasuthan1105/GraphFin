@@ -162,16 +162,16 @@ export default function Seeds() {
                 </strong>
               </div>
               <div style={{ background: "#08090d", padding: "10px", borderRadius: "4px" }}>
-                <span style={{ fontSize: "10px", color: "#64748b", display: "block" }}>
+                <span style={{ fontSize: "10px", color: "#77777d", display: "block" }}>
                   SEED VARIANCE
                 </span>
-                <strong style={{ fontSize: "13px", color: "#10b981" }}>0.000 (Deterministic)</strong>
+                <strong style={{ fontSize: "13px", color: "#f5f5f5" }}>0.000 (Deterministic)</strong>
               </div>
               <div style={{ background: "#08090d", padding: "10px", borderRadius: "4px" }}>
-                <span style={{ fontSize: "10px", color: "#64748b", display: "block" }}>
+                <span style={{ fontSize: "10px", color: "#77777d", display: "block" }}>
                   RANK STABILITY
                 </span>
-                <strong style={{ fontSize: "13px", color: "#38bdf8" }}>ρ = 1.0000 (Exact)</strong>
+                <strong style={{ fontSize: "13px", color: "#f5f5f5" }}>ρ = 1.0000 (Exact)</strong>
               </div>
             </div>
             <p style={{ margin: 0, fontSize: "11px", color: "#94a3b8", lineHeight: 1.5 }}>

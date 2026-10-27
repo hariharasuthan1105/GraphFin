@@ -110,10 +110,10 @@ export default function Diagnostics() {
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                  <span style={{ fontFamily: "IBM Plex Mono, monospace", color: "#38bdf8", fontWeight: 700 }}>
+                  <span style={{ fontFamily: "IBM Plex Mono, monospace", color: "#ffffff", fontWeight: 700 }}>
                     {inspectedAcc.id}
                   </span>
-                  <span style={{ fontSize: "11px", color: inspectedAcc.anomalyScore >= 0.7 ? "#f43f5e" : "#f59e0b" }}>
+                  <span style={{ fontSize: "11px", color: inspectedAcc.anomalyScore >= 0.7 ? "#ef4444" : "#b44a50" }}>
                     Risk Tier: {(inspectedAcc.anomalyScore * 100).toFixed(1)}%
                   </span>
                 </div>

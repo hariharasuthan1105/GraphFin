@@ -240,7 +240,7 @@ export default function Experiments() {
                 <span style={{ fontSize: "10px", color: "#64748b", display: "block" }}>
                   EXECUTION MODE
                 </span>
-                <strong style={{ fontSize: "13px", color: "#38bdf8" }}>
+                <strong style={{ fontSize: "13px", color: "#f5f5f5" }}>
                   Deterministic Graph Heuristics
                 </strong>
               </div>

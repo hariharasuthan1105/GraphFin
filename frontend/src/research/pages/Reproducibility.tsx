@@ -29,7 +29,7 @@ export default function Reproducibility() {
               <dt>Algorithm Framework</dt>
               <dd>GraphFin Deterministic Heuristics v2.0 (Zero network latency, in-browser memory execution)</dd>
               <dt>Replay Determinism</dt>
-              <dd><span style={{ color: "#10b981", fontWeight: 600 }}>✓ Verified Byte-Identical on Replay</span></dd>
+              <dd><span style={{ color: "#f5f5f5", fontWeight: 600 }}><b style={{ color: "#c04b52" }}>✓</b> Verified Byte-Identical on Replay</span></dd>
             </dl>
           </div>
         </Panel>
