@@ -115,20 +115,27 @@
   position: fixed;
   inset: 0 auto 0 0;
   width: 236px;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
   background: #000;
   border-right: 1px solid #303034;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  overscroll-behavior: contain;
   z-index: 30;
+  box-sizing: border-box;
 }
 .brand {
-  height: 100px;
+  height: 72px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
-  padding: 0 28px;
+  padding: 0 24px;
   font-family: "Pixelify Sans", monospace;
   font-weight: 700;
-  font-size: 30px;
+  font-size: 28px;
   letter-spacing: -1px;
   white-space: nowrap;
 }
@@ -139,20 +146,90 @@
   color: #c04b52;
   animation: cursor-blink 500ms steps(1) 4;
 }
+.sidebar-mode-toggle {
+  flex-shrink: 0;
+  padding: 0 14px 10px 14px;
+}
+.sidebar-mode-box {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #101012;
+  border: 1px solid #303034;
+  border-radius: 4px;
+  padding: 4px;
+}
+.sidebar-mode-btn {
+  background: transparent;
+  color: #a6a6a6;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  padding: 6px 8px;
+  font-size: 10px;
+  font-family: "IBM Plex Mono", Consolas, monospace;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: unset;
+  transition: all 150ms ease;
+}
+.sidebar-mode-btn:hover {
+  background: #171719;
+  color: #fff;
+}
+.sidebar-mode-btn.is-active {
+  background: #842d35;
+  color: #ffffff;
+  border-color: #b44a50;
+}
 .nav-label {
-  padding: 26px 26px 14px;
+  flex-shrink: 0;
+  padding: 12px 22px 6px;
   color: #77777d;
+}
+.sidebar nav {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #303034 #080809;
+}
+.sidebar nav::-webkit-scrollbar {
+  width: 5px;
+}
+.sidebar nav::-webkit-scrollbar-track {
+  background: #080809;
+}
+.sidebar nav::-webkit-scrollbar-thumb {
+  background: #303034;
+  border-radius: 3px;
+}
+.sidebar nav::-webkit-scrollbar-thumb:hover {
+  background: #b44a50;
+}
+.sidebar nav::-webkit-scrollbar-thumb:active {
+  background: #842d35;
 }
 .sidebar nav a {
   display: flex;
   align-items: center;
-  gap: 13px;
-  padding: 14px 23px;
+  gap: 12px;
+  padding: 10px 22px;
   border-left: 2px solid transparent;
   color: #a6a6a6;
+  font-size: 13px;
+  line-height: 1.4;
+  white-space: nowrap;
   transition:
     background-color 180ms,
-    color 180ms;
+    color 180ms,
+    border-left-color 180ms;
 }
 .sidebar nav a:hover {
   background: #101012;
@@ -163,9 +240,18 @@
   background: #171719;
   border-left-color: #b44a50;
 }
+.sidebar nav a:focus-visible {
+  outline: 2px solid #b44a50;
+  outline-offset: -2px;
+  background: #171719;
+  color: #fff;
+}
 .nav-icon {
   width: 18px;
-  font-size: 19px;
+  font-size: 16px;
+  line-height: 1;
+  text-align: center;
+  flex-shrink: 0;
 }
 .nav-number {
   margin-left: auto;
@@ -175,12 +261,19 @@
   color: #77777d;
 }
 .sidebar-bottom {
+  flex-shrink: 0;
   margin-top: auto;
-  padding: 24px;
+  padding: 16px 20px;
   border-top: 1px solid #303034;
+  background: #000;
 }
 .sidebar-bottom p {
-  font-size: 12px;
+  font-size: 11px;
+  line-height: 1.4;
+  margin: 0;
+}
+.sidebar-bottom .eyebrow {
+  margin-bottom: 4px;
 }
 .sidebar-bottom a {
   font-size: 11px;
@@ -190,7 +283,7 @@
   display: block;
   font-size: 10px;
   color: #a6a6a6;
-  margin-top: 8px;
+  margin-top: 6px;
 }
 .workspace {
   margin-left: 236px;
@@ -681,6 +774,20 @@
   .workspace {
     margin-left: 210px;
   }
+  .sidebar nav a {
+    padding: 9px 16px;
+    font-size: 12px;
+    gap: 10px;
+  }
+  .nav-label {
+    padding: 10px 16px 6px;
+  }
+  .sidebar-mode-toggle {
+    padding: 0 10px 8px 10px;
+  }
+  .sidebar-bottom {
+    padding: 14px 16px;
+  }
   .research main {
     padding: 28px 24px;
   }
@@ -707,11 +814,21 @@
   .research .sidebar {
     transform: translateX(-100%);
     visibility: hidden;
-    width: 260px;
+    width: 270px;
+    height: 100vh;
+    height: 100dvh;
+    max-height: 100dvh;
+    transition: transform 220ms ease, visibility 220ms ease;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.7);
   }
   .research .sidebar.is-open {
     transform: translateX(0);
     visibility: visible;
+  }
+  .sidebar nav a {
+    padding: 12px 22px;
+    font-size: 13px;
+    gap: 12px;
   }
   .workspace {
     margin: 0;

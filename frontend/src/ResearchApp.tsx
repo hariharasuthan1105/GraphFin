@@ -40,7 +40,9 @@ function locationRoute() {
 
 function MainShell() {
   const [route, setRoute] = useState(locationRoute);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(() => {
+    return window.location.hash.includes("menu=1") || window.location.search.includes("menu=1");
+  });
   const menu = useRef<HTMLButtonElement>(null);
   const { appMode, setAppMode, activeSession, isBackendOnline, backendStatus } = useSession();
 
@@ -60,8 +62,32 @@ function MainShell() {
     document.title = TITLE + " - " + currentLabel;
   }, [currentLabel]);
 
+  const navRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (!navRef.current) return;
+    const activeEl = navRef.current.querySelector<HTMLAnchorElement>('a[aria-current="page"]');
+    if (!activeEl) return;
+
+    const navRect = navRef.current.getBoundingClientRect();
+    const activeRect = activeEl.getBoundingClientRect();
+
+    if (activeRect.top < navRect.top || activeRect.bottom > navRect.bottom) {
+      activeEl.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "nearest",
+      });
+    }
+  }, [route]);
+
+  useEffect(() => {
+    if (route === "workspace") {
+      window.location.hash = "#/overview";
+    }
+  }, [route]);
+
   if (route === "workspace") {
-    window.location.hash = "#/overview";
     return null;
   }
 
@@ -88,63 +114,25 @@ function MainShell() {
           }
         }}
       >
-        <a className="brand" href="#/overview" aria-label="GraphFin overview">
+        <a className="brand" href="#/overview" aria-label="GraphFin overview" onClick={() => setOpen(false)}>
           <span>GRAPHFIN</span>
           <b aria-hidden="true">_</b>
         </a>
 
         {/* Sidebar Mode Toggle */}
-        <div style={{ padding: "0 14px 14px 14px" }}>
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "4px",
-              background: "#101012",
-              border: "1px solid #303034",
-              borderRadius: "4px",
-              padding: "4px",
-            }}
-          >
+        <div className="sidebar-mode-toggle">
+          <div className="sidebar-mode-box">
             <button
               type="button"
+              className={`sidebar-mode-btn ${appMode === "interactive" ? "is-active" : ""}`}
               onClick={() => setAppMode("interactive")}
-              style={{
-                background: appMode === "interactive" ? "#842d35" : "transparent",
-                color: appMode === "interactive" ? "#ffffff" : "#a6a6a6",
-                border: appMode === "interactive" ? "1px solid #b44a50" : "1px solid transparent",
-                borderRadius: "3px",
-                padding: "6px 8px",
-                fontSize: "10px",
-                fontFamily: "IBM Plex Mono, monospace",
-                fontWeight: 600,
-                textAlign: "left",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-              }}
             >
               <span>✦</span> Interactive Analysis
             </button>
             <button
               type="button"
+              className={`sidebar-mode-btn ${appMode === "research" ? "is-active" : ""}`}
               onClick={() => setAppMode("research")}
-              style={{
-                background: appMode === "research" ? "#842d35" : "transparent",
-                color: appMode === "research" ? "#ffffff" : "#a6a6a6",
-                border: appMode === "research" ? "1px solid #b44a50" : "1px solid transparent",
-                borderRadius: "3px",
-                padding: "6px 8px",
-                fontSize: "10px",
-                fontFamily: "IBM Plex Mono, monospace",
-                fontWeight: 600,
-                textAlign: "left",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-              }}
             >
               <span>⚲</span> Research Evidence
             </button>
@@ -152,12 +140,13 @@ function MainShell() {
         </div>
 
         <div className="nav-label eyebrow">NAVIGATION / 11 SECTIONS</div>
-        <nav aria-label="Research navigation">
+        <nav ref={navRef} aria-label="Research navigation">
           {navItems.map((item) => (
             <a
               key={item.key}
               href={"#/" + item.key}
               aria-current={route === item.key ? "page" : undefined}
+              onClick={() => setOpen(false)}
             >
               <span className="nav-icon" aria-hidden="true">
                 {item.num}
