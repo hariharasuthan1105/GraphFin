@@ -1,42 +1,48 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { TITLE } from "./research/state";
+import { SessionProvider, useSession } from "./research/sessionContext";
 import "./research/research.css";
 
 const pages = {
   overview: lazy(() => import("./research/pages/Overview")),
-  analyze: lazy(() => import("./research/pages/DatasetAnalysis")),
   datasets: lazy(() => import("./research/pages/Datasets")),
+  analyze: lazy(() => import("./research/pages/DatasetAnalysis")),
+  graph: lazy(() => import("./research/pages/GraphExplorer")),
   experiments: lazy(() => import("./research/pages/Experiments")),
   comparison: lazy(() => import("./research/pages/Comparison")),
   seeds: lazy(() => import("./research/pages/Seeds")),
   reproducibility: lazy(() => import("./research/pages/Reproducibility")),
   diagnostics: lazy(() => import("./research/pages/Diagnostics")),
   limitations: lazy(() => import("./research/pages/Limitations")),
-  graph: lazy(() => import("./research/pages/GraphExplorer")),
+  reports: lazy(() => import("./research/pages/Reports")),
 };
 
 const navItems = [
   { key: "overview", label: "Overview", num: "01" },
-  { key: "datasets", label: "Datasets", num: "02" },
-  { key: "experiments", label: "Experiments", num: "03" },
-  { key: "comparison", label: "Model Comparison", num: "04" },
-  { key: "seeds", label: "Seed Analysis", num: "05" },
-  { key: "reproducibility", label: "Reproducibility", num: "06" },
-  { key: "diagnostics", label: "CREST Diagnostics", num: "07" },
-  { key: "limitations", label: "Research Limitations", num: "08" },
-  { key: "graph", label: "Graph Explorer", num: "09" },
+  { key: "datasets", label: "Dataset Explorer", num: "02" },
+  { key: "analyze", label: "Interactive Analysis", num: "03" },
+  { key: "graph", label: "Graph Explorer", num: "04" },
+  { key: "experiments", label: "Experiment Registry", num: "05" },
+  { key: "comparison", label: "Model Comparison", num: "06" },
+  { key: "seeds", label: "Seed Analysis", num: "07" },
+  { key: "reproducibility", label: "Reproducibility", num: "08" },
+  { key: "diagnostics", label: "CREST Diagnostics", num: "09" },
+  { key: "limitations", label: "Research Limitations", num: "10" },
+  { key: "reports", label: "Reports & Downloads", num: "11" },
 ];
 
 function locationRoute() {
   const r = window.location.hash.slice(2).split(/[/?]/)[0] || "overview";
   if (r === "graph-explorer") return "graph";
+  if (r === "dataset-reports") return "reports";
   return r;
 }
 
-export function App() {
+function MainShell() {
   const [route, setRoute] = useState(locationRoute);
   const [open, setOpen] = useState(false);
   const menu = useRef<HTMLButtonElement>(null);
+  const { appMode, setAppMode, activeSession } = useSession();
 
   useEffect(() => {
     const update = () => {
@@ -47,9 +53,8 @@ export function App() {
     return () => window.removeEventListener("hashchange", update);
   }, []);
 
-  const currentLabel =
-    navItems.find((item) => item.key === route)?.label ||
-    (route === "analyze" ? "Dataset Analysis" : "Research Dashboard");
+  const currentItem = navItems.find((item) => item.key === route);
+  const currentLabel = currentItem?.label || "Research Dashboard";
 
   useEffect(() => {
     document.title = TITLE + " - " + currentLabel;
@@ -85,9 +90,70 @@ export function App() {
       >
         <a className="brand" href="#/overview" aria-label="GraphFin overview">
           <span>GRAPHFIN</span>
-          <b aria-hidden="true">_</b>
+          <b aria-hidden="true" style={{ color: "#38bdf8" }}>
+            _
+          </b>
         </a>
-        <div className="nav-label eyebrow">RESEARCH WORKSPACE / 09</div>
+
+        {/* Sidebar Mode Toggle */}
+        <div style={{ padding: "0 14px 14px 14px" }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "4px",
+              background: "#0a0c12",
+              border: "1px solid #1c2230",
+              borderRadius: "4px",
+              padding: "4px",
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setAppMode("interactive")}
+              style={{
+                background: appMode === "interactive" ? "#0284c7" : "transparent",
+                color: appMode === "interactive" ? "#ffffff" : "#94a3b8",
+                border: "none",
+                borderRadius: "3px",
+                padding: "6px 8px",
+                fontSize: "10px",
+                fontFamily: "IBM Plex Mono, monospace",
+                fontWeight: 600,
+                textAlign: "left",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+              }}
+            >
+              <span>✦</span> Interactive Analysis
+            </button>
+            <button
+              type="button"
+              onClick={() => setAppMode("research")}
+              style={{
+                background: appMode === "research" ? "#134e48" : "transparent",
+                color: appMode === "research" ? "#ffffff" : "#94a3b8",
+                border: "none",
+                borderRadius: "3px",
+                padding: "6px 8px",
+                fontSize: "10px",
+                fontFamily: "IBM Plex Mono, monospace",
+                fontWeight: 600,
+                textAlign: "left",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+              }}
+            >
+              <span>⚲</span> Research Evidence
+            </button>
+          </div>
+        </div>
+
+        <div className="nav-label eyebrow">NAVIGATION / 11 SECTIONS</div>
         <nav aria-label="Research navigation">
           {navItems.map((item) => (
             <a
@@ -103,11 +169,21 @@ export function App() {
           ))}
         </nav>
         <div className="sidebar-bottom">
-          <p className="eyebrow">READ-ONLY RESEARCH</p>
+          <p className="eyebrow">
+            {appMode === "interactive" ? "INTERACTIVE SESSION" : "READ-ONLY RESEARCH"}
+          </p>
           <p>
-            Explore methods,
-            <br />
-            results, and evidence.
+            {appMode === "interactive" ? (
+              activeSession ? (
+                <span style={{ color: "#38bdf8", wordBreak: "break-all" }}>
+                  ● {activeSession.summary.datasetName} ({activeSession.accounts.length} acc)
+                </span>
+              ) : (
+                "No custom dataset uploaded yet."
+              )
+            ) : (
+              "Explore verified benchmarks & evidence."
+            )}
           </p>
         </div>
       </aside>
@@ -132,32 +208,110 @@ export function App() {
           <span className="breadcrumb">
             GRAPHFIN <span>/</span> {currentLabel}
           </span>
+
           <div className="toolbar-right-controls">
-            <span
+            {/* Topbar Mode Switcher */}
+            <div
               style={{
-                fontFamily: "Silkscreen, monospace",
-                fontSize: "9px",
-                letterSpacing: "0.08em",
-                color: "#f5f5f5",
                 display: "inline-flex",
                 alignItems: "center",
-                gap: "6px",
+                gap: "2px",
+                background: "#0c0e14",
+                border: "1px solid #1e2434",
+                borderRadius: "4px",
+                padding: "2px",
               }}
             >
+              <button
+                type="button"
+                onClick={() => setAppMode("interactive")}
+                style={{
+                  background: appMode === "interactive" ? "#162238" : "transparent",
+                  color: appMode === "interactive" ? "#38bdf8" : "#64748b",
+                  border: appMode === "interactive" ? "1px solid #0284c7" : "none",
+                  borderRadius: "3px",
+                  padding: "4px 8px",
+                  fontSize: "10px",
+                  fontFamily: "IBM Plex Mono, monospace",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                ✦ INTERACTIVE
+              </button>
+              <button
+                type="button"
+                onClick={() => setAppMode("research")}
+                style={{
+                  background: appMode === "research" ? "#102320" : "transparent",
+                  color: appMode === "research" ? "#2dd4bf" : "#64748b",
+                  border: appMode === "research" ? "1px solid #0d9488" : "none",
+                  borderRadius: "3px",
+                  padding: "4px 8px",
+                  fontSize: "10px",
+                  fontFamily: "IBM Plex Mono, monospace",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                ⚲ RESEARCH
+              </button>
+            </div>
+
+            <span style={{ color: "#232938" }}>|</span>
+
+            {/* Active Session Indicator */}
+            {activeSession ? (
               <span
                 style={{
-                  width: "6px",
-                  height: "6px",
-                  background: "#b44a50",
-                  display: "inline-block",
+                  fontFamily: "IBM Plex Mono, monospace",
+                  fontSize: "10px",
+                  letterSpacing: "0.04em",
+                  color: "#38bdf8",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  background: "#0c1828",
+                  padding: "4px 8px",
+                  borderRadius: "3px",
+                  border: "1px solid #1e3a5f",
                 }}
-              />
-              OPEN RESEARCH ACCESS
-            </span>
-            <span style={{ color: "#303034" }}>|</span>
-            <span className="toolbar-mode">
-              <i /> EVIDENCE TERMINAL
-            </span>
+              >
+                <span
+                  style={{
+                    width: "6px",
+                    height: "6px",
+                    background: "#38bdf8",
+                    borderRadius: "50%",
+                    display: "inline-block",
+                  }}
+                />
+                SESSION ACTIVE
+              </span>
+            ) : (
+              <span
+                style={{
+                  fontFamily: "IBM Plex Mono, monospace",
+                  fontSize: "10px",
+                  letterSpacing: "0.04em",
+                  color: "#94a3b8",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                }}
+              >
+                <span
+                  style={{
+                    width: "6px",
+                    height: "6px",
+                    background: "#475569",
+                    borderRadius: "50%",
+                    display: "inline-block",
+                  }}
+                />
+                READY
+              </span>
+            )}
           </div>
         </header>
 
@@ -168,7 +322,7 @@ export function App() {
                 <span className="pixels" aria-hidden="true">
                   ▪ ▪ ▪ ▪ ▪
                 </span>
-                <p>Reading research artifacts…</p>
+                <p>Loading view…</p>
               </div>
             }
           >
@@ -184,10 +338,18 @@ export function App() {
         </main>
         <footer className="research-footer">
           <span>{TITLE}</span>
-          <span>RESEARCH, NOT FINANCIAL ADVICE / 008</span>
+          <span>RESEARCH & INTERACTIVE ANOMALY DETECTION / 008</span>
         </footer>
       </div>
     </div>
+  );
+}
+
+export function App() {
+  return (
+    <SessionProvider>
+      <MainShell />
+    </SessionProvider>
   );
 }
 

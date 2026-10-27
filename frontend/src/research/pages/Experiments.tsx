@@ -12,6 +12,7 @@ import {
   Hash,
 } from "../ui";
 import { query } from "../client";
+import { useSession } from "../sessionContext";
 function Rankings({ experiment }: { experiment: Experiment }) {
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState("score_desc");
@@ -195,6 +196,7 @@ function Detail({ id }: { id: string }) {
   );
 }
 export default function Experiments() {
+  const { activeSession } = useSession();
   const [tier, setTier] = useState("ibm-5k");
   const [method, setMethod] = useState("");
   const [page, setPage] = useState(1);
@@ -210,10 +212,61 @@ export default function Experiments() {
   );
   return (
     <>
-      <Heading index="03" title="Experiment registry">
+      <Heading index="05" title="Experiment registry">
         Versioned methods. Frozen populations. Inspect the record behind each
         result.
       </Heading>
+
+      {activeSession && (
+        <Panel title="Active Analysis Session Context" tag="INTERACTIVE PIPELINE">
+          <div className="panel-body">
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                gap: "12px",
+                marginBottom: "12px",
+              }}
+            >
+              <div>
+                <span style={{ fontSize: "10px", color: "#64748b", display: "block" }}>
+                  DATASET NAME
+                </span>
+                <strong style={{ fontSize: "13px", color: "#f8fafc" }}>
+                  {activeSession.summary.datasetName}
+                </strong>
+              </div>
+              <div>
+                <span style={{ fontSize: "10px", color: "#64748b", display: "block" }}>
+                  EXECUTION MODE
+                </span>
+                <strong style={{ fontSize: "13px", color: "#38bdf8" }}>
+                  Deterministic Graph Heuristics
+                </strong>
+              </div>
+              <div>
+                <span style={{ fontSize: "10px", color: "#64748b", display: "block" }}>
+                  ACTIVE METRICS
+                </span>
+                <span style={{ fontSize: "12px", color: "#94a3b8" }}>
+                  Degree Asymmetry, Cycles, Fan-In/Out
+                </span>
+              </div>
+              <div>
+                <span style={{ fontSize: "10px", color: "#64748b", display: "block" }}>
+                  FLAGGED ANOMALIES
+                </span>
+                <strong style={{ fontSize: "13px", color: "#f43f5e" }}>
+                  {activeSession.summary.suspiciousAccountCount} accounts
+                </strong>
+              </div>
+            </div>
+            <p style={{ margin: 0, fontSize: "11px", color: "#94a3b8", lineHeight: 1.5 }}>
+              <strong>Scientific Note:</strong> The 86 historical registered experiments cataloged below are frozen benchmark models (E0–E6 Isolation Forest with 19 engineered features) trained on standardized splits. The active uploaded session executes client-side deterministic graph topology analysis.
+            </p>
+          </div>
+        </Panel>
+      )}
       <div className="filters">
         <label>
           Dataset scope

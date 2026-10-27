@@ -16,11 +16,15 @@ import type {
   AnalysisResult,
   ColumnMapping,
 } from "../datasetAnalysis/types";
+import { useSession } from "../sessionContext";
 
 export default function DatasetAnalysis() {
-  const [step, setStep] = useState<"upload" | "mapping" | "results">("upload");
-  const [fileName, setFileName] = useState("");
-  const [fileSize, setFileSize] = useState(0);
+  const { activeSession, setActiveSession, setGraphMode } = useSession();
+  const [step, setStep] = useState<"upload" | "mapping" | "results">(
+    activeSession ? "results" : "upload"
+  );
+  const [fileName, setFileName] = useState(activeSession?.summary.datasetName || "");
+  const [fileSize, setFileSize] = useState(activeSession?.summary.fileSizeBytes || 0);
   const [parsedTable, setParsedTable] = useState<ParsedTable | null>(null);
   const [mapping, setMapping] = useState<ColumnMapping>({
     sourceCol: "",
@@ -33,8 +37,10 @@ export default function DatasetAnalysis() {
   });
   const [errorMsg, setErrorMsg] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [result, setResult] = useState<AnalysisResult | null>(null);
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [result, setResult] = useState<AnalysisResult | null>(activeSession);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(
+    activeSession?.topAnomalies[0]?.id || activeSession?.accounts[0]?.id || null
+  );
   const [filterPattern, setFilterPattern] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState<string>("");
 
@@ -133,6 +139,8 @@ export default function DatasetAnalysis() {
         const records = buildTransactionRecords(parsedTable, mapping);
         const analysis = analyzeTransactionGraph(records, fileName, fileSize);
         setResult(analysis);
+        setActiveSession(analysis);
+        setGraphMode("uploaded");
         if (analysis.topAnomalies.length > 0) {
           setSelectedNodeId(analysis.topAnomalies[0].id);
         } else if (analysis.accounts.length > 0) {

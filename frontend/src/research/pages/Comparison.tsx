@@ -13,6 +13,7 @@ import {
   Hash,
 } from "../ui";
 import { query } from "../client";
+import { useSession } from "../sessionContext";
 function Compare({ ids, metric }: { ids: string[]; metric: string }) {
   const path =
     "/comparisons?" +
@@ -42,6 +43,7 @@ function Compare({ ids, metric }: { ids: string[]; metric: string }) {
   );
 }
 export default function Comparison() {
+  const { activeSession } = useSession();
   const [tier, setTier] = useState("ibm-5k");
   const [seed, setSeed] = useState("42");
   const [metric, setMetric] = useState("average_precision");
@@ -57,9 +59,59 @@ export default function Comparison() {
   const rows = r.data?.items.filter((x) => x.status === "verified") ?? [];
   return (
     <>
-      <Heading index="04" title="Model comparison">
-        Compare methods within one exact dataset, label set and held-out split.
+      <Heading index="06" title="Model & indicator comparison">
+        Compare methods within exact benchmark populations, or evaluate topological feature contributions on your active dataset.
       </Heading>
+
+      {activeSession && (
+        <Panel title="Active Dataset: Topological Indicator Contribution" tag="HEURISTIC SENSITIVITY">
+          <div className="panel-body">
+            <p style={{ margin: "0 0 12px 0", fontSize: "12px", color: "#94a3b8", lineHeight: 1.5 }}>
+              Analysis of structural anomaly drivers on <strong>{activeSession.summary.datasetName}</strong>:
+            </p>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+                gap: "10px",
+                marginBottom: "14px",
+              }}
+            >
+              <div style={{ background: "#08090d", padding: "10px", borderRadius: "4px" }}>
+                <span style={{ fontSize: "10px", color: "#64748b", display: "block" }}>FAN-OUT</span>
+                <strong style={{ fontSize: "14px", color: "#f59e0b" }}>
+                  {activeSession.summary.patternsDetected.fanOutCount} detected
+                </strong>
+                <span style={{ fontSize: "10px", color: "#94a3b8", display: "block" }}>Rapid dispersal</span>
+              </div>
+              <div style={{ background: "#08090d", padding: "10px", borderRadius: "4px" }}>
+                <span style={{ fontSize: "10px", color: "#64748b", display: "block" }}>FAN-IN</span>
+                <strong style={{ fontSize: "14px", color: "#f59e0b" }}>
+                  {activeSession.summary.patternsDetected.fanInCount} detected
+                </strong>
+                <span style={{ fontSize: "10px", color: "#94a3b8", display: "block" }}>Mule aggregation</span>
+              </div>
+              <div style={{ background: "#08090d", padding: "10px", borderRadius: "4px" }}>
+                <span style={{ fontSize: "10px", color: "#64748b", display: "block" }}>CYCLES</span>
+                <strong style={{ fontSize: "14px", color: "#a855f7" }}>
+                  {activeSession.summary.patternsDetected.cycleCount} detected
+                </strong>
+                <span style={{ fontSize: "10px", color: "#94a3b8", display: "block" }}>Reciprocal loops</span>
+              </div>
+              <div style={{ background: "#08090d", padding: "10px", borderRadius: "4px" }}>
+                <span style={{ fontSize: "10px", color: "#64748b", display: "block" }}>VOL OUTLIERS</span>
+                <strong style={{ fontSize: "14px", color: "#f43f5e" }}>
+                  {activeSession.summary.patternsDetected.volumeOutlierCount} detected
+                </strong>
+                <span style={{ fontSize: "10px", color: "#94a3b8", display: "block" }}>Extreme values</span>
+              </div>
+            </div>
+            <p style={{ margin: 0, fontSize: "11px", color: "#64748b", lineHeight: 1.4 }}>
+              <strong>Scientific Honesty Note:</strong> The comparison below reflects historical E0–E6 Isolation Forest models trained on frozen IBM AML splits. The active uploaded session executes deterministic graph algorithms and does not fabricate supervised ML model reruns on arbitrary input files.
+            </p>
+          </div>
+        </Panel>
+      )}
       <div className="filters">
         <Tier value={tier} onChange={setTier} />
         <label>

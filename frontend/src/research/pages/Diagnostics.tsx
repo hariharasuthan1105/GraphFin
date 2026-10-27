@@ -44,18 +44,93 @@ function Detail({ id }: { id: string }) {
     </Panel>
   );
 }
+import { useSession } from "../sessionContext";
+
 export default function Diagnostics() {
+  const { activeSession } = useSession();
+  const [selectedAccId, setSelectedAccId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [id, setId] = useState<string>();
   const r = useResearch<Page_Diagnostic_>(
     query("/diagnostics", { page_number: page, page_size: 10 }),
     "Page_Diagnostic_",
   );
+
+  const inspectedAcc = activeSession?.accounts.find(
+    (a) => a.id === (selectedAccId || activeSession.topAnomalies[0]?.id),
+  );
+
   return (
     <>
-      <Heading index="07" title="CREST diagnostics">
-        Experimental model-sensitivity diagnostic
+      <Heading index="09" title="Diagnostics & explanation sensitivity">
+        Experimental model-sensitivity diagnostics on research benchmarks, and local flow concentration audits.
       </Heading>
+
+      {activeSession && (
+        <Panel
+          title="Active Dataset: Local Flow Sensitivity & Structural Drivers"
+          tag="INTERACTIVE AUDIT"
+        >
+          <div className="panel-body">
+            <div style={{ marginBottom: "14px" }}>
+              <label style={{ fontSize: "12px", color: "#94a3b8" }}>
+                Select Inspected Account:
+                <select
+                  value={inspectedAcc?.id || ""}
+                  onChange={(e) => setSelectedAccId(e.target.value)}
+                  style={{
+                    marginLeft: "8px",
+                    background: "#08090d",
+                    color: "#f8fafc",
+                    border: "1px solid #1e2434",
+                    borderRadius: "4px",
+                    padding: "4px 8px",
+                    fontFamily: "IBM Plex Mono, monospace",
+                  }}
+                >
+                  {activeSession.accounts
+                    .slice(0, 30)
+                    .map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.id} (Score: {a.anomalyScore.toFixed(3)})
+                      </option>
+                    ))}
+                </select>
+              </label>
+            </div>
+
+            {inspectedAcc && (
+              <div
+                style={{
+                  background: "#08090d",
+                  border: "1px solid #1a1e28",
+                  borderRadius: "4px",
+                  padding: "12px",
+                  marginBottom: "12px",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                  <span style={{ fontFamily: "IBM Plex Mono, monospace", color: "#38bdf8", fontWeight: 700 }}>
+                    {inspectedAcc.id}
+                  </span>
+                  <span style={{ fontSize: "11px", color: inspectedAcc.anomalyScore >= 0.7 ? "#f43f5e" : "#f59e0b" }}>
+                    Risk Tier: {(inspectedAcc.anomalyScore * 100).toFixed(1)}%
+                  </span>
+                </div>
+                <div style={{ fontSize: "12px", color: "#94a3b8", lineHeight: 1.5 }}>
+                  <div>Total Sent: ${inspectedAcc.totalSent.toLocaleString()} · Total Received: ${inspectedAcc.totalReceived.toLocaleString()}</div>
+                  <div>Primary Topological Driver: {inspectedAcc.patterns.join(", ") || "Moderate Degree Elevation"}</div>
+                  <div>Direct Counterparties: {inspectedAcc.counterparties.length} connected entities</div>
+                </div>
+              </div>
+            )}
+
+            <p style={{ margin: 0, fontSize: "11px", color: "#64748b", lineHeight: 1.4 }}>
+              <strong>Scientific Honesty Note:</strong> CREST counterparty intervention models (shown below) were experimentally evaluated on frozen academic benchmarks. For interactive uploaded datasets, GraphFin provides deterministic local flow concentration metrics without falsifying offline ablation interventions.
+            </p>
+          </div>
+        </Panel>
+      )}
       <Notice>
         CREST detection superiority has not been demonstrated. CREST explanation
         superiority has not been demonstrated. Score changes are neither proof
