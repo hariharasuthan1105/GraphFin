@@ -130,6 +130,96 @@ export function query(
     });
   return path + (q.size ? "?" + q : "");
 }
+
+function getStaticFallbackUrl(path: string): string | null {
+  const cleanPath = path.split("?")[0];
+  let prefix = "";
+  if (typeof window !== "undefined" && window.location.pathname.includes("/GraphFin")) {
+    prefix = "/GraphFin";
+  }
+
+  if (cleanPath === "/overview") {
+    return `${prefix}/data/research/overview.json`;
+  }
+  if (cleanPath === "/datasets") {
+    return `${prefix}/data/research/datasets.json`;
+  }
+  if (cleanPath.startsWith("/datasets/")) {
+    const id = cleanPath.replace("/datasets/", "");
+    return `${prefix}/data/research/datasets/${id}.json`;
+  }
+  if (cleanPath === "/experiments" || cleanPath.startsWith("/experiments?")) {
+    return `${prefix}/data/research/experiments.json`;
+  }
+  if (cleanPath.includes("/rankings")) {
+    const id = cleanPath.replace("/experiments/", "").replace("/rankings", "");
+    return `${prefix}/data/research/rankings/${id}.json`;
+  }
+  if (cleanPath.startsWith("/experiments/")) {
+    const id = cleanPath.replace("/experiments/", "").replace(/\/.*$/, "");
+    return `${prefix}/data/research/experiments/${id}.json`;
+  }
+  if (cleanPath === "/model-seeds" || cleanPath.startsWith("/model-seeds?")) {
+    return `${prefix}/data/research/model-seeds.json`;
+  }
+  if (cleanPath === "/reproducibility") {
+    return `${prefix}/data/research/reproducibility.json`;
+  }
+  if (cleanPath === "/limitations") {
+    return `${prefix}/data/research/limitations.json`;
+  }
+  if (cleanPath === "/diagnostics" || cleanPath.startsWith("/diagnostics?")) {
+    return `${prefix}/data/research/diagnostics.json`;
+  }
+  if (cleanPath.startsWith("/diagnostics/")) {
+    const id = cleanPath.replace("/diagnostics/", "");
+    return `${prefix}/data/research/diagnostics/${id}.json`;
+  }
+  return null;
+}
+
+function filterStaticPage(path: string, raw: unknown): unknown {
+  if (!path.includes("?") || !raw || typeof raw !== "object") return raw;
+  const params = new URLSearchParams(path.split("?")[1]);
+  const page = raw as {
+    items?: Record<string, unknown>[];
+    total?: number;
+    page?: number;
+    page_size?: number;
+  };
+  if (!Array.isArray(page.items)) return raw;
+
+  let items = [...page.items];
+  const datasetId = params.get("dataset_id");
+  const tier = params.get("tier");
+  const method = params.get("method");
+  const version = params.get("version");
+  const splitSeed = params.get("split_seed");
+  const modelSeed = params.get("model_seed");
+
+  if (datasetId) items = items.filter((x) => x.dataset_id === datasetId);
+  if (tier) items = items.filter((x) => x.tier === tier);
+  if (method) items = items.filter((x) => x.method === method);
+  if (version) items = items.filter((x) => x.version === version);
+  if (splitSeed != null)
+    items = items.filter((x) => String(x.split_seed) === splitSeed);
+  if (modelSeed != null)
+    items = items.filter((x) => String(x.model_seed) === modelSeed);
+
+  const pageNum = parseInt(params.get("page_number") || "1", 10);
+  const pageSize = parseInt(params.get("page_size") || "25", 10);
+  const total = items.length;
+  const pagedItems = items.slice((pageNum - 1) * pageSize, pageNum * pageSize);
+
+  return {
+    ...page,
+    items: pagedItems,
+    total,
+    page: pageNum,
+    page_size: pageSize,
+  };
+}
+
 export function getResearch<T>(
   path: string,
   schema: keyof typeof schemas,
@@ -143,41 +233,82 @@ export function getResearch<T>(
   let entry = pending.get(key);
   if (!entry) {
     const controller = new AbortController();
-    const promise = fetch(researchUrl(path), {
-      method: "GET",
-      signal: controller.signal,
-      credentials: "include",
-      headers: {
-        Accept: "application/json",
-        ...getAuthHeaders(),
-      },
-    })
-      .then(async (r) => {
-        if (!r.ok) {
-          const error = await r.json().catch(() => null);
-          throw new ResearchError(
-            r.status,
-            typeof error?.message === "string"
-              ? error.message
-              : `Research request unavailable (${r.status}).`,
-          );
+    const promise = (async () => {
+      const targetSchema = (schemas as Record<string, Schema>)[schema];
+      const staticUrl = getStaticFallbackUrl(path);
+
+      // Attempt live fetch first with a 5-second timeout (to handle sleeping Render service)
+      try {
+        const liveController = new AbortController();
+        const timeoutId = setTimeout(() => liveController.abort(), 5000);
+
+        const onParentAbort = () => liveController.abort();
+        controller.signal.addEventListener("abort", onParentAbort);
+
+        const r = await fetch(researchUrl(path), {
+          method: "GET",
+          signal: liveController.signal,
+          credentials: "same-origin",
+          headers: {
+            Accept: "application/json",
+            ...getAuthHeaders(),
+          },
+        }).finally(() => {
+          clearTimeout(timeoutId);
+          controller.signal.removeEventListener("abort", onParentAbort);
+        });
+
+        if (r.ok) {
+          const value: unknown = await r.json();
+          if (validate(value, targetSchema)) {
+            const obj = value as { status?: string };
+            if (obj.status !== "unavailable") {
+              if (!path.includes("rankings") && !path.includes("diagnostics")) {
+                cache.set(key, { value, expires: Date.now() + 60_000 });
+                if (cache.size > 30) cache.delete(cache.keys().next().value!);
+              }
+              return value as T;
+            }
+          }
         }
-        const value: unknown = await r.json();
-        if (!validate(value, (schemas as Record<string, Schema>)[schema]))
-          throw new ResearchError(
-            503,
-            "Research response does not match the verified API contract.",
-          );
-        // Account tokens are process-local: never retain ranking/diagnostic responses between visits.
-        if (!path.includes("rankings") && !path.includes("diagnostics")) {
-          cache.set(key, { value, expires: Date.now() + 60_000 });
-          if (cache.size > 30) cache.delete(cache.keys().next().value!);
+      } catch (err) {
+        if (controller.signal.aborted) {
+          throw err;
         }
-        return value;
-      })
-      .finally(() => {
-        if (pending.get(key)?.controller === controller) pending.delete(key);
-      });
+        // Live backend timed out or unreachable: fall through to static verified evidence
+      }
+
+      // Fallback: load verified aggregate research evidence
+      if (staticUrl) {
+        try {
+          const res = await fetch(staticUrl, {
+            signal: controller.signal,
+            headers: { Accept: "application/json" },
+          });
+          if (res.ok) {
+            const rawJson: unknown = await res.json();
+            const processed = filterStaticPage(path, rawJson);
+            if (validate(processed, targetSchema)) {
+              if (!path.includes("rankings") && !path.includes("diagnostics")) {
+                cache.set(key, { value: processed, expires: Date.now() + 60_000 });
+                if (cache.size > 30) cache.delete(cache.keys().next().value!);
+              }
+              return processed as T;
+            }
+          }
+        } catch (staticErr) {
+          if (controller.signal.aborted) throw staticErr;
+        }
+      }
+
+      throw new ResearchError(
+        503,
+        "Approved research evidence is unavailable.",
+      );
+    })().finally(() => {
+      if (pending.get(key)?.controller === controller) pending.delete(key);
+    });
+
     entry = { promise, controller, users: 0 };
     pending.set(key, entry);
   }

@@ -1,0 +1,961 @@
+{
+  "status": "verified",
+  "provenance_status": "partially_verified",
+  "artifact_id": "seed_rows",
+  "artifact_sha256": "d8a7da63b38ced9524d87f0f1b3e77c7e0d811d94255fbe47f91c01d74ed048b",
+  "limitations": [
+    "IBM upstream account labels are partially verified; features are transductive.",
+    "Reproducibility is not independent external validation.",
+    "CREST detection and explanation superiority are unsupported."
+  ],
+  "runs": [
+    {
+      "dataset_id": "ibm-5k",
+      "tier": "5k",
+      "method": "E1",
+      "split_seed": 42,
+      "model_seed": 13,
+      "metrics": {
+        "count": 1500,
+        "positives": 6,
+        "prevalence": 0.004,
+        "average_precision": 0.05734016184638517,
+        "roc_auc": 0.7568607764390898,
+        "retrieval": [
+          {
+            "k": 10,
+            "effective_k": 10,
+            "positives": 1,
+            "precision": 0.1,
+            "recall": 0.16666666666666666
+          },
+          {
+            "k": 25,
+            "effective_k": 25,
+            "positives": 1,
+            "precision": 0.04,
+            "recall": 0.16666666666666666
+          },
+          {
+            "k": 50,
+            "effective_k": 50,
+            "positives": 2,
+            "precision": 0.04,
+            "recall": 0.3333333333333333
+          },
+          {
+            "k": 100,
+            "effective_k": 100,
+            "positives": 2,
+            "precision": 0.02,
+            "recall": 0.3333333333333333
+          }
+        ],
+        "confidence_interval": null,
+        "uncertainty_note": "No per-run AP CI provided. Missing/nonfinite metrics are null; split/model SD is not a CI."
+      },
+      "fit_score_seconds": 0.5472813999995196
+    },
+    {
+      "dataset_id": "ibm-5k",
+      "tier": "5k",
+      "method": "E1",
+      "split_seed": 42,
+      "model_seed": 42,
+      "metrics": {
+        "count": 1500,
+        "positives": 6,
+        "prevalence": 0.004,
+        "average_precision": 0.057130037676304354,
+        "roc_auc": 0.7322066041945561,
+        "retrieval": [
+          {
+            "k": 10,
+            "effective_k": 10,
+            "positives": 1,
+            "precision": 0.1,
+            "recall": 0.16666666666666666
+          },
+          {
+            "k": 25,
+            "effective_k": 25,
+            "positives": 1,
+            "precision": 0.04,
+            "recall": 0.16666666666666666
+          },
+          {
+            "k": 50,
+            "effective_k": 50,
+            "positives": 2,
+            "precision": 0.04,
+            "recall": 0.3333333333333333
+          },
+          {
+            "k": 100,
+            "effective_k": 100,
+            "positives": 2,
+            "precision": 0.02,
+            "recall": 0.3333333333333333
+          }
+        ],
+        "confidence_interval": null,
+        "uncertainty_note": "No per-run AP CI provided. Missing/nonfinite metrics are null; split/model SD is not a CI."
+      },
+      "fit_score_seconds": 0.4291573000000426
+    },
+    {
+      "dataset_id": "ibm-5k",
+      "tier": "5k",
+      "method": "E1",
+      "split_seed": 42,
+      "model_seed": 101,
+      "metrics": {
+        "count": 1500,
+        "positives": 6,
+        "prevalence": 0.004,
+        "average_precision": 0.1835639620492086,
+        "roc_auc": 0.73086791610888,
+        "retrieval": [
+          {
+            "k": 10,
+            "effective_k": 10,
+            "positives": 1,
+            "precision": 0.1,
+            "recall": 0.16666666666666666
+          },
+          {
+            "k": 25,
+            "effective_k": 25,
+            "positives": 1,
+            "precision": 0.04,
+            "recall": 0.16666666666666666
+          },
+          {
+            "k": 50,
+            "effective_k": 50,
+            "positives": 2,
+            "precision": 0.04,
+            "recall": 0.3333333333333333
+          },
+          {
+            "k": 100,
+            "effective_k": 100,
+            "positives": 2,
+            "precision": 0.02,
+            "recall": 0.3333333333333333
+          }
+        ],
+        "confidence_interval": null,
+        "uncertainty_note": "No per-run AP CI provided. Missing/nonfinite metrics are null; split/model SD is not a CI."
+      },
+      "fit_score_seconds": 0.42261340000004566
+    },
+    {
+      "dataset_id": "ibm-5k",
+      "tier": "5k",
+      "method": "E4",
+      "split_seed": 42,
+      "model_seed": 13,
+      "metrics": {
+        "count": 1500,
+        "positives": 6,
+        "prevalence": 0.004,
+        "average_precision": 0.18881741749379458,
+        "roc_auc": 0.7602632753235165,
+        "retrieval": [
+          {
+            "k": 10,
+            "effective_k": 10,
+            "positives": 1,
+            "precision": 0.1,
+            "recall": 0.16666666666666666
+          },
+          {
+            "k": 25,
+            "effective_k": 25,
+            "positives": 2,
+            "precision": 0.08,
+            "recall": 0.3333333333333333
+          },
+          {
+            "k": 50,
+            "effective_k": 50,
+            "positives": 2,
+            "precision": 0.04,
+            "recall": 0.3333333333333333
+          },
+          {
+            "k": 100,
+            "effective_k": 100,
+            "positives": 2,
+            "precision": 0.02,
+            "recall": 0.3333333333333333
+          }
+        ],
+        "confidence_interval": null,
+        "uncertainty_note": "No per-run AP CI provided. Missing/nonfinite metrics are null; split/model SD is not a CI."
+      },
+      "fit_score_seconds": 0.44421479999982694
+    },
+    {
+      "dataset_id": "ibm-5k",
+      "tier": "5k",
+      "method": "E4",
+      "split_seed": 42,
+      "model_seed": 42,
+      "metrics": {
+        "count": 1500,
+        "positives": 6,
+        "prevalence": 0.004,
+        "average_precision": 0.19454523425133932,
+        "roc_auc": 0.7494422132976349,
+        "retrieval": [
+          {
+            "k": 10,
+            "effective_k": 10,
+            "positives": 1,
+            "precision": 0.1,
+            "recall": 0.16666666666666666
+          },
+          {
+            "k": 25,
+            "effective_k": 25,
+            "positives": 2,
+            "precision": 0.08,
+            "recall": 0.3333333333333333
+          },
+          {
+            "k": 50,
+            "effective_k": 50,
+            "positives": 2,
+            "precision": 0.04,
+            "recall": 0.3333333333333333
+          },
+          {
+            "k": 100,
+            "effective_k": 100,
+            "positives": 3,
+            "precision": 0.03,
+            "recall": 0.5
+          }
+        ],
+        "confidence_interval": null,
+        "uncertainty_note": "No per-run AP CI provided. Missing/nonfinite metrics are null; split/model SD is not a CI."
+      },
+      "fit_score_seconds": 0.4305986999997913
+    },
+    {
+      "dataset_id": "ibm-5k",
+      "tier": "5k",
+      "method": "E4",
+      "split_seed": 42,
+      "model_seed": 101,
+      "metrics": {
+        "count": 1500,
+        "positives": 6,
+        "prevalence": 0.004,
+        "average_precision": 0.18881783994024798,
+        "roc_auc": 0.7707496653279786,
+        "retrieval": [
+          {
+            "k": 10,
+            "effective_k": 10,
+            "positives": 1,
+            "precision": 0.1,
+            "recall": 0.16666666666666666
+          },
+          {
+            "k": 25,
+            "effective_k": 25,
+            "positives": 1,
+            "precision": 0.04,
+            "recall": 0.16666666666666666
+          },
+          {
+            "k": 50,
+            "effective_k": 50,
+            "positives": 2,
+            "precision": 0.04,
+            "recall": 0.3333333333333333
+          },
+          {
+            "k": 100,
+            "effective_k": 100,
+            "positives": 3,
+            "precision": 0.03,
+            "recall": 0.5
+          }
+        ],
+        "confidence_interval": null,
+        "uncertainty_note": "No per-run AP CI provided. Missing/nonfinite metrics are null; split/model SD is not a CI."
+      },
+      "fit_score_seconds": 0.4471739999999045
+    },
+    {
+      "dataset_id": "ibm-50k",
+      "tier": "50k",
+      "method": "E1",
+      "split_seed": 42,
+      "model_seed": 13,
+      "metrics": {
+        "count": 14998,
+        "positives": 75,
+        "prevalence": 0.005000666755567409,
+        "average_precision": 0.015761170684921794,
+        "roc_auc": 0.7009725479684603,
+        "retrieval": [
+          {
+            "k": 10,
+            "effective_k": 10,
+            "positives": 0,
+            "precision": 0.0,
+            "recall": 0.0
+          },
+          {
+            "k": 25,
+            "effective_k": 25,
+            "positives": 2,
+            "precision": 0.08,
+            "recall": 0.02666666666666667
+          },
+          {
+            "k": 50,
+            "effective_k": 50,
+            "positives": 3,
+            "precision": 0.06,
+            "recall": 0.04
+          },
+          {
+            "k": 100,
+            "effective_k": 100,
+            "positives": 3,
+            "precision": 0.03,
+            "recall": 0.04
+          }
+        ],
+        "confidence_interval": null,
+        "uncertainty_note": "No per-run AP CI provided. Missing/nonfinite metrics are null; split/model SD is not a CI."
+      },
+      "fit_score_seconds": 1.0545613000003868
+    },
+    {
+      "dataset_id": "ibm-50k",
+      "tier": "50k",
+      "method": "E1",
+      "split_seed": 42,
+      "model_seed": 42,
+      "metrics": {
+        "count": 14998,
+        "positives": 75,
+        "prevalence": 0.005000666755567409,
+        "average_precision": 0.022242242689584614,
+        "roc_auc": 0.7100663405481471,
+        "retrieval": [
+          {
+            "k": 10,
+            "effective_k": 10,
+            "positives": 1,
+            "precision": 0.1,
+            "recall": 0.013333333333333334
+          },
+          {
+            "k": 25,
+            "effective_k": 25,
+            "positives": 1,
+            "precision": 0.04,
+            "recall": 0.013333333333333334
+          },
+          {
+            "k": 50,
+            "effective_k": 50,
+            "positives": 3,
+            "precision": 0.06,
+            "recall": 0.04
+          },
+          {
+            "k": 100,
+            "effective_k": 100,
+            "positives": 4,
+            "precision": 0.04,
+            "recall": 0.05333333333333334
+          }
+        ],
+        "confidence_interval": null,
+        "uncertainty_note": "No per-run AP CI provided. Missing/nonfinite metrics are null; split/model SD is not a CI."
+      },
+      "fit_score_seconds": 1.025062199999411
+    },
+    {
+      "dataset_id": "ibm-50k",
+      "tier": "50k",
+      "method": "E1",
+      "split_seed": 42,
+      "model_seed": 101,
+      "metrics": {
+        "count": 14998,
+        "positives": 75,
+        "prevalence": 0.005000666755567409,
+        "average_precision": 0.015136387908546762,
+        "roc_auc": 0.716028055127432,
+        "retrieval": [
+          {
+            "k": 10,
+            "effective_k": 10,
+            "positives": 0,
+            "precision": 0.0,
+            "recall": 0.0
+          },
+          {
+            "k": 25,
+            "effective_k": 25,
+            "positives": 1,
+            "precision": 0.04,
+            "recall": 0.013333333333333334
+          },
+          {
+            "k": 50,
+            "effective_k": 50,
+            "positives": 1,
+            "precision": 0.02,
+            "recall": 0.013333333333333334
+          },
+          {
+            "k": 100,
+            "effective_k": 100,
+            "positives": 3,
+            "precision": 0.03,
+            "recall": 0.04
+          }
+        ],
+        "confidence_interval": null,
+        "uncertainty_note": "No per-run AP CI provided. Missing/nonfinite metrics are null; split/model SD is not a CI."
+      },
+      "fit_score_seconds": 1.0338533000003736
+    },
+    {
+      "dataset_id": "ibm-50k",
+      "tier": "50k",
+      "method": "E4",
+      "split_seed": 42,
+      "model_seed": 13,
+      "metrics": {
+        "count": 14998,
+        "positives": 75,
+        "prevalence": 0.005000666755567409,
+        "average_precision": 0.018849610452701046,
+        "roc_auc": 0.7030623869195203,
+        "retrieval": [
+          {
+            "k": 10,
+            "effective_k": 10,
+            "positives": 1,
+            "precision": 0.1,
+            "recall": 0.013333333333333334
+          },
+          {
+            "k": 25,
+            "effective_k": 25,
+            "positives": 1,
+            "precision": 0.04,
+            "recall": 0.013333333333333334
+          },
+          {
+            "k": 50,
+            "effective_k": 50,
+            "positives": 1,
+            "precision": 0.02,
+            "recall": 0.013333333333333334
+          },
+          {
+            "k": 100,
+            "effective_k": 100,
+            "positives": 1,
+            "precision": 0.01,
+            "recall": 0.013333333333333334
+          }
+        ],
+        "confidence_interval": null,
+        "uncertainty_note": "No per-run AP CI provided. Missing/nonfinite metrics are null; split/model SD is not a CI."
+      },
+      "fit_score_seconds": 1.0552839000001768
+    },
+    {
+      "dataset_id": "ibm-50k",
+      "tier": "50k",
+      "method": "E4",
+      "split_seed": 42,
+      "model_seed": 42,
+      "metrics": {
+        "count": 14998,
+        "positives": 75,
+        "prevalence": 0.005000666755567409,
+        "average_precision": 0.01489402072176908,
+        "roc_auc": 0.7064343630637272,
+        "retrieval": [
+          {
+            "k": 10,
+            "effective_k": 10,
+            "positives": 1,
+            "precision": 0.1,
+            "recall": 0.013333333333333334
+          },
+          {
+            "k": 25,
+            "effective_k": 25,
+            "positives": 1,
+            "precision": 0.04,
+            "recall": 0.013333333333333334
+          },
+          {
+            "k": 50,
+            "effective_k": 50,
+            "positives": 1,
+            "precision": 0.02,
+            "recall": 0.013333333333333334
+          },
+          {
+            "k": 100,
+            "effective_k": 100,
+            "positives": 1,
+            "precision": 0.01,
+            "recall": 0.013333333333333334
+          }
+        ],
+        "confidence_interval": null,
+        "uncertainty_note": "No per-run AP CI provided. Missing/nonfinite metrics are null; split/model SD is not a CI."
+      },
+      "fit_score_seconds": 0.9969908000002761
+    },
+    {
+      "dataset_id": "ibm-50k",
+      "tier": "50k",
+      "method": "E4",
+      "split_seed": 42,
+      "model_seed": 101,
+      "metrics": {
+        "count": 14998,
+        "positives": 75,
+        "prevalence": 0.005000666755567409,
+        "average_precision": 0.013860435604196546,
+        "roc_auc": 0.7125162500837634,
+        "retrieval": [
+          {
+            "k": 10,
+            "effective_k": 10,
+            "positives": 1,
+            "precision": 0.1,
+            "recall": 0.013333333333333334
+          },
+          {
+            "k": 25,
+            "effective_k": 25,
+            "positives": 1,
+            "precision": 0.04,
+            "recall": 0.013333333333333334
+          },
+          {
+            "k": 50,
+            "effective_k": 50,
+            "positives": 1,
+            "precision": 0.02,
+            "recall": 0.013333333333333334
+          },
+          {
+            "k": 100,
+            "effective_k": 100,
+            "positives": 1,
+            "precision": 0.01,
+            "recall": 0.013333333333333334
+          }
+        ],
+        "confidence_interval": null,
+        "uncertainty_note": "No per-run AP CI provided. Missing/nonfinite metrics are null; split/model SD is not a CI."
+      },
+      "fit_score_seconds": 1.0160981999997603
+    }
+  ],
+  "summaries": [
+    {
+      "tier": "5k",
+      "method": "E1",
+      "mean_ap": 0.09934472052396605,
+      "sample_sd_ap": 0.07293607831764105,
+      "minimum_ap": 0.057130037676304354,
+      "maximum_ap": 0.1835639620492086
+    },
+    {
+      "tier": "5k",
+      "method": "E4",
+      "mean_ap": 0.19072683056179396,
+      "sample_sd_ap": 0.003306834603796429,
+      "minimum_ap": 0.18881741749379458,
+      "maximum_ap": 0.19454523425133932
+    },
+    {
+      "tier": "50k",
+      "method": "E1",
+      "mean_ap": 0.017713267094351056,
+      "sample_sd_ap": 0.0039346287418357,
+      "minimum_ap": 0.015136387908546762,
+      "maximum_ap": 0.022242242689584614
+    },
+    {
+      "tier": "50k",
+      "method": "E4",
+      "mean_ap": 0.015868022259555557,
+      "sample_sd_ap": 0.0026333392610799872,
+      "minimum_ap": 0.013860435604196546,
+      "maximum_ap": 0.018849610452701046
+    }
+  ],
+  "pairs": [
+    {
+      "tier": "5k",
+      "method": "E1",
+      "first_model_seed": 13,
+      "second_model_seed": 42,
+      "spearman_ordinal": 0.9774198192976976,
+      "top_k": [
+        {
+          "k": 10,
+          "overlap": 0.8,
+          "jaccard": 0.6666666666666666
+        },
+        {
+          "k": 25,
+          "overlap": 0.88,
+          "jaccard": 0.7857142857142857
+        },
+        {
+          "k": 50,
+          "overlap": 0.94,
+          "jaccard": 0.8867924528301887
+        },
+        {
+          "k": 100,
+          "overlap": 0.93,
+          "jaccard": 0.8691588785046729
+        }
+      ]
+    },
+    {
+      "tier": "5k",
+      "method": "E1",
+      "first_model_seed": 13,
+      "second_model_seed": 101,
+      "spearman_ordinal": 0.9799294204130758,
+      "top_k": [
+        {
+          "k": 10,
+          "overlap": 0.8,
+          "jaccard": 0.6666666666666666
+        },
+        {
+          "k": 25,
+          "overlap": 0.88,
+          "jaccard": 0.7857142857142857
+        },
+        {
+          "k": 50,
+          "overlap": 0.96,
+          "jaccard": 0.9230769230769231
+        },
+        {
+          "k": 100,
+          "overlap": 0.96,
+          "jaccard": 0.9230769230769231
+        }
+      ]
+    },
+    {
+      "tier": "5k",
+      "method": "E1",
+      "first_model_seed": 42,
+      "second_model_seed": 101,
+      "spearman_ordinal": 0.9901394907286626,
+      "top_k": [
+        {
+          "k": 10,
+          "overlap": 0.9,
+          "jaccard": 0.8181818181818182
+        },
+        {
+          "k": 25,
+          "overlap": 0.88,
+          "jaccard": 0.7857142857142857
+        },
+        {
+          "k": 50,
+          "overlap": 0.98,
+          "jaccard": 0.9607843137254902
+        },
+        {
+          "k": 100,
+          "overlap": 0.92,
+          "jaccard": 0.8518518518518519
+        }
+      ]
+    },
+    {
+      "tier": "5k",
+      "method": "E4",
+      "first_model_seed": 13,
+      "second_model_seed": 42,
+      "spearman_ordinal": 0.9742950250200112,
+      "top_k": [
+        {
+          "k": 10,
+          "overlap": 0.9,
+          "jaccard": 0.8181818181818182
+        },
+        {
+          "k": 25,
+          "overlap": 0.92,
+          "jaccard": 0.8518518518518519
+        },
+        {
+          "k": 50,
+          "overlap": 0.88,
+          "jaccard": 0.7857142857142857
+        },
+        {
+          "k": 100,
+          "overlap": 0.89,
+          "jaccard": 0.8018018018018018
+        }
+      ]
+    },
+    {
+      "tier": "5k",
+      "method": "E4",
+      "first_model_seed": 13,
+      "second_model_seed": 101,
+      "spearman_ordinal": 0.9759459164204074,
+      "top_k": [
+        {
+          "k": 10,
+          "overlap": 0.8,
+          "jaccard": 0.6666666666666666
+        },
+        {
+          "k": 25,
+          "overlap": 0.92,
+          "jaccard": 0.8518518518518519
+        },
+        {
+          "k": 50,
+          "overlap": 0.86,
+          "jaccard": 0.7543859649122807
+        },
+        {
+          "k": 100,
+          "overlap": 0.89,
+          "jaccard": 0.8018018018018018
+        }
+      ]
+    },
+    {
+      "tier": "5k",
+      "method": "E4",
+      "first_model_seed": 42,
+      "second_model_seed": 101,
+      "spearman_ordinal": 0.9796302842801263,
+      "top_k": [
+        {
+          "k": 10,
+          "overlap": 0.8,
+          "jaccard": 0.6666666666666666
+        },
+        {
+          "k": 25,
+          "overlap": 0.88,
+          "jaccard": 0.7857142857142857
+        },
+        {
+          "k": 50,
+          "overlap": 0.78,
+          "jaccard": 0.639344262295082
+        },
+        {
+          "k": 100,
+          "overlap": 0.86,
+          "jaccard": 0.7543859649122807
+        }
+      ]
+    },
+    {
+      "tier": "50k",
+      "method": "E1",
+      "first_model_seed": 13,
+      "second_model_seed": 42,
+      "spearman_ordinal": 0.9688552922225749,
+      "top_k": [
+        {
+          "k": 10,
+          "overlap": 0.5,
+          "jaccard": 0.3333333333333333
+        },
+        {
+          "k": 25,
+          "overlap": 0.8,
+          "jaccard": 0.6666666666666666
+        },
+        {
+          "k": 50,
+          "overlap": 0.78,
+          "jaccard": 0.639344262295082
+        },
+        {
+          "k": 100,
+          "overlap": 0.72,
+          "jaccard": 0.5625
+        }
+      ]
+    },
+    {
+      "tier": "50k",
+      "method": "E1",
+      "first_model_seed": 13,
+      "second_model_seed": 101,
+      "spearman_ordinal": 0.9706135769296113,
+      "top_k": [
+        {
+          "k": 10,
+          "overlap": 0.6,
+          "jaccard": 0.42857142857142855
+        },
+        {
+          "k": 25,
+          "overlap": 0.8,
+          "jaccard": 0.6666666666666666
+        },
+        {
+          "k": 50,
+          "overlap": 0.8,
+          "jaccard": 0.6666666666666666
+        },
+        {
+          "k": 100,
+          "overlap": 0.82,
+          "jaccard": 0.6949152542372882
+        }
+      ]
+    },
+    {
+      "tier": "50k",
+      "method": "E1",
+      "first_model_seed": 42,
+      "second_model_seed": 101,
+      "spearman_ordinal": 0.9664923744100771,
+      "top_k": [
+        {
+          "k": 10,
+          "overlap": 0.6,
+          "jaccard": 0.42857142857142855
+        },
+        {
+          "k": 25,
+          "overlap": 0.88,
+          "jaccard": 0.7857142857142857
+        },
+        {
+          "k": 50,
+          "overlap": 0.84,
+          "jaccard": 0.7241379310344828
+        },
+        {
+          "k": 100,
+          "overlap": 0.71,
+          "jaccard": 0.5503875968992248
+        }
+      ]
+    },
+    {
+      "tier": "50k",
+      "method": "E4",
+      "first_model_seed": 13,
+      "second_model_seed": 42,
+      "spearman_ordinal": 0.978429657977258,
+      "top_k": [
+        {
+          "k": 10,
+          "overlap": 0.8,
+          "jaccard": 0.6666666666666666
+        },
+        {
+          "k": 25,
+          "overlap": 0.72,
+          "jaccard": 0.5625
+        },
+        {
+          "k": 50,
+          "overlap": 0.84,
+          "jaccard": 0.7241379310344828
+        },
+        {
+          "k": 100,
+          "overlap": 0.92,
+          "jaccard": 0.8518518518518519
+        }
+      ]
+    },
+    {
+      "tier": "50k",
+      "method": "E4",
+      "first_model_seed": 13,
+      "second_model_seed": 101,
+      "spearman_ordinal": 0.970817670507287,
+      "top_k": [
+        {
+          "k": 10,
+          "overlap": 0.6,
+          "jaccard": 0.42857142857142855
+        },
+        {
+          "k": 25,
+          "overlap": 0.68,
+          "jaccard": 0.5151515151515151
+        },
+        {
+          "k": 50,
+          "overlap": 0.8,
+          "jaccard": 0.6666666666666666
+        },
+        {
+          "k": 100,
+          "overlap": 0.86,
+          "jaccard": 0.7543859649122807
+        }
+      ]
+    },
+    {
+      "tier": "50k",
+      "method": "E4",
+      "first_model_seed": 42,
+      "second_model_seed": 101,
+      "spearman_ordinal": 0.9717243179041447,
+      "top_k": [
+        {
+          "k": 10,
+          "overlap": 0.7,
+          "jaccard": 0.5384615384615384
+        },
+        {
+          "k": 25,
+          "overlap": 0.72,
+          "jaccard": 0.5625
+        },
+        {
+          "k": 50,
+          "overlap": 0.8,
+          "jaccard": 0.6666666666666666
+        },
+        {
+          "k": 100,
+          "overlap": 0.93,
+          "jaccard": 0.8691588785046729
+        }
+      ]
+    }
+  ]
+}

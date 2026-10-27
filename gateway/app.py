@@ -217,6 +217,13 @@ def create_gateway_app(config: GatewayConfig = None) -> FastAPI:
                         if asset_file.is_file() and str(asset_file).startswith(str(assets_dir.resolve())):
                             return FileResponse(asset_file)
 
+                    # Defensive resolution if requested with GitHub Pages /GraphFin/ base prefix
+                    if normalized.startswith("GraphFin/"):
+                        stripped = normalized[len("GraphFin/"):]
+                        candidate = (dist_dir / stripped).resolve()
+                        if candidate.is_file() and str(candidate).startswith(str(dist_resolved)):
+                            return FileResponse(candidate)
+
                     file_path = (dist_dir / full_path).resolve()
                     if file_path.is_file() and str(file_path).startswith(str(dist_resolved)):
                         return FileResponse(file_path)

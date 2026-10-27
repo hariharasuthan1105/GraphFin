@@ -1,0 +1,24 @@
+{
+  "status": "exploratory",
+  "provenance_status": "partially_verified",
+  "artifact_id": "diagnostics",
+  "artifact_sha256": "289505062c7c70afe0d92b4b79eae035f32de3ee16934dfa6bb9cbd4bf47726c",
+  "limitations": [
+    "IBM upstream account labels are partially verified; features are transductive.",
+    "Reproducibility is not independent external validation.",
+    "CREST detection and explanation superiority are unsupported."
+  ],
+  "diagnostic_id": "crest-013",
+  "account_token": "acct_397d2eb65459c2ad96965c33",
+  "method": "B",
+  "family": "temporal",
+  "available": true,
+  "valid": true,
+  "reason": null,
+  "baseline_score": -0.31540955124866077,
+  "intervened_score": -0.3135652668844447,
+  "signed_fidelity": -0.0018442843642160756,
+  "omitted_count": 2,
+  "omitted_fraction": 0.125,
+  "omitted_amount_fraction": 0.02542314239450849
+}

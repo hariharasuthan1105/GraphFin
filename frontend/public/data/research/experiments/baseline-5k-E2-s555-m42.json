@@ -1,0 +1,78 @@
+{
+  "status": "verified",
+  "provenance_status": "partially_verified",
+  "artifact_id": "rows",
+  "artifact_sha256": "83531c9873feac36ef78c0237a9c3dab6f0162cdbb84b542caae357a3cbbd4a4",
+  "limitations": [
+    "IBM upstream account labels are partially verified; features are transductive.",
+    "Reproducibility is not independent external validation.",
+    "CREST detection and explanation superiority are unsupported."
+  ],
+  "experiment_id": "baseline-5k-E2-s555-m42",
+  "dataset_id": "ibm-5k",
+  "tier": "5k",
+  "method": "E2",
+  "version": "isolation-forest-raw-v2",
+  "feature_names": [
+    "in_degree",
+    "out_degree",
+    "total_degree",
+    "weighted_in_degree",
+    "weighted_out_degree",
+    "betweenness_centrality",
+    "transaction_count",
+    "total_sent",
+    "total_received",
+    "net_flow",
+    "average_transaction_amount",
+    "maximum_transaction_amount",
+    "unique_receivers",
+    "unique_senders"
+  ],
+  "split_seed": 555,
+  "model_seed": 42,
+  "population_identity": "11873f131bb36e0adb2e2fd9e5e9158758637afd59f3be9dbdcebdf9af3293c2",
+  "dataset_sha256": "622d421b8ba1463ac0acc423f77fbf8a5c5604e5d2b1ea07b80e13dfb5a0a3f2",
+  "label_sha256": "2a417d2c2c92a8f8cd4c135f3a2e66a5feba6fcfc67cfd9b2e5b5da215a154c1",
+  "train_sha256": "c44a7176a3d720ede5b14e08f63564e188c70d02bf0c3771ba2cf573a71ac59f",
+  "test_sha256": "840156282c20fbdfecd09c01cb7a77eb7a1300497aa1f40de4ce335926aad97e",
+  "metrics": {
+    "count": 1500,
+    "positives": 6,
+    "prevalence": 0.004,
+    "average_precision": 0.00908301257075456,
+    "roc_auc": 0.6806671128960284,
+    "retrieval": [
+      {
+        "k": 10,
+        "effective_k": 10,
+        "positives": 0,
+        "precision": 0.0,
+        "recall": 0.0
+      },
+      {
+        "k": 25,
+        "effective_k": 25,
+        "positives": 0,
+        "precision": 0.0,
+        "recall": 0.0
+      },
+      {
+        "k": 50,
+        "effective_k": 50,
+        "positives": 0,
+        "precision": 0.0,
+        "recall": 0.0
+      },
+      {
+        "k": 100,
+        "effective_k": 100,
+        "positives": 0,
+        "precision": 0.0,
+        "recall": 0.0
+      }
+    ],
+    "confidence_interval": null,
+    "uncertainty_note": "No per-run AP CI provided. Missing/nonfinite metrics are null; split/model SD is not a CI."
+  }
+}

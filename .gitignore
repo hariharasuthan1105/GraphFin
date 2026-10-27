@@ -60,6 +60,8 @@ data/results/cross_dataset/archive/
 !data/results/permutation_and_casestudy/**
 !data/results/final_report/
 !data/results/final_report/**
+!data/results/v2/
+!data/results/v2/**
 
 # Temporary / Log files
 scratch/

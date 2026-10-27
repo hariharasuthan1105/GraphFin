@@ -1,4 +1,13 @@
 import { useEffect, useRef, useState } from "react";
+import {
+  forceSimulation,
+  forceLink,
+  forceManyBody,
+  forceCenter,
+  forceCollide,
+  type SimulationNodeDatum,
+  type SimulationLinkDatum,
+} from "d3-force";
 import type { AccountNode, TransferEdge } from "./types";
 
 interface Props {
@@ -9,21 +18,21 @@ interface Props {
   maxRenderNodes?: number;
 }
 
-interface SimNode {
+interface SimNode extends SimulationNodeDatum {
   id: string;
   x: number;
   y: number;
-  vx: number;
-  vy: number;
   radius: number;
   score: number;
+  inDegree: number;
+  outDegree: number;
   isHighRisk: boolean;
   patterns: string[];
 }
 
-interface SimEdge {
-  source: string;
-  target: string;
+interface SimEdge extends SimulationLinkDatum<SimNode> {
+  source: string | SimNode;
+  target: string | SimNode;
   amount: number;
   isReciprocal?: boolean;
 }
@@ -41,91 +50,104 @@ export function AnalysisGraphCanvas({
   const [hoveredNode, setHoveredNode] = useState<SimNode | null>(null);
   const [zoom, setZoom] = useState(1.0);
 
-  // Filter top most active / anomalous nodes to ensure crisp performance
+  // Compute collision-aware d3-force layout with automatic fit-to-view bounding
   useEffect(() => {
     const activeNodes = accounts.slice(0, maxRenderNodes);
     const activeIds = new Set(activeNodes.map((a) => a.id));
 
-    // Width and height of virtual canvas
+    // Width and height of canvas viewport
     const W = 800;
     const H = 550;
     const cx = W / 2;
     const cy = H / 2;
 
     const simNodes: SimNode[] = activeNodes.map((acc, idx) => {
-      // Initialize in concentric ring based on anomaly score
       const angle = (idx / activeNodes.length) * 2 * Math.PI;
-      const dist = (1 - acc.anomalyScore * 0.6) * 180 + 30;
+      const dist = 140 + (1 - acc.anomalyScore * 0.5) * 80;
       return {
         id: acc.id,
-        x: cx + Math.cos(angle) * dist + (Math.random() - 0.5) * 20,
-        y: cy + Math.sin(angle) * dist + (Math.random() - 0.5) * 20,
-        vx: 0,
-        vy: 0,
-        radius: Math.max(5, Math.min(14, 5 + Math.log10(Math.max(1, acc.totalDegree)) * 4)),
+        x: cx + Math.cos(angle) * dist,
+        y: cy + Math.sin(angle) * dist,
+        radius: Math.max(6, Math.min(16, 6 + Math.log10(Math.max(1, acc.totalDegree)) * 4)),
         score: acc.anomalyScore,
+        inDegree: acc.inDegree,
+        outDegree: acc.outDegree,
         isHighRisk: acc.anomalyScore >= 0.45 || acc.patterns.length > 0,
         patterns: acc.patterns,
       };
     });
 
-    const activeEdges = edges
+    const activeEdges: SimEdge[] = edges
       .filter((e) => activeIds.has(e.source) && activeIds.has(e.target))
-      .slice(0, 150);
+      .slice(0, 150)
+      .map((e) => ({
+        source: e.source,
+        target: e.target,
+        amount: e.amount,
+        isReciprocal: e.isReciprocal,
+      }));
 
-    // Run simple spring relaxation
-    const nodeMap = new Map(simNodes.map((n) => [n.id, n]));
-    for (let step = 0; step < 60; step++) {
-      // Edge spring pull
-      for (const e of activeEdges) {
-        const u = nodeMap.get(e.source);
-        const v = nodeMap.get(e.target);
-        if (u && v) {
-          const dx = v.x - u.x;
-          const dy = v.y - u.y;
-          const dist = Math.max(1, Math.hypot(dx, dy));
-          const force = (dist - 80) * 0.02;
-          const fx = (dx / dist) * force;
-          const fy = (dy / dist) * force;
-          u.x += fx;
-          u.y += fy;
-          v.x -= fx;
-          v.y -= fy;
-        }
-      }
+    // Run d3-force simulation with strong collision avoidance (+24px buffer)
+    const simulation = forceSimulation<SimNode>(simNodes)
+      .force(
+        "link",
+        forceLink<SimNode, SimEdge>(activeEdges)
+          .id((d) => d.id)
+          .distance(120),
+      )
+      .force("charge", forceManyBody().strength(-350).distanceMax(550))
+      .force(
+        "collide",
+        forceCollide<SimNode>()
+          .radius((d) => d.radius + 24)
+          .iterations(3),
+      )
+      .force("center", forceCenter(cx, cy))
+      .stop();
 
-      // Node electrostatic repulsion
-      for (let i = 0; i < simNodes.length; i++) {
-        for (let j = i + 1; j < simNodes.length; j++) {
-          const u = simNodes[i];
-          const v = simNodes[j];
-          const dx = v.x - u.x;
-          const dy = v.y - u.y;
-          const distSq = dx * dx + dy * dy || 1;
-          if (distSq < 15000) {
-            const force = 300 / distSq;
-            const dist = Math.sqrt(distSq);
-            u.x -= (dx / dist) * force;
-            u.y -= (dy / dist) * force;
-            v.x += (dx / dist) * force;
-            v.y += (dy / dist) * force;
-          }
-        }
-      }
+    // Advance 180 ticks synchronously for a stable, collision-free layout
+    for (let i = 0; i < 180; ++i) {
+      simulation.tick();
+    }
 
-      // Center gravity
+    // Auto-fit to view: calculate bounding box and center within 800x550
+    if (simNodes.length > 0) {
+      let minX = Infinity;
+      let maxX = -Infinity;
+      let minY = Infinity;
+      let maxY = -Infinity;
+
       for (const n of simNodes) {
-        n.x += (cx - n.x) * 0.015;
-        n.y += (cy - n.y) * 0.015;
+        if (n.x < minX) minX = n.x;
+        if (n.x > maxX) maxX = n.x;
+        if (n.y < minY) minY = n.y;
+        if (n.y > maxY) maxY = n.y;
+      }
+
+      const padding = 50;
+      const spanX = Math.max(100, maxX - minX);
+      const spanY = Math.max(100, maxY - minY);
+      const scaleX = (W - padding * 2) / spanX;
+      const scaleY = (H - padding * 2) / spanY;
+      const fitScale = Math.min(1.0, Math.min(scaleX, scaleY));
+
+      const midX = (minX + maxX) / 2;
+      const midY = (minY + maxY) / 2;
+
+      for (const n of simNodes) {
+        n.x = cx + (n.x - midX) * fitScale;
+        n.y = cy + (n.y - midY) * fitScale;
       }
     }
 
     setNodes(simNodes);
     setLinks(activeEdges);
+    setZoom(1.0); // Reset to crisp 100% initial zoom
   }, [accounts, edges, maxRenderNodes]);
 
   return (
     <div className="analysis-graph-container" ref={containerRef} style={{ position: "relative" }}>
+      {/* Horizontal Graph Controls Bar */}
       <div className="graph-controls-bar">
         <span className="eyebrow technical">
           INTERACTIVE TOPOLOGY LENS ({nodes.length} ACCOUNTS / {links.length} TRANSFERS)
@@ -134,7 +156,7 @@ export function AnalysisGraphCanvas({
           <button
             type="button"
             className="zoom-btn"
-            onClick={() => setZoom((z) => Math.max(0.6, z - 0.2))}
+            onClick={() => setZoom((z) => Math.max(0.6, Math.round((z - 0.2) * 10) / 10))}
             title="Zoom out"
           >
             -
@@ -143,7 +165,7 @@ export function AnalysisGraphCanvas({
           <button
             type="button"
             className="zoom-btn"
-            onClick={() => setZoom((z) => Math.min(2.0, z + 0.2))}
+            onClick={() => setZoom((z) => Math.min(2.0, Math.round((z + 0.2) * 10) / 10))}
             title="Zoom in"
           >
             +
@@ -152,7 +174,7 @@ export function AnalysisGraphCanvas({
             type="button"
             className="zoom-btn reset"
             onClick={() => setZoom(1.0)}
-            title="Reset zoom"
+            title="Reset to 100% zoom"
           >
             RESET
           </button>
@@ -198,15 +220,15 @@ export function AnalysisGraphCanvas({
         <g transform={`translate(${400 * (1 - zoom)}, ${275 * (1 - zoom)}) scale(${zoom})`}>
           {/* Edges */}
           {links.map((link, idx) => {
-            const u = nodes.find((n) => n.id === link.source);
-            const v = nodes.find((n) => n.id === link.target);
+            const u = typeof link.source === "object" ? link.source : nodes.find((n) => n.id === link.source);
+            const v = typeof link.target === "object" ? link.target : nodes.find((n) => n.id === link.target);
             if (!u || !v) return null;
             const isHighRisk = u.isHighRisk || v.isHighRisk || link.isReciprocal;
             const isSelected = selectedNode === u.id || selectedNode === v.id;
 
             return (
               <line
-                key={`${link.source}-${link.target}-${idx}`}
+                key={`link-${u.id}-${v.id}-${idx}`}
                 x1={u.x}
                 y1={u.y}
                 x2={v.x}
@@ -218,12 +240,12 @@ export function AnalysisGraphCanvas({
                     ? link.isReciprocal
                       ? "#e05252"
                       : "#842d35"
-                    : "#303034"
+                    : "#2a2a2e"
                 }
                 strokeWidth={isSelected ? 2 : link.isReciprocal ? 1.8 : 1}
-                strokeDasharray={link.isReciprocal ? "3,3" : undefined}
+                strokeDasharray={link.isReciprocal ? "4,4" : undefined}
                 markerEnd={isHighRisk ? "url(#arrow-risk)" : "url(#arrow)"}
-                opacity={0.75}
+                opacity={isSelected ? 1.0 : isHighRisk ? 0.75 : 0.45}
               />
             );
           })}
@@ -237,47 +259,83 @@ export function AnalysisGraphCanvas({
             if (n.isHighRisk) {
               fillColor = n.score >= 0.7 ? "#e05252" : "#b44a50";
             } else if (n.score < 0.2) {
-              fillColor = "#2a2a2e";
+              fillColor = "#26262a";
             }
 
             return (
               <g
-                key={n.id}
+                key={`node-${n.id}`}
                 transform={`translate(${n.x}, ${n.y})`}
                 onClick={() => onSelectNode(n.id)}
                 onMouseEnter={() => setHoveredNode(n)}
                 onMouseLeave={() => setHoveredNode(null)}
                 style={{ cursor: "pointer" }}
               >
-                {/* Glow ring for selected or high risk */}
-                {(isSelected || n.isHighRisk) && (
+                {/* Outer Glow Ring for Selected Node */}
+                {isSelected && (
+                  <>
+                    <circle
+                      r={n.radius + 9}
+                      fill="none"
+                      stroke="#ffffff"
+                      strokeWidth={1.5}
+                      strokeDasharray="4,4"
+                      opacity={0.85}
+                    />
+                    <circle
+                      r={n.radius + 5}
+                      fill="none"
+                      stroke="#ffffff"
+                      strokeWidth={2}
+                      opacity={0.95}
+                    />
+                  </>
+                )}
+
+                {/* Subtle Warning Halo for High-Risk (when not selected) */}
+                {!isSelected && n.isHighRisk && (
                   <circle
-                    r={n.radius + (isSelected ? 6 : 4)}
+                    r={n.radius + 4}
                     fill="none"
-                    stroke={isSelected ? "#ffffff" : "#c04b52"}
-                    strokeWidth={isSelected ? 2 : 1}
-                    opacity={isSelected ? 0.9 : 0.4}
+                    stroke="#c04b52"
+                    strokeWidth={1}
+                    opacity={0.5}
                   />
                 )}
 
+                {/* Main Node Body */}
                 <circle
                   r={n.radius}
                   fill={fillColor}
                   stroke={isSelected ? "#ffffff" : n.isHighRisk ? "#e05252" : "#45454a"}
-                  strokeWidth={isSelected ? 2 : 1}
+                  strokeWidth={isSelected ? 2.5 : 1}
                 />
 
-                {/* Account label on high risk or selected */}
-                {(isSelected || isHovered || n.isHighRisk) && (
-                  <text
-                    x={n.radius + 6}
-                    y={4}
-                    fill={isSelected ? "#ffffff" : n.isHighRisk ? "#f5f5f5" : "#a6a6a6"}
-                    fontSize={10}
-                    fontFamily="IBM Plex Mono, monospace"
-                  >
-                    {n.id.length > 14 ? n.id.slice(0, 12) + "…" : n.id}
-                  </text>
+                {/* Legible Badge Label: ONLY rendered on Selected or Hovered nodes */}
+                {(isSelected || isHovered) && (
+                  <g transform={`translate(${n.radius + 8}, -11)`}>
+                    <rect
+                      x={-4}
+                      y={-2}
+                      width={Math.max(65, n.id.length * 7.2 + 12)}
+                      height={22}
+                      fill="#101012"
+                      stroke={isSelected ? "#ffffff" : "#b44a50"}
+                      strokeWidth={1}
+                      rx={2}
+                      opacity={0.95}
+                    />
+                    <text
+                      x={3}
+                      y={13}
+                      fill="#ffffff"
+                      fontSize={10}
+                      fontFamily="IBM Plex Mono, monospace"
+                      fontWeight={600}
+                    >
+                      {n.id}
+                    </text>
+                  </g>
                 )}
               </g>
             );
@@ -285,31 +343,22 @@ export function AnalysisGraphCanvas({
         </g>
       </svg>
 
-      {/* Floating Hover Tooltip */}
+      {/* Floating Hover Tooltip HUD */}
       {hoveredNode && (
-        <div
-          style={{
-            position: "absolute",
-            bottom: 16,
-            left: 16,
-            background: "#171719",
-            border: "1px solid #303034",
-            padding: "8px 12px",
-            borderRadius: 2,
-            fontFamily: "IBM Plex Mono, monospace",
-            fontSize: 11,
-            pointerEvents: "none",
-            zIndex: 10,
-          }}
-        >
-          <div style={{ color: hoveredNode.isHighRisk ? "#e05252" : "#f5f5f5", fontWeight: 600 }}>
-            Account: {hoveredNode.id}
+        <div className="graph-hud-tooltip">
+          <div className="graph-hud-title">ACCOUNT: {hoveredNode.id}</div>
+          <div className="graph-hud-row">
+            <span>Anomaly Score:</span>
+            <span style={{ color: hoveredNode.isHighRisk ? "#e05252" : "#4ade80" }}>
+              {hoveredNode.score.toFixed(3)}
+            </span>
           </div>
-          <div style={{ color: "#a6a6a6" }}>
-            Anomaly Score: <span style={{ color: "#fff" }}>{hoveredNode.score.toFixed(3)}</span>
+          <div className="graph-hud-row">
+            <span>Connections:</span>
+            <span>{hoveredNode.inDegree} in / {hoveredNode.outDegree} out</span>
           </div>
           {hoveredNode.patterns.length > 0 && (
-            <div style={{ color: "#b44a50", marginTop: 4 }}>
+            <div className="graph-hud-patterns">
               Patterns: {hoveredNode.patterns.join(", ")}
             </div>
           )}

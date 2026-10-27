@@ -1,0 +1,141 @@
+{
+  "status": "verified",
+  "provenance_status": "partially_verified",
+  "artifact_id": "scores-50k-555",
+  "artifact_sha256": "db5d84fde2db27b08ceb9e3f77ab4c1b69c7ff97dfe14df214cfe50623d2a34d",
+  "limitations": [
+    "IBM upstream account labels are partially verified; features are transductive.",
+    "Reproducibility is not independent external validation.",
+    "CREST detection and explanation superiority are unsupported."
+  ],
+  "items": [
+    {
+      "rank": 1,
+      "account_token": "acct_5db1fcf545adaf65814856e3",
+      "anomaly_score": 0.1160128641702517
+    },
+    {
+      "rank": 2,
+      "account_token": "acct_067d9866c57e476769b098a4",
+      "anomaly_score": 0.1144435778989843
+    },
+    {
+      "rank": 3,
+      "account_token": "acct_5ebec75c7c05f658f05e3091",
+      "anomaly_score": 0.0622808384596899
+    },
+    {
+      "rank": 4,
+      "account_token": "acct_c9c0c57f5ed835d3c3af83a0",
+      "anomaly_score": 0.061311915044553356
+    },
+    {
+      "rank": 5,
+      "account_token": "acct_ace273cf36cb7e7b585c06d4",
+      "anomaly_score": 0.05544357942777156
+    },
+    {
+      "rank": 6,
+      "account_token": "acct_2cab50047ff549dbc1f8cf70",
+      "anomaly_score": 0.05282116928933178
+    },
+    {
+      "rank": 7,
+      "account_token": "acct_5223421dd0b2b5bdd24e7005",
+      "anomaly_score": 0.04631721798929345
+    },
+    {
+      "rank": 8,
+      "account_token": "acct_23e3ef13e777928de36c4124",
+      "anomaly_score": 0.04456102057700306
+    },
+    {
+      "rank": 9,
+      "account_token": "acct_ce03f3e83bce587ada168a53",
+      "anomaly_score": 0.037710804497329
+    },
+    {
+      "rank": 10,
+      "account_token": "acct_b5dac2c7a5f5cfa224da20f3",
+      "anomaly_score": 0.03605195232851399
+    },
+    {
+      "rank": 11,
+      "account_token": "acct_bf46a9da2e5305788af57bae",
+      "anomaly_score": 0.03316269960657392
+    },
+    {
+      "rank": 12,
+      "account_token": "acct_a297633e5b8ebe77b3bd8426",
+      "anomaly_score": 0.026518764402505446
+    },
+    {
+      "rank": 13,
+      "account_token": "acct_9c3267def015f76e01a5260d",
+      "anomaly_score": 0.024522052439527986
+    },
+    {
+      "rank": 14,
+      "account_token": "acct_a8d1fd5ebd2415bbdb4e29a9",
+      "anomaly_score": 0.024453561692871495
+    },
+    {
+      "rank": 15,
+      "account_token": "acct_d31447cffbcbb8f2af141261",
+      "anomaly_score": 0.02387817633647793
+    },
+    {
+      "rank": 16,
+      "account_token": "acct_2f016c397c2bdc0c866254a9",
+      "anomaly_score": 0.02128010339166375
+    },
+    {
+      "rank": 17,
+      "account_token": "acct_c7a74f52e773632cd68a72a0",
+      "anomaly_score": 0.018545947086264225
+    },
+    {
+      "rank": 18,
+      "account_token": "acct_dff5f0497264aba0046115a9",
+      "anomaly_score": 0.01789257552607415
+    },
+    {
+      "rank": 19,
+      "account_token": "acct_ea9ce23f687774333b1e02b8",
+      "anomaly_score": 0.014702830142981016
+    },
+    {
+      "rank": 20,
+      "account_token": "acct_2587e31ba0aa61cc87e46a11",
+      "anomaly_score": 0.014493145465663382
+    },
+    {
+      "rank": 21,
+      "account_token": "acct_7356da70a6844332020447db",
+      "anomaly_score": 0.0142479025596699
+    },
+    {
+      "rank": 22,
+      "account_token": "acct_3ea32e95886f76d7248ae533",
+      "anomaly_score": 0.014143826897126566
+    },
+    {
+      "rank": 23,
+      "account_token": "acct_1e59f98a26004f076338ab74",
+      "anomaly_score": 0.013053139276843817
+    },
+    {
+      "rank": 24,
+      "account_token": "acct_ab69d8abb0863b255f7f157a",
+      "anomaly_score": 0.012884965139482785
+    },
+    {
+      "rank": 25,
+      "account_token": "acct_fa3a17f381fc4bbeac73665c",
+      "anomaly_score": 0.010969305000380736
+    }
+  ],
+  "total": 14998,
+  "page": 1,
+  "page_size": 25
+}

@@ -1,0 +1,33 @@
+{
+  "status": "verified",
+  "provenance_status": "partially_verified",
+  "artifact_id": "datasets",
+  "artifact_sha256": "c8d1b11e9b309a97f6dec1c5dc862652e57c16eb80c231ae8b4af29bcd8d01ad",
+  "limitations": [
+    "IBM upstream account labels are partially verified; features are transductive.",
+    "Reproducibility is not independent external validation.",
+    "CREST detection and explanation superiority are unsupported."
+  ],
+  "dataset_id": "ibm-50k",
+  "name": "IBM AML 50k",
+  "version": "ibm-50k-supplied-v1",
+  "dataset_type": "synthetic",
+  "tier": "50k",
+  "accounts": 49992,
+  "transactions": 353850,
+  "positives": 249,
+  "negatives": 49743,
+  "prevalence": 0.004980796927508402,
+  "label_definition": "ibm-50k-retained-involvement-v1",
+  "label_sets": [
+    {
+      "identity": "ibm-50k-retained-involvement-v1",
+      "sha256": "d007bb2f244350b7d9b2d547929bb5c50c4e6a5a6dc6cef94b14b90db9becdab",
+      "accounts": 50000,
+      "positives": 249
+    }
+  ],
+  "label_disagreements": null,
+  "transaction_sha256": "9bed6503841db5cf47f48cad182d39d6a5a6bab142fb267b338050e141f7b45f",
+  "time_semantics": "Synthetic calendar timestamps; retrospective full-observation involvement."
+}

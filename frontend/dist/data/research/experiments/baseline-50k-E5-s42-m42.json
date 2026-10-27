@@ -1,0 +1,68 @@
+{
+  "status": "verified",
+  "provenance_status": "partially_verified",
+  "artifact_id": "rows",
+  "artifact_sha256": "83531c9873feac36ef78c0237a9c3dab6f0162cdbb84b542caae357a3cbbd4a4",
+  "limitations": [
+    "IBM upstream account labels are partially verified; features are transductive.",
+    "Reproducibility is not independent external validation.",
+    "CREST detection and explanation superiority are unsupported."
+  ],
+  "experiment_id": "baseline-50k-E5-s42-m42",
+  "dataset_id": "ibm-50k",
+  "tier": "50k",
+  "method": "E5",
+  "version": "isolation-forest-raw-v2",
+  "feature_names": [
+    "egonet_node_count",
+    "egonet_edge_count",
+    "egonet_density",
+    "circular_flow_indicator"
+  ],
+  "split_seed": 42,
+  "model_seed": 42,
+  "population_identity": "af1717c99e31be8c18766435526a5b8043e831736017ac4390dbb8f78f42af5e",
+  "dataset_sha256": "9bed6503841db5cf47f48cad182d39d6a5a6bab142fb267b338050e141f7b45f",
+  "label_sha256": "d007bb2f244350b7d9b2d547929bb5c50c4e6a5a6dc6cef94b14b90db9becdab",
+  "train_sha256": "1c0304adba060fdda247acb44f37562c6a5e22709c41b7307141a1e57feb60cc",
+  "test_sha256": "c163ac77250b013afb1d6fe664c093a0277dcd99030e331b2aeaec4948e2b409",
+  "metrics": {
+    "count": 14998,
+    "positives": 75,
+    "prevalence": 0.005000666755567409,
+    "average_precision": 0.009942449306631197,
+    "roc_auc": 0.5605579753847528,
+    "retrieval": [
+      {
+        "k": 10,
+        "effective_k": 10,
+        "positives": 0,
+        "precision": 0.0,
+        "recall": 0.0
+      },
+      {
+        "k": 25,
+        "effective_k": 25,
+        "positives": 1,
+        "precision": 0.04,
+        "recall": 0.013333333333333334
+      },
+      {
+        "k": 50,
+        "effective_k": 50,
+        "positives": 3,
+        "precision": 0.06,
+        "recall": 0.04
+      },
+      {
+        "k": 100,
+        "effective_k": 100,
+        "positives": 6,
+        "precision": 0.06,
+        "recall": 0.08
+      }
+    ],
+    "confidence_interval": null,
+    "uncertainty_note": "No per-run AP CI provided. Missing/nonfinite metrics are null; split/model SD is not a CI."
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "status": "incomplete",
+  "provenance_status": "partially_verified",
+  "artifact_id": null,
+  "artifact_sha256": null,
+  "limitations": [
+    "Original intervention benchmark lacks completion; no detector metrics available."
+  ],
+  "experiment_id": "phase5-e6-incomplete",
+  "dataset_id": "ibm-5k",
+  "tier": "5k",
+  "method": "E6_CREST",
+  "version": "e6-crest-frozen-e4-v1",
+  "feature_names": [],
+  "split_seed": null,
+  "model_seed": null,
+  "population_identity": null,
+  "dataset_sha256": null,
+  "label_sha256": null,
+  "train_sha256": null,
+  "test_sha256": null,
+  "metrics": null
+}

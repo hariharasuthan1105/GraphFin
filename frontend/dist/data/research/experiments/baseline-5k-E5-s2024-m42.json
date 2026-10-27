@@ -1,0 +1,68 @@
+{
+  "status": "verified",
+  "provenance_status": "partially_verified",
+  "artifact_id": "rows",
+  "artifact_sha256": "83531c9873feac36ef78c0237a9c3dab6f0162cdbb84b542caae357a3cbbd4a4",
+  "limitations": [
+    "IBM upstream account labels are partially verified; features are transductive.",
+    "Reproducibility is not independent external validation.",
+    "CREST detection and explanation superiority are unsupported."
+  ],
+  "experiment_id": "baseline-5k-E5-s2024-m42",
+  "dataset_id": "ibm-5k",
+  "tier": "5k",
+  "method": "E5",
+  "version": "isolation-forest-raw-v2",
+  "feature_names": [
+    "egonet_node_count",
+    "egonet_edge_count",
+    "egonet_density",
+    "circular_flow_indicator"
+  ],
+  "split_seed": 2024,
+  "model_seed": 42,
+  "population_identity": "c041609f4450033e8990dedc00faa37de837723c95668aa125960b1003c1f5c1",
+  "dataset_sha256": "622d421b8ba1463ac0acc423f77fbf8a5c5604e5d2b1ea07b80e13dfb5a0a3f2",
+  "label_sha256": "2a417d2c2c92a8f8cd4c135f3a2e66a5feba6fcfc67cfd9b2e5b5da215a154c1",
+  "train_sha256": "c8cb0933f3af316e0da1adac7337443edd3fbe68f0fa0d2ce2881b84828d97fd",
+  "test_sha256": "b460d196c0f7500583e3e6f87a2950e882508075b839e09cc2b929d90648ab63",
+  "metrics": {
+    "count": 1500,
+    "positives": 6,
+    "prevalence": 0.004,
+    "average_precision": 0.004,
+    "roc_auc": 0.49096385542168675,
+    "retrieval": [
+      {
+        "k": 10,
+        "effective_k": 10,
+        "positives": 0,
+        "precision": 0.0,
+        "recall": 0.0
+      },
+      {
+        "k": 25,
+        "effective_k": 25,
+        "positives": 0,
+        "precision": 0.0,
+        "recall": 0.0
+      },
+      {
+        "k": 50,
+        "effective_k": 50,
+        "positives": 0,
+        "precision": 0.0,
+        "recall": 0.0
+      },
+      {
+        "k": 100,
+        "effective_k": 100,
+        "positives": 1,
+        "precision": 0.01,
+        "recall": 0.16666666666666666
+      }
+    ],
+    "confidence_interval": null,
+    "uncertainty_note": "No per-run AP CI provided. Missing/nonfinite metrics are null; split/model SD is not a CI."
+  }
+}

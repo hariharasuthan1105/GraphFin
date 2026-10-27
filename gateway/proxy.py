@@ -16,7 +16,7 @@ ALLOWED_ROUTE_PATTERN = re.compile(
     r"^/api/v1/("
     r"health|"
     r"research/overview|"
-    r"research/datasets|"
+    r"research/datasets(?:/[a-zA-Z0-9_-]+)?|"
     r"research/experiments(?:/[a-zA-Z0-9_-]+(?:/(metrics|rankings|provenance))?)?|"
     r"research/comparisons|"
     r"research/reproducibility|"

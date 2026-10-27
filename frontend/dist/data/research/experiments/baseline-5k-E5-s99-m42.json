@@ -1,0 +1,68 @@
+{
+  "status": "verified",
+  "provenance_status": "partially_verified",
+  "artifact_id": "rows",
+  "artifact_sha256": "83531c9873feac36ef78c0237a9c3dab6f0162cdbb84b542caae357a3cbbd4a4",
+  "limitations": [
+    "IBM upstream account labels are partially verified; features are transductive.",
+    "Reproducibility is not independent external validation.",
+    "CREST detection and explanation superiority are unsupported."
+  ],
+  "experiment_id": "baseline-5k-E5-s99-m42",
+  "dataset_id": "ibm-5k",
+  "tier": "5k",
+  "method": "E5",
+  "version": "isolation-forest-raw-v2",
+  "feature_names": [
+    "egonet_node_count",
+    "egonet_edge_count",
+    "egonet_density",
+    "circular_flow_indicator"
+  ],
+  "split_seed": 99,
+  "model_seed": 42,
+  "population_identity": "1a2985b5852cd2beb3760502d3b2995357abc011ab71d31af30f17ee370e6bdf",
+  "dataset_sha256": "622d421b8ba1463ac0acc423f77fbf8a5c5604e5d2b1ea07b80e13dfb5a0a3f2",
+  "label_sha256": "2a417d2c2c92a8f8cd4c135f3a2e66a5feba6fcfc67cfd9b2e5b5da215a154c1",
+  "train_sha256": "352a35d2006b599dfe95e9cdb66902018baf2f91a0a28a97f515472be4cb74d2",
+  "test_sha256": "ec2f330a829f83814f148e3a2993152fd3a73e826b3f11d40cae67741455e59e",
+  "metrics": {
+    "count": 1500,
+    "positives": 6,
+    "prevalence": 0.004,
+    "average_precision": 0.004,
+    "roc_auc": 0.4896251673360107,
+    "retrieval": [
+      {
+        "k": 10,
+        "effective_k": 10,
+        "positives": 0,
+        "precision": 0.0,
+        "recall": 0.0
+      },
+      {
+        "k": 25,
+        "effective_k": 25,
+        "positives": 0,
+        "precision": 0.0,
+        "recall": 0.0
+      },
+      {
+        "k": 50,
+        "effective_k": 50,
+        "positives": 0,
+        "precision": 0.0,
+        "recall": 0.0
+      },
+      {
+        "k": 100,
+        "effective_k": 100,
+        "positives": 0,
+        "precision": 0.0,
+        "recall": 0.0
+      }
+    ],
+    "confidence_interval": null,
+    "uncertainty_note": "No per-run AP CI provided. Missing/nonfinite metrics are null; split/model SD is not a CI."
+  }
+}

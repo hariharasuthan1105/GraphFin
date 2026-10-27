@@ -1,0 +1,63 @@
+{
+  "status": "verified",
+  "provenance_status": "partially_verified",
+  "artifact_id": "limitations",
+  "artifact_sha256": "9313c7f1c64e638e24e63f73f0d317dbac76167656dfd81bca1e2f3c32373282",
+  "limitations": [
+    "IBM upstream account labels are partially verified; features are transductive.",
+    "Reproducibility is not independent external validation.",
+    "CREST detection and explanation superiority are unsupported."
+  ],
+  "items": [
+    {
+      "topic": "IBM labels",
+      "assessment": "PARTIALLY",
+      "description": "Byte identity/counts/alignment verified; raw laundering flags absent"
+    },
+    {
+      "topic": "PaySim",
+      "assessment": "NO",
+      "description": "774/2606 positives;1832 disagreements; raw generation evidence absent"
+    },
+    {
+      "topic": "External validation",
+      "assessment": "NO",
+      "description": "Same supplied synthetic subsets; replay is not external validation"
+    },
+    {
+      "topic": "Model randomness",
+      "assessment": "PARTIALLY",
+      "description": "Three seeds; fixed split42; E1/E4 only"
+    },
+    {
+      "topic": "Graph construction",
+      "assessment": "PARTIALLY",
+      "description": "Full-observation transductive; not prospective"
+    },
+    {
+      "topic": "Uncertainty",
+      "assessment": "PARTIALLY",
+      "description": "Graph-dependent accounts/overlapping splits; SD not CI"
+    },
+    {
+      "topic": "CREST superiority",
+      "assessment": "NO",
+      "description": "Ranking stopped;12 compatible fidelity ties"
+    },
+    {
+      "topic": "Feature mechanisms",
+      "assessment": "PARTIALLY",
+      "description": "Redundant columns; no deduplication causal ablation"
+    },
+    {
+      "topic": "Scalability",
+      "assessment": "PARTIALLY",
+      "description": "Measured baseline replay; broad interventions exceed projected budget"
+    },
+    {
+      "topic": "Release permissions",
+      "assessment": "PARTIALLY",
+      "description": "Dataset redistribution license not authenticated"
+    }
+  ]
+}

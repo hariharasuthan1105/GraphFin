@@ -1,0 +1,39 @@
+{
+  "status": "verified",
+  "provenance_status": "unresolved",
+  "artifact_id": "paysim",
+  "artifact_sha256": "9f836aeb986d866a767739ad4a599c99461b45c0c85606142b8c9e351b8801d3",
+  "limitations": [
+    "IBM upstream account labels are partially verified; features are transductive.",
+    "Reproducibility is not independent external validation.",
+    "CREST detection and explanation superiority are unsupported."
+  ],
+  "dataset_id": "paysim",
+  "name": "PaySim",
+  "version": "supplied-paysim-conflicting-labels-v1",
+  "dataset_type": "synthetic",
+  "tier": "supplied",
+  "accounts": 547686,
+  "transactions": null,
+  "positives": null,
+  "negatives": null,
+  "prevalence": null,
+  "label_definition": "unresolved endpoint-involvement label sets",
+  "label_sets": [
+    {
+      "identity": "paysim-application-2606",
+      "sha256": "3cf7a6f6c0bae57393fc59679cb586c2d797b7edeb8663524aa88ae18debb085",
+      "accounts": 547686,
+      "positives": 2606
+    },
+    {
+      "identity": "paysim-research-774",
+      "sha256": "59b99a79e6c77b09fb5f63d03037a003e9b08deaea4f9227b8843a16f0abfecb",
+      "accounts": 547686,
+      "positives": 774
+    }
+  ],
+  "label_disagreements": 1832,
+  "transaction_sha256": "194d3d0527106464350af8d5b9e40c14c112b7531396cd49755dcc88fa31eb7c",
+  "time_semantics": "Simulation hours converted to synthetic timestamps; not observed real-world dates."
+}

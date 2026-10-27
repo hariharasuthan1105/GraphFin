@@ -85,38 +85,70 @@ export default function Overview() {
         </div>
       </section>
 
-      {/* Metrics KPI Strip matching visual specification */}
+      {/* Metrics KPI Strip matching verified empirical evidence */}
       <div className="metrics" style={{ marginBottom: "24px" }}>
         <Metric
           label="Completed runs"
-          value={r.data ? fmt(r.data.completed_run_count, 0) : "0"}
+          value={
+            r.data
+              ? fmt(r.data.completed_run_count, 0)
+              : r.error
+              ? "Unavailable"
+              : "Loading..."
+          }
           note={
             r.data
               ? `${r.data.completed_evaluation_count} method evaluations`
-              : "0 method evaluations"
+              : r.error
+              ? "Evidence not loaded"
+              : "Verifying research catalog..."
           }
         />
         <Metric
           label="Research methods"
-          value={r.data ? fmt(r.data.available_methods.length, 0) : "0"}
+          value={
+            r.data
+              ? fmt(r.data.available_methods.length, 0)
+              : r.error
+              ? "Unavailable"
+              : "Loading..."
+          }
           note={
             r.data && r.data.available_methods.length > 0
               ? r.data.available_methods.join(" / ")
-              : "methods implemented"
+              : r.error
+              ? "Evidence not loaded"
+              : "Scanning method benchmarks..."
           }
         />
         <Metric
           label="Network scales"
-          value={r.data ? fmt(r.data.scales.length, 0) : "0"}
+          value={
+            r.data
+              ? fmt(r.data.scales.length, 0)
+              : r.error
+              ? "Unavailable"
+              : "Loading..."
+          }
           note={
             r.data && r.data.scales.length > 0
               ? r.data.scales.join(" / ") + " accounts"
-              : "accounts analyzed"
+              : r.error
+              ? "Evidence not loaded"
+              : "Scanning scale benchmarks..."
           }
         />
         <Metric
           label="Replay evidence"
-          value="Available"
+          value={
+            r.data
+              ? r.data.reproducibility_available
+                ? "Available"
+                : "Unverified"
+              : r.error
+              ? "Unavailable"
+              : "Loading..."
+          }
           note="Reproducible results and analysis"
         />
       </div>

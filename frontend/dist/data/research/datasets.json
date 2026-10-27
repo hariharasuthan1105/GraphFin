@@ -1,0 +1,114 @@
+{
+  "status": "verified",
+  "provenance_status": "unresolved",
+  "items": [
+    {
+      "status": "verified",
+      "provenance_status": "partially_verified",
+      "artifact_id": "datasets",
+      "artifact_sha256": "c8d1b11e9b309a97f6dec1c5dc862652e57c16eb80c231ae8b4af29bcd8d01ad",
+      "limitations": [
+        "IBM upstream account labels are partially verified; features are transductive.",
+        "Reproducibility is not independent external validation.",
+        "CREST detection and explanation superiority are unsupported."
+      ],
+      "dataset_id": "ibm-5k",
+      "name": "IBM AML 5k",
+      "version": "ibm-5k-supplied-v1",
+      "dataset_type": "synthetic",
+      "tier": "5k",
+      "accounts": 5000,
+      "transactions": 31463,
+      "positives": 20,
+      "negatives": 4980,
+      "prevalence": 0.004,
+      "label_definition": "ibm-5k-retained-involvement-v1",
+      "label_sets": [
+        {
+          "identity": "ibm-5k-retained-involvement-v1",
+          "sha256": "2a417d2c2c92a8f8cd4c135f3a2e66a5feba6fcfc67cfd9b2e5b5da215a154c1",
+          "accounts": 5000,
+          "positives": 20
+        }
+      ],
+      "label_disagreements": null,
+      "transaction_sha256": "622d421b8ba1463ac0acc423f77fbf8a5c5604e5d2b1ea07b80e13dfb5a0a3f2",
+      "time_semantics": "Synthetic calendar timestamps; retrospective full-observation involvement."
+    },
+    {
+      "status": "verified",
+      "provenance_status": "partially_verified",
+      "artifact_id": "datasets",
+      "artifact_sha256": "c8d1b11e9b309a97f6dec1c5dc862652e57c16eb80c231ae8b4af29bcd8d01ad",
+      "limitations": [
+        "IBM upstream account labels are partially verified; features are transductive.",
+        "Reproducibility is not independent external validation.",
+        "CREST detection and explanation superiority are unsupported."
+      ],
+      "dataset_id": "ibm-50k",
+      "name": "IBM AML 50k",
+      "version": "ibm-50k-supplied-v1",
+      "dataset_type": "synthetic",
+      "tier": "50k",
+      "accounts": 49992,
+      "transactions": 353850,
+      "positives": 249,
+      "negatives": 49743,
+      "prevalence": 0.004980796927508402,
+      "label_definition": "ibm-50k-retained-involvement-v1",
+      "label_sets": [
+        {
+          "identity": "ibm-50k-retained-involvement-v1",
+          "sha256": "d007bb2f244350b7d9b2d547929bb5c50c4e6a5a6dc6cef94b14b90db9becdab",
+          "accounts": 50000,
+          "positives": 249
+        }
+      ],
+      "label_disagreements": null,
+      "transaction_sha256": "9bed6503841db5cf47f48cad182d39d6a5a6bab142fb267b338050e141f7b45f",
+      "time_semantics": "Synthetic calendar timestamps; retrospective full-observation involvement."
+    },
+    {
+      "status": "verified",
+      "provenance_status": "unresolved",
+      "artifact_id": "paysim",
+      "artifact_sha256": "9f836aeb986d866a767739ad4a599c99461b45c0c85606142b8c9e351b8801d3",
+      "limitations": [
+        "IBM upstream account labels are partially verified; features are transductive.",
+        "Reproducibility is not independent external validation.",
+        "CREST detection and explanation superiority are unsupported."
+      ],
+      "dataset_id": "paysim",
+      "name": "PaySim",
+      "version": "supplied-paysim-conflicting-labels-v1",
+      "dataset_type": "synthetic",
+      "tier": "supplied",
+      "accounts": 547686,
+      "transactions": null,
+      "positives": null,
+      "negatives": null,
+      "prevalence": null,
+      "label_definition": "unresolved endpoint-involvement label sets",
+      "label_sets": [
+        {
+          "identity": "paysim-application-2606",
+          "sha256": "3cf7a6f6c0bae57393fc59679cb586c2d797b7edeb8663524aa88ae18debb085",
+          "accounts": 547686,
+          "positives": 2606
+        },
+        {
+          "identity": "paysim-research-774",
+          "sha256": "59b99a79e6c77b09fb5f63d03037a003e9b08deaea4f9227b8843a16f0abfecb",
+          "accounts": 547686,
+          "positives": 774
+        }
+      ],
+      "label_disagreements": 1832,
+      "transaction_sha256": "194d3d0527106464350af8d5b9e40c14c112b7531396cd49755dcc88fa31eb7c",
+      "time_semantics": "Simulation hours converted to synthetic timestamps; not observed real-world dates."
+    }
+  ],
+  "total": 3,
+  "page": 1,
+  "page_size": 3
+}

@@ -1,0 +1,23 @@
+{
+  "status": "historical",
+  "provenance_status": "partially_verified",
+  "artifact_id": null,
+  "artifact_sha256": null,
+  "limitations": [
+    "Historical versions and missing processed inputs prohibit comparison; metrics intentionally unavailable."
+  ],
+  "experiment_id": "legacy-e0-e4",
+  "dataset_id": "ibm-historical",
+  "tier": "historical",
+  "method": "E0-E4",
+  "version": "legacy-mixed",
+  "feature_names": [],
+  "split_seed": null,
+  "model_seed": null,
+  "population_identity": null,
+  "dataset_sha256": null,
+  "label_sha256": null,
+  "train_sha256": null,
+  "test_sha256": null,
+  "metrics": null
+}

@@ -611,7 +611,7 @@ export default function DatasetAnalysis() {
           )}
 
           {/* Two-Column Grid: Accounts Ranking & Interactive Graph Canvas */}
-          <div className="grid-two" style={{ marginTop: "20px", alignItems: "start" }}>
+          <div className="analysis-workbench-grid">
             {/* Column 1: Suspicious Accounts Table */}
             <Panel title="Flagged Accounts & Anomaly Ranking" tag="RANKING / RISK">
               <div className="panel-body" style={{ padding: "16px" }}>
@@ -743,47 +743,110 @@ export default function DatasetAnalysis() {
               {selectedAccount && (
                 <Panel title={`Account Inspector: ${selectedAccount.id}`} tag="ENTITY / DETAILS">
                   <div className="panel-body">
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px", marginBottom: "16px" }}>
-                      <div className="metric">
-                        <span className="eyebrow">ANOMALY SCORE</span>
-                        <strong style={{ color: selectedAccount.anomalyScore >= 0.45 ? "#e05252" : "#f5f5f5" }}>
+                    {/* Responsive Metrics Grid */}
+                    <div className="inspector-metrics-grid">
+                      <div className={`inspector-metric-card ${selectedAccount.anomalyScore >= 0.45 ? "alert" : ""}`}>
+                        <span className="metric-label">ANOMALY SCORE</span>
+                        <div
+                          className="metric-number"
+                          style={{ color: selectedAccount.anomalyScore >= 0.45 ? "#e05252" : "#f5f5f5" }}
+                        >
                           {selectedAccount.anomalyScore.toFixed(3)}
-                        </strong>
+                        </div>
+                        <span className="metric-hint">
+                          {selectedAccount.anomalyScore >= 0.7
+                            ? "Critical risk tier"
+                            : selectedAccount.anomalyScore >= 0.45
+                            ? "Suspicious activity"
+                            : "Baseline activity"}
+                        </span>
                       </div>
-                      <div className="metric">
-                        <span className="eyebrow">IN / OUT DEGREE</span>
-                        <strong>{selectedAccount.inDegree} in / {selectedAccount.outDegree} out</strong>
+
+                      <div className="inspector-metric-card">
+                        <span className="metric-label">TOPOLOGICAL DEGREE</span>
+                        <div className="metric-number">
+                          {selectedAccount.inDegree} <span style={{ fontSize: "11px", color: "#a6a6a6" }}>IN</span> / {selectedAccount.outDegree} <span style={{ fontSize: "11px", color: "#a6a6a6" }}>OUT</span>
+                        </div>
+                        <span className="metric-hint">
+                          {selectedAccount.totalDegree} total transfer edges
+                        </span>
                       </div>
-                      <div className="metric">
-                        <span className="eyebrow">NET FLOW</span>
-                        <strong style={{ color: selectedAccount.netFlow < 0 ? "#e05252" : "#4ade80" }}>
-                          ${fmt(selectedAccount.netFlow, 2)}
-                        </strong>
+
+                      <div className={`inspector-metric-card ${selectedAccount.netFlow < 0 ? "alert" : "positive"}`}>
+                        <span className="metric-label">NET FLOW VOLUME</span>
+                        <div
+                          className="metric-number"
+                          style={{
+                            color: selectedAccount.netFlow < 0 ? "#e05252" : "#4ade80",
+                            wordBreak: "break-all",
+                          }}
+                        >
+                          {selectedAccount.netFlow < 0 ? "-" : "+"}${fmt(Math.abs(selectedAccount.netFlow), 2)}
+                        </div>
+                        <span className="metric-hint">
+                          {selectedAccount.netFlow < 0 ? "Net outflow (dispersal)" : "Net inflow (accumulation)"}
+                        </span>
                       </div>
                     </div>
 
-                    <div style={{ fontSize: "11px", fontFamily: "IBM Plex Mono, monospace", color: "#a6a6a6" }}>
-                      <strong>Top Transfer Counterparties:</strong>
-                      <div style={{ marginTop: "6px", display: "grid", gap: "4px" }}>
-                        {selectedAccount.counterparties.map((cp) => (
-                          <div
-                            key={cp.id}
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              background: "#080809",
-                              padding: "4px 8px",
-                              border: "1px solid #202023",
-                            }}
-                          >
-                            <span>
-                              {cp.direction === "out" ? "→ Out to: " : "← In from: "}
-                              <span style={{ color: "#f5f5f5" }}>{cp.id}</span>
-                            </span>
-                            <span>${fmt(cp.amount, 2)} ({cp.count} tx)</span>
-                          </div>
+                    {/* Detected Patterns Strip */}
+                    {selectedAccount.patterns.length > 0 && (
+                      <div className="inspector-patterns-strip">
+                        {selectedAccount.patterns.map((p) => (
+                          <span key={p} className="inspector-pattern-badge">
+                            <span>⚠</span> {p.replace("_", " ")}
+                          </span>
                         ))}
                       </div>
+                    )}
+
+                    {/* Counterparty Table */}
+                    <div>
+                      <span className="eyebrow technical" style={{ display: "block", marginBottom: "8px" }}>
+                        TOP TRANSFER COUNTERPARTIES ({selectedAccount.counterparties.length})
+                      </span>
+                      {selectedAccount.counterparties.length === 0 ? (
+                        <div style={{ color: "#77777d", fontSize: "11px", fontFamily: "IBM Plex Mono, monospace" }}>
+                          No direct counterparty transactions recorded.
+                        </div>
+                      ) : (
+                        <div className="counterparties-list-container">
+                          <table className="counterparty-table">
+                            <thead>
+                              <tr>
+                                <th style={{ textAlign: "left", width: "80px" }}>Flow</th>
+                                <th style={{ textAlign: "left" }}>Counterparty ID</th>
+                                <th style={{ textAlign: "right" }}>Volume</th>
+                                <th style={{ textAlign: "right", width: "70px" }}>Count</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {selectedAccount.counterparties.map((cp) => (
+                                <tr
+                                  key={cp.id}
+                                  onClick={() => setSelectedNodeId(cp.id)}
+                                  style={{ cursor: "pointer" }}
+                                >
+                                  <td>
+                                    <span className={`direction-badge ${cp.direction}`}>
+                                      {cp.direction === "out" ? "OUT →" : "← IN"}
+                                    </span>
+                                  </td>
+                                  <td style={{ color: "#f5f5f5", fontWeight: 500 }}>
+                                    {cp.id}
+                                  </td>
+                                  <td style={{ textAlign: "right", color: "#f5f5f5", fontVariantNumeric: "tabular-nums" }}>
+                                    ${fmt(cp.amount, 2)}
+                                  </td>
+                                  <td style={{ textAlign: "right", color: "#a6a6a6" }}>
+                                    {cp.count} tx
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </Panel>

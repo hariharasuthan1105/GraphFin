@@ -1,0 +1,40 @@
+{
+  "status": "verified",
+  "provenance_status": "partially_verified",
+  "artifact_id": "replay",
+  "artifact_sha256": "789251b080dd739708ae87949128673a88302fb470991d22dc570ec3e08ad93e",
+  "limitations": [
+    "IBM upstream account labels are partially verified; features are transductive.",
+    "Reproducibility is not independent external validation.",
+    "CREST detection and explanation superiority are unsupported."
+  ],
+  "replays": [
+    {
+      "tier": "5k",
+      "byte_identical": true,
+      "evidence_sha256": "90db2f6368feede18a7080761832e0c0c13643bef4ba0f5402970f0a00263be3",
+      "dataset_sha256": "622d421b8ba1463ac0acc423f77fbf8a5c5604e5d2b1ea07b80e13dfb5a0a3f2",
+      "feature_schema": "canonical19-plus-egonet4-v1",
+      "model_seed": 42
+    },
+    {
+      "tier": "50k",
+      "byte_identical": true,
+      "evidence_sha256": "789251b080dd739708ae87949128673a88302fb470991d22dc570ec3e08ad93e",
+      "dataset_sha256": "9bed6503841db5cf47f48cad182d39d6a5a6bab142fb267b338050e141f7b45f",
+      "feature_schema": "canonical19-plus-egonet4-v1",
+      "model_seed": 42
+    }
+  ],
+  "n_estimators": 100,
+  "max_samples": "auto",
+  "contamination": 0.005,
+  "split_seeds": [
+    42,
+    123,
+    7,
+    2024,
+    99,
+    555
+  ]
+}
