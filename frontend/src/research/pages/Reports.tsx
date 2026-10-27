@@ -136,7 +136,7 @@ export default function Reports() {
             <div class="kpi-label">Transactions Parsed</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-val">$${activeSession.summary.totalVolume.toLocaleString("en-US", { maximumFractionDigits: 2 })}</div>
+            <div class="kpi-val">${activeSession.summary.currency === "INR" ? "₹" : (activeSession.summary.currency ? activeSession.summary.currency + " " : "$")}${activeSession.summary.totalVolume.toLocaleString("en-US", { maximumFractionDigits: 2 })}</div>
             <div class="kpi-label">Total Transfer Volume</div>
           </div>
           <div class="kpi-card">
@@ -167,7 +167,7 @@ export default function Reports() {
                 <td><strong>${a.id}</strong></td>
                 <td style="color: ${a.anomalyScore >= 0.7 ? "#e11d48" : "#d97706"};">${a.anomalyScore.toFixed(3)}</td>
                 <td>${a.inDegree} in / ${a.outDegree} out</td>
-                <td>${a.netFlow < 0 ? "-" : "+"}$${Math.abs(a.netFlow).toLocaleString()}</td>
+                <td>${a.netFlow < 0 ? "-" : "+"}${activeSession.summary.currency === "INR" ? "₹" : (activeSession.summary.currency ? activeSession.summary.currency + " " : "$")}${Math.abs(a.netFlow).toLocaleString()}</td>
                 <td>${a.patterns.join(", ") || "Elevated Degree"}</td>
               </tr>
             `,

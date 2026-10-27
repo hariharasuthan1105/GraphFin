@@ -158,9 +158,6 @@ export default function DatasetAnalysis() {
           setSelectedNodeId(analysis.accounts[0].id);
         }
         setStep("results");
-
-        // Sync with backend ML pipeline (Isolation Forest) in background
-        syncSessionToBackend(analysis, rawCsvText).catch(() => {});
       } catch (err) {
         setErrorMsg(err instanceof Error ? err.message : "Graph analysis encountered an error.");
       } finally {
@@ -399,7 +396,7 @@ export default function DatasetAnalysis() {
                 {/* Amount Column */}
                 <div>
                   <label style={{ display: "block", fontSize: "11px", color: "#b44a50", fontWeight: 600, marginBottom: "4px" }}>
-                    TRANSACTION AMOUNT ($) * REQUIRED
+                    TRANSACTION AMOUNT * REQUIRED
                   </label>
                   <select
                     style={{ width: "100%", background: "#171719", color: "#f5f5f5", border: "1px solid #303034", padding: "8px" }}
@@ -557,9 +554,30 @@ export default function DatasetAnalysis() {
                     fontSize: "10px",
                     padding: "2px 8px",
                     borderRadius: "3px",
-                    background: backendStatus === "synced" ? "#1f1416" : "#171719",
-                    border: backendStatus === "synced" ? "1px solid #b44a50" : "1px solid #303034",
-                    color: backendStatus === "synced" ? "#f5f5f5" : "#a6a6a6",
+                    background:
+                      backendStatus === "ml_verified" || backendStatus === "synced"
+                        ? "#132318"
+                        : backendStatus === "ml_pending" || backendStatus === "syncing"
+                        ? "#231f13"
+                        : backendStatus === "ml_failed"
+                        ? "#261517"
+                        : "#171719",
+                    border:
+                      backendStatus === "ml_verified" || backendStatus === "synced"
+                        ? "1px solid #22c55e"
+                        : backendStatus === "ml_pending" || backendStatus === "syncing"
+                        ? "1px solid #f59e0b"
+                        : backendStatus === "ml_failed"
+                        ? "1px solid #ef4444"
+                        : "1px solid #303034",
+                    color:
+                      backendStatus === "ml_verified" || backendStatus === "synced"
+                        ? "#4ade80"
+                        : backendStatus === "ml_pending" || backendStatus === "syncing"
+                        ? "#fbbf24"
+                        : backendStatus === "ml_failed"
+                        ? "#f87171"
+                        : "#f5f5f5",
                     display: "inline-flex",
                     alignItems: "center",
                     gap: "5px",
@@ -570,15 +588,26 @@ export default function DatasetAnalysis() {
                       width: "6px",
                       height: "6px",
                       borderRadius: "50%",
-                      background: backendStatus === "synced" ? "#ef4444" : backendStatus === "syncing" ? "#f59e0b" : "#77777d",
+                      background:
+                        backendStatus === "ml_verified" || backendStatus === "synced"
+                          ? "#22c55e"
+                          : backendStatus === "ml_pending" || backendStatus === "syncing"
+                          ? "#f59e0b"
+                          : backendStatus === "ml_failed"
+                          ? "#ef4444"
+                          : "#b44a50",
                       display: "inline-block",
                     }}
                   />
-                  {backendStatus === "synced"
-                    ? `Backend ML: ${backendModel}`
-                    : backendStatus === "syncing"
-                    ? "Syncing Backend ML Pipeline..."
-                    : "Client-Side Graph Heuristics (Deterministic)"}
+                  {backendStatus === "ml_verified" || backendStatus === "synced"
+                    ? `Backend ML completed and verified: ${result.backendModel || backendModel}`
+                    : backendStatus === "ml_pending" || backendStatus === "syncing"
+                    ? "Backend ML pending..."
+                    : backendStatus === "ml_unavailable"
+                    ? "Backend ML unavailable"
+                    : backendStatus === "ml_failed"
+                    ? "Backend ML failed"
+                    : "Client-side heuristic analysis completed"}
                 </span>
               </div>
               <h2 style={{ margin: 0 }}>{result.summary.datasetName}</h2>
@@ -628,11 +657,11 @@ export default function DatasetAnalysis() {
           </div>
 
           {/* Metric KPI Strip */}
-          <div className="metrics" style={{ marginBottom: "24px" }}>
+          <div className="metrics" style={{ marginBottom: "20px" }}>
             <div className="metric">
               <span className="eyebrow">TRANSACTIONS</span>
               <strong>{fmt(result.summary.totalTransactions, 0)}</strong>
-              <small>Total volume: ${fmt(result.summary.totalVolume, 2)}</small>
+              <small>Total volume: {result.summary.currency === "INR" ? "₹" : (result.summary.currency ? result.summary.currency + " " : "$")}{fmt(result.summary.totalVolume, 2)}</small>
             </div>
             <div className="metric">
               <span className="eyebrow">UNIQUE ACCOUNTS</span>
@@ -644,7 +673,7 @@ export default function DatasetAnalysis() {
               <strong style={{ color: "#e05252" }}>
                 {fmt(result.summary.suspiciousAccountCount, 0)}
               </strong>
-              <small>Anomaly score &ge; 0.45 or pattern trigger</small>
+              <small>Score &ge; 0.60, or multi-pattern, or |z| &ge; 3.0</small>
             </div>
             <div className="metric">
               <span className="eyebrow">TOPOLOGICAL PATTERNS</span>
@@ -658,6 +687,97 @@ export default function DatasetAnalysis() {
               </small>
             </div>
           </div>
+
+          {/* Backend ML Verification Section with Explicit Privacy & Consent Safeguards */}
+          <Panel
+            title="Backend Machine Learning Verification (Isolation Forest)"
+            tag={
+              backendStatus === "ml_verified" || backendStatus === "synced"
+                ? "ML VERIFIED"
+                : backendStatus === "ml_pending" || backendStatus === "syncing"
+                ? "ML PENDING"
+                : backendStatus === "ml_unavailable"
+                ? "ML UNAVAILABLE"
+                : backendStatus === "ml_failed"
+                ? "ML FAILED"
+                : "CONSENT REQUIRED"
+            }
+          >
+            <div className="panel-body" style={{ padding: "16px 20px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "20px", flexWrap: "wrap" }}>
+                <div style={{ flex: 1, minWidth: "280px" }}>
+                  <p style={{ margin: "0 0 10px 0", fontSize: "12px", color: "#f5f5f5", lineHeight: 1.5 }}>
+                    {backendStatus === "ml_verified" || backendStatus === "synced" ? (
+                      <>
+                        <strong style={{ color: "#4ade80" }}>✓ Verified Isolation Forest Execution:</strong>{" "}
+                        Trained on {result.summary.uniqueAccounts} entities across canonical 19 graph, behavioral, and temporal features (100 trees, 0.05 contamination).
+                      </>
+                    ) : (
+                      <>
+                        <strong>Privacy Safeguard:</strong> This dataset was analyzed entirely in local browser memory. To fit GraphFin's 19-dimensional scikit-learn Isolation Forest on the remote Render backend, explicit consent is required.
+                      </>
+                    )}
+                  </p>
+                  <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", fontSize: "11px", color: "#a6a6a6" }}>
+                    <span>• <strong>Destination:</strong> https://graphfin.onrender.com/api/v1</span>
+                    <span>• <strong>Storage:</strong> Ephemeral in-memory (no permanent retention)</span>
+                    <span>• <strong>Budget:</strong> Max 15,000 transactions, 10 MB payload</span>
+                  </div>
+                </div>
+
+                <div>
+                  {backendStatus === "ml_verified" || backendStatus === "synced" ? (
+                    <span
+                      style={{
+                        padding: "8px 14px",
+                        background: "#132318",
+                        border: "1px solid #22c55e",
+                        color: "#4ade80",
+                        fontSize: "11px",
+                        fontWeight: 600,
+                        fontFamily: "IBM Plex Mono, monospace",
+                        borderRadius: "2px",
+                      }}
+                    >
+                      ✓ MODEL ACTIVE
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={isProcessing || backendStatus === "ml_pending" || backendStatus === "syncing"}
+                      onClick={async () => {
+                        const confirmed = window.confirm(
+                          "GraphFin Privacy Consent:\n\n" +
+                          "Do you authorize transmitting this dataset to https://graphfin.onrender.com for remote Isolation Forest fitting?\n\n" +
+                          "• Purpose: 19 canonical graph feature extraction & Isolation Forest inference\n" +
+                          "• Ephemeral: Data is kept in memory during model fitting and NOT permanently saved\n" +
+                          "• Limits: Max 15,000 transactions, max 10 MB"
+                        );
+                        if (confirmed) {
+                          await syncSessionToBackend(result, rawCsvText || result.summary.rawCsvContent, true);
+                        }
+                      }}
+                      style={{
+                        background: backendStatus === "ml_pending" || backendStatus === "syncing" ? "#202023" : "#842d35",
+                        color: "#ffffff",
+                        border: "1px solid #b44a50",
+                        padding: "8px 16px",
+                        fontSize: "11px",
+                        fontWeight: 600,
+                        cursor: backendStatus === "ml_pending" || backendStatus === "syncing" ? "not-allowed" : "pointer",
+                        borderRadius: "2px",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {backendStatus === "ml_pending" || backendStatus === "syncing"
+                        ? "FITTING ISOLATION FOREST..."
+                        : "TRANSMIT & VERIFY WITH BACKEND ML ↗"}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </Panel>
 
           {/* Ground Truth Validation Box (if label provided) */}
           {result.summary.evaluation && (
@@ -824,22 +944,37 @@ export default function DatasetAnalysis() {
                   <div className="panel-body">
                     {/* Responsive Metrics Grid */}
                     <div className="inspector-metrics-grid">
-                      <div className={`inspector-metric-card ${selectedAccount.anomalyScore >= 0.45 ? "alert" : ""}`}>
-                        <span className="metric-label">ANOMALY SCORE</span>
+                      <div className={`inspector-metric-card ${selectedAccount.anomalyScore >= 0.6 ? "alert" : ""}`}>
+                        <span className="metric-label">HEURISTIC SCORE</span>
                         <div
                           className="metric-number"
-                          style={{ color: selectedAccount.anomalyScore >= 0.45 ? "#e05252" : "#f5f5f5" }}
+                          style={{ color: selectedAccount.anomalyScore >= 0.6 ? "#e05252" : "#f5f5f5" }}
                         >
                           {selectedAccount.anomalyScore.toFixed(3)}
                         </div>
                         <span className="metric-hint">
                           {selectedAccount.anomalyScore >= 0.7
                             ? "Critical risk tier"
-                            : selectedAccount.anomalyScore >= 0.45
+                            : selectedAccount.anomalyScore >= 0.6
                             ? "Suspicious activity"
                             : "Baseline activity"}
                         </span>
                       </div>
+
+                      {selectedAccount.mlScore !== undefined && (
+                        <div className={`inspector-metric-card ${selectedAccount.mlScore >= 0.5 ? "alert" : ""}`}>
+                          <span className="metric-label">ISOLATION FOREST</span>
+                          <div
+                            className="metric-number"
+                            style={{ color: selectedAccount.mlScore >= 0.5 ? "#e05252" : "#4ade80" }}
+                          >
+                            {selectedAccount.mlScore.toFixed(3)}
+                          </div>
+                          <span className="metric-hint">
+                            Decision depth: {selectedAccount.mlStatus || "verified"}
+                          </span>
+                        </div>
+                      )}
 
                       <div className="inspector-metric-card">
                         <span className="metric-label">TOPOLOGICAL DEGREE</span>
@@ -860,7 +995,7 @@ export default function DatasetAnalysis() {
                             wordBreak: "break-all",
                           }}
                         >
-                          {selectedAccount.netFlow < 0 ? "-" : "+"}${fmt(Math.abs(selectedAccount.netFlow), 2)}
+                          {selectedAccount.netFlow < 0 ? "-" : "+"}{result.summary.currency === "INR" ? "₹" : (result.summary.currency ? result.summary.currency + " " : "$")}{fmt(Math.abs(selectedAccount.netFlow), 2)}
                         </div>
                         <span className="metric-hint">
                           {selectedAccount.netFlow < 0 ? "Net outflow (dispersal)" : "Net inflow (accumulation)"}
@@ -915,10 +1050,10 @@ export default function DatasetAnalysis() {
                                     {cp.id}
                                   </td>
                                   <td style={{ textAlign: "right", color: "#f5f5f5", fontVariantNumeric: "tabular-nums" }}>
-                                    ${fmt(cp.amount, 2)}
+                                    {(activeSession?.summary.currency === "INR" ? "₹" : "$")}{fmt(cp.totalAmount ?? cp.amount ?? ((cp.inAmount ?? 0) + (cp.outAmount ?? 0)), 2)}
                                   </td>
                                   <td style={{ textAlign: "right", color: "#a6a6a6" }}>
-                                    {cp.count} tx
+                                    {cp.count ?? ((cp.inCount ?? 0) + (cp.outCount ?? 0))} tx
                                   </td>
                                 </tr>
                               ))}

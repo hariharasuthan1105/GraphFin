@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import type { AnalysisResult, AccountNode } from "./datasetAnalysis/types";
+import type { AnalysisResult, AccountNode, BackendMLStatus } from "./datasetAnalysis/types";
 import { SAMPLE_CSV_DATA } from "./datasetAnalysis/sampleData";
 import { parseDelimitedText } from "./datasetAnalysis/parser";
 import { analyzeTransactionGraph } from "./datasetAnalysis/engine";
@@ -18,7 +18,7 @@ export type SimulatedPresetKey =
   | "smurfing-fanout"
   | "fanin-aggregation";
 
-export type BackendSyncStatus = "idle" | "syncing" | "synced" | "offline";
+export type BackendSyncStatus = BackendMLStatus;
 
 interface SessionContextType {
   appMode: AppMode;
@@ -36,7 +36,11 @@ interface SessionContextType {
   backendModel: string;
   backendMessage: string;
   isBackendOnline: boolean;
-  syncSessionToBackend: (session: AnalysisResult, rawCsv?: string) => Promise<void>;
+  syncSessionToBackend: (
+    session: AnalysisResult,
+    rawCsv?: string,
+    userConsent?: boolean,
+  ) => Promise<boolean>;
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
@@ -50,17 +54,16 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   const [backendStatus, setBackendStatus] = useState<BackendSyncStatus>("idle");
   const [backendDatasetId, setBackendDatasetId] = useState<string | null>(null);
-  const [backendModel, setBackendModel] = useState<string>("Client-Side Graph Heuristics");
-  const [backendMessage, setBackendMessage] = useState<string>("Checking backend API...");
+  const [backendModel, setBackendModel] = useState<string>("Client-Side Graph Heuristics v2.1");
+  const [backendMessage, setBackendMessage] = useState<string>("Client-side heuristic analysis completed.");
   const [isBackendOnline, setIsBackendOnline] = useState<boolean>(false);
 
-  // Probe backend health on mount
+  // Probe backend health on mount (non-intrusive health ping)
   useEffect(() => {
     let mounted = true;
     checkBackendHealth().then((res) => {
       if (mounted) {
         setIsBackendOnline(res.online);
-        setBackendMessage(res.message);
       }
     });
     return () => {
@@ -68,93 +71,136 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // Sync session to backend ML pipeline
-  const syncSessionToBackend = async (session: AnalysisResult, rawCsv?: string) => {
-    try {
-      setBackendStatus("syncing");
-      setBackendMessage("Syncing dataset with backend ML pipeline...");
+  // Securely trigger backend ML pipeline with EXPLICIT user consent and bounds enforcement
+  const syncSessionToBackend = async (
+    session: AnalysisResult,
+    rawCsv?: string,
+    userConsent = false,
+  ): Promise<boolean> => {
+    // 1. Enforce Privacy Requirement: explicit consent is mandatory
+    if (!userConsent) {
+      console.warn("Backend ML sync blocked: Explicit user consent is required before transmitting financial data.");
+      return false;
+    }
 
-      // Prepare canonical CSV content
+    // 2. Enforce Resource and Safety Limits for Render Free Tier (512MB RAM budget)
+    const MAX_SAFE_TRANSACTIONS = 15000;
+    const MAX_SAFE_FILE_BYTES = 10 * 1024 * 1024; // 10 MB
+
+    if (session.summary.totalTransactions > MAX_SAFE_TRANSACTIONS) {
+      setBackendStatus("ml_unavailable");
+      setBackendMessage(
+        `Backend ML unavailable: Dataset exceeds 15,000 transaction limit for public Render Free tier (${session.summary.totalTransactions.toLocaleString()} rows). Local heuristics remain active.`
+      );
+      return false;
+    }
+
+    if (session.summary.fileSizeBytes > MAX_SAFE_FILE_BYTES) {
+      setBackendStatus("ml_unavailable");
+      setBackendMessage(
+        `Backend ML unavailable: Dataset exceeds 10 MB safety limit for public Render tier. Local heuristics remain active.`
+      );
+      return false;
+    }
+
+    try {
+      setBackendStatus("ml_pending");
+      setBackendMessage("Backend ML pending: Transmitting dataset and fitting Isolation Forest (100 Trees, 19 Features)...");
+
+      // Build canonical CSV content if raw text is not already available
       let csvData = rawCsv;
       if (!csvData) {
-        // Build canonical CSV from account / edge relationships
         const rows = session.edges.map((e, idx) =>
           `TX_${String(idx + 1).padStart(5, "0")},${e.source},${e.target},${e.amount},2026-10-27T10:00:00Z`
         );
         csvData = "transaction_id,sender_id,receiver_id,amount,timestamp\n" + rows.join("\n");
       }
 
-      // 1. Upload to backend
-      const uploadRes = await uploadTransactionsCsv(csvData, session.summary.datasetName);
+      // Step A: Upload to backend
+      const uploadRes = await uploadTransactionsCsv(
+        csvData,
+        session.summary.datasetName,
+        session.summary.currency || "USD"
+      );
       const dsId = uploadRes.dataset_id;
       setBackendDatasetId(dsId);
 
-      // 2. Train Isolation Forest model
-      setBackendMessage("Training Isolation Forest anomaly model on backend...");
+      // Step B: Train Isolation Forest model (100 trees, 0.05 contamination, 19 canonical features)
+      setBackendMessage("Backend ML pending: Fitting Isolation Forest anomaly model on backend...");
       await trainIsolationForest(dsId, "isolation_forest");
 
-      // 3. Fetch computed per-user anomaly scores
-      setBackendMessage("Retrieving multidimensional anomaly scores...");
-      const userRes = await fetchUserAnomalies(dsId, "isolation_forest", 500);
+      // Step C: Fetch computed per-user anomaly scores
+      setBackendMessage("Backend ML pending: Retrieving multidimensional anomaly scores...");
+      const userRes = await fetchUserAnomalies(dsId, "isolation_forest", 1000);
 
       if (userRes && Array.isArray(userRes.users) && userRes.users.length > 0) {
-        const scoreMap = new Map<string, number>();
+        const userMap = new Map<string, any>();
         userRes.users.forEach((u: any) => {
-          if (u.user_id && typeof u.continuous_anomaly_score === "number") {
-            // Map isolation forest score (ranges ~-0.5 to 0.5) to normalized 0.0 - 1.0 range
-            const normScore = Math.max(0, Math.min(1, (u.continuous_anomaly_score + 0.5)));
-            scoreMap.set(u.user_id, normScore);
+          if (u.user_id) {
+            userMap.set(u.user_id, u);
           }
         });
 
-        // Merge scores into accounts
+        // Associate Isolation Forest output with each account node
+        // Semantics: preserve deterministic heuristic score as heuristicScore / anomalyScore,
+        // and attach verified ML continuous score, risk score, and status.
         const updatedAccounts: AccountNode[] = session.accounts.map((acc) => {
-          const mlScore = scoreMap.get(acc.id);
-          if (mlScore !== undefined) {
-            // Blend ML isolation depth with graph structural anomaly score
-            const blended = Number(((acc.anomalyScore * 0.4) + (mlScore * 0.6)).toFixed(4));
+          const mlData = userMap.get(acc.id);
+          if (mlData) {
+            const rawScore = typeof mlData.raw_score === "number" ? mlData.raw_score : 0;
+            const riskScore = typeof mlData.risk_score === "number" ? mlData.risk_score : 0;
+            const mlStatus = mlData.status || (mlData.prediction === -1 ? "anomaly" : "normal");
+            // Normalize decision score to [0, 1] range: lower raw_score means more anomalous
+            const normMlScore = Number(Math.max(0, Math.min(1, (0.5 - rawScore))).toFixed(4));
+
             return {
               ...acc,
-              anomalyScore: blended,
+              heuristicScore: acc.anomalyScore,
+              mlScore: normMlScore,
+              mlRiskScore: riskScore,
+              mlStatus: mlStatus,
             };
           }
           return acc;
         });
 
-        updatedAccounts.sort((a, b) => b.anomalyScore - a.anomalyScore);
-        const topAnomalies = updatedAccounts.filter((a) => a.anomalyScore >= 0.6);
-
         const updatedSession: AnalysisResult = {
           ...session,
           accounts: updatedAccounts,
-          topAnomalies: topAnomalies.length > 0 ? topAnomalies : updatedAccounts.slice(0, 5),
           backendDatasetId: dsId,
-          backendStatus: "synced",
+          backendStatus: "ml_verified",
           backendModel: "Isolation Forest (100 Trees, 19 Features)",
         };
 
         setActiveSession(updatedSession);
-        setBackendStatus("synced");
+        setBackendStatus("ml_verified");
         setBackendModel("Isolation Forest (100 Trees, 19 Features)");
-        setBackendMessage("Synced & Trained: Isolation Forest active");
-        return;
+        setBackendMessage("Backend ML completed and verified: Isolation Forest active");
+        return true;
       }
 
-      setBackendStatus("synced");
-      setBackendModel("Graph Engine (NetworkX)");
-      setBackendMessage("Synced: Dataset active on backend");
+      setBackendStatus("ml_failed");
+      setBackendMessage("Backend ML failed: Response did not return valid user anomaly records.");
+      return false;
     } catch (err: any) {
-      console.warn("Backend sync failed; client heuristics remain active:", err);
-      setBackendStatus("offline");
+      console.warn("Backend ML execution failed; preserving client heuristics:", err);
+      const isRestricted = err?.message?.includes("405") || err?.message?.includes("GATEWAY_READ_ONLY");
+      const isTimeout = err?.name === "AbortError" || err?.message?.includes("timeout");
+
+      const failStatus: BackendMLStatus = isRestricted || isTimeout ? "ml_unavailable" : "ml_failed";
+      setBackendStatus(failStatus);
       setBackendMessage(
-        err?.message?.includes("AbortError")
-          ? "Backend waking up (client heuristics active)"
-          : "Local heuristics active (backend offline)"
+        isRestricted
+          ? "Backend ML unavailable: Remote gateway is configured for read-only safety. Client heuristics active."
+          : isTimeout
+          ? "Backend ML unavailable: Remote server timed out or spinning up. Client heuristics active."
+          : `Backend ML failed: ${err?.message || "Execution error"}. Client heuristics active.`
       );
+      return false;
     }
   };
 
-  // Load benchmark sample immediately or on demand
+  // Load benchmark sample immediately or on demand (CLIENT-SIDE ONLY, NO AUTO-TRANSMISSION)
   const loadBenchmarkSample = () => {
     try {
       const parsed = parseDelimitedText(SAMPLE_CSV_DATA);
@@ -172,12 +218,14 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         SAMPLE_CSV_DATA.length,
       );
       result.summary.rawCsvContent = SAMPLE_CSV_DATA;
+      result.backendStatus = "client_completed";
+      result.backendModel = "Client-Side Graph Heuristics v2.1";
       setActiveSession(result);
       setAppMode("interactive");
       setGraphMode("uploaded");
-
-      // Auto-sync sample to backend in background
-      syncSessionToBackend(result, SAMPLE_CSV_DATA).catch(() => {});
+      setBackendStatus("client_completed");
+      setBackendModel("Client-Side Graph Heuristics v2.1");
+      setBackendMessage("Client-side heuristic analysis completed.");
     } catch (err) {
       console.error("Failed to load benchmark sample", err);
     }
@@ -195,7 +243,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     setGraphMode("simulated");
     setBackendDatasetId(null);
     setBackendStatus("idle");
-    setBackendModel("Client-Side Graph Heuristics");
+    setBackendModel("Client-Side Graph Heuristics v2.1");
+    setBackendMessage("Client-side heuristic analysis completed.");
   };
 
   return (

@@ -10,7 +10,7 @@ export interface ParsedTable {
   rawTotalRows: number;
 }
 
-export function parseDelimitedText(text: string, maxRows = 10000): ParsedTable {
+export function parseDelimitedText(text: string, maxRows = 25000): ParsedTable {
   const clean = text.replace(/^\uFEFF/, "").trim();
   if (!clean) {
     throw new Error("File is empty.");
@@ -106,7 +106,6 @@ export function parseJsonTransactions(jsonStr: string): ParsedTable {
   if (Array.isArray(parsed)) {
     items = parsed;
   } else if (parsed && typeof parsed === "object") {
-    // Check for keys like 'transactions', 'data', 'items'
     const record = parsed as Record<string, unknown>;
     const arrayKey = Object.keys(record).find((k) => Array.isArray(record[k]));
     if (arrayKey) {
@@ -119,7 +118,7 @@ export function parseJsonTransactions(jsonStr: string): ParsedTable {
   }
 
   const headers = Object.keys(items[0] as Record<string, unknown>);
-  const rows = items.slice(0, 10000).map((item) => {
+  const rows = items.slice(0, 25000).map((item) => {
     const obj = item as Record<string, unknown>;
     return headers.map((h) => String(obj[h] ?? ""));
   });
@@ -167,9 +166,17 @@ export function autoDetectColumnMapping(headers: string[]): ColumnMapping {
     findCol(/^(type|action|category|txtype|transtype)$/i) ||
     findCol(/type|action/i);
 
+  const currencyCol =
+    findCol(/^(currency|curr|ccy|currencycode)$/i) ||
+    findCol(/curr/i);
+
   const labelCol =
     findCol(/^(isfraud|fraud|isanomaly|anomaly|label|class|target|isflaggedfraud)$/i) ||
     findCol(/fraud|anom/i);
+
+  const patternTypeCol =
+    findCol(/^(patterntype|pattern|anomalytype|motif)$/i) ||
+    findCol(/pattern/i);
 
   return {
     sourceCol,
@@ -178,14 +185,31 @@ export function autoDetectColumnMapping(headers: string[]): ColumnMapping {
     transactionIdCol: transactionIdCol || (headers[0] !== sourceCol ? headers[0] : ""),
     timestampCol,
     typeCol,
+    currencyCol,
     labelCol,
+    patternTypeCol,
   };
+}
+
+export interface BuildRecordsResult {
+  records: TransactionRecord[];
+  acceptedRows: number;
+  rejectedRows: number;
+  rawTotalRows: number;
 }
 
 export function buildTransactionRecords(
   table: ParsedTable,
   mapping: ColumnMapping,
 ): TransactionRecord[] {
+  const result = buildTransactionRecordsDetailed(table, mapping);
+  return result.records;
+}
+
+export function buildTransactionRecordsDetailed(
+  table: ParsedTable,
+  mapping: ColumnMapping,
+): BuildRecordsResult {
   const { headers, rows } = table;
   const colIdx = (name?: string) => (name ? headers.indexOf(name) : -1);
 
@@ -195,7 +219,9 @@ export function buildTransactionRecords(
   const idIdx = colIdx(mapping.transactionIdCol);
   const timeIdx = colIdx(mapping.timestampCol);
   const typeIdx = colIdx(mapping.typeCol);
+  const currIdx = colIdx(mapping.currencyCol);
   const labelIdx = colIdx(mapping.labelCol);
+  const patIdx = colIdx(mapping.patternTypeCol);
 
   if (srcIdx === -1 || dstIdx === -1 || amtIdx === -1) {
     throw new Error(
@@ -204,6 +230,7 @@ export function buildTransactionRecords(
   }
 
   const records: TransactionRecord[] = [];
+  let rejectedRows = 0;
 
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
@@ -213,6 +240,7 @@ export function buildTransactionRecords(
     const amount = parseFloat(rawAmt || "0");
 
     if (!source || !destination || isNaN(amount) || amount <= 0) {
+      rejectedRows++;
       continue; // skip invalid or non-positive records
     }
 
@@ -226,6 +254,9 @@ export function buildTransactionRecords(
       }
     }
 
+    const currency = currIdx !== -1 && row[currIdx] ? row[currIdx].trim().toUpperCase() : undefined;
+    const pattern_type = patIdx !== -1 && row[patIdx] ? row[patIdx].trim() : undefined;
+
     records.push({
       transaction_id: idIdx !== -1 && row[idIdx] ? row[idIdx].trim() : `TX_${i + 1}`,
       source,
@@ -233,7 +264,9 @@ export function buildTransactionRecords(
       amount,
       timestamp: timeIdx !== -1 ? row[timeIdx]?.trim() : undefined,
       type: typeIdx !== -1 ? row[typeIdx]?.trim() : undefined,
+      currency,
       label,
+      pattern_type,
     });
   }
 
@@ -243,5 +276,10 @@ export function buildTransactionRecords(
     );
   }
 
-  return records;
+  return {
+    records,
+    acceptedRows: records.length,
+    rejectedRows,
+    rawTotalRows: rows.length,
+  };
 }

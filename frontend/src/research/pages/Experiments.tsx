@@ -274,7 +274,11 @@ export default function Experiments() {
         <>
           <Panel
             title={`Active Session Runtime Model: ${activeSession.backendModel || backendModel}`}
-            tag={activeSession.backendStatus === "synced" ? "BACKEND / TRAINED" : "CLIENT / HEURISTIC"}
+            tag={
+              (activeSession.backendStatus === "ml_verified" || activeSession.backendStatus === "synced" || backendStatus === "ml_verified")
+                ? "BACKEND / TRAINED"
+                : "CLIENT / HEURISTIC"
+            }
           >
             <div className="panel-body">
               <div

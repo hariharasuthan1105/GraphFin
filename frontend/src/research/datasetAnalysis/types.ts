@@ -1,7 +1,7 @@
 /**
  * GraphFin Dataset Analysis Types
  * Defines data structures for client-side transaction parsing, graph construction,
- * structural anomaly metrics, and interactive inspection.
+ * statistically defensible anomaly metrics, and interactive inspection.
  */
 
 export interface TransactionRecord {
@@ -11,7 +11,9 @@ export interface TransactionRecord {
   amount: number;
   timestamp?: string | number;
   type?: string;
+  currency?: string;
   label?: number | boolean | null; // Known ground-truth fraud label if provided
+  pattern_type?: string;
   raw?: Record<string, string>;
 }
 
@@ -22,7 +24,21 @@ export interface ColumnMapping {
   amountCol: string;
   timestampCol?: string;
   typeCol?: string;
+  currencyCol?: string;
   labelCol?: string;
+  patternTypeCol?: string;
+}
+
+export interface AccountCounterparty {
+  id: string;
+  amount?: number;
+  count?: number;
+  inCount?: number;
+  inAmount?: number;
+  outCount?: number;
+  outAmount?: number;
+  totalAmount?: number;
+  direction: "in" | "out" | "both";
 }
 
 export interface AccountNode {
@@ -34,10 +50,18 @@ export interface AccountNode {
   totalReceived: number;
   netFlow: number;
   txCount: number;
-  anomalyScore: number; // 0.00 to 1.00
+  anomalyScore: number; // 0.00 to 1.00 (composite continuous score)
+  heuristicScore?: number;
+  mlScore?: number;
+  mlRiskScore?: number;
+  mlStatus?: string;
+  isFlaggedForReview?: boolean; // Statistically defensible classification
   patterns: AnomalyPattern[];
-  counterparties: { id: string; direction: "in" | "out"; amount: number; count: number }[];
-  isLabeledFraud?: boolean;
+  counterparties: AccountCounterparty[];
+  volumeZScore?: number;
+  degreeZScore?: number;
+  isLabeledFraud?: boolean; // Ground-truth flag from synthetic injection
+  syntheticPatternType?: string;
 }
 
 export interface TransferEdge {
@@ -49,20 +73,51 @@ export interface TransferEdge {
 }
 
 export type AnomalyPattern =
-  | "FAN_OUT"          // Rapid fund dispersion to multiple receivers
-  | "FAN_IN"           // Fund aggregation from multiple senders into single sink
-  | "CYCLE"            // Circular / reciprocal transfer flow
-  | "VOLUME_OUTLIER"   // Transaction amount in extreme upper tail (>3 sigma)
-  | "FLOW_IMBALANCE";  // High volume asymmetry with minimal counter-flow
+  | "FAN_OUT"          // Dispersal hub (out-degree >= threshold & >= 2.5x in-degree)
+  | "FAN_IN"           // Aggregation hub (in-degree >= threshold & >= 2.5x out-degree)
+  | "CYCLE"            // Noteworthy multi-hop loop or high-frequency reciprocal round-tripping
+  | "VOLUME_OUTLIER"   // Account-level volume in upper tail (>= 2.5 sigma from account distribution)
+  | "FLOW_IMBALANCE";  // Extreme volume asymmetry on active account with minimal return flow
+
+export interface ThresholdConfig {
+  volumeZThreshold: number;         // e.g. 2.5 standard deviations above account volume mean
+  degreeZThreshold: number;         // e.g. 2.5 standard deviations above account degree mean
+  fanOutRatio: number;              // e.g. 2.5 (outDegree / max(1, inDegree))
+  fanInRatio: number;               // e.g. 2.5 (inDegree / max(1, outDegree))
+  suspiciousScoreThreshold: number; // e.g. 0.60
+  version: string;                  // e.g. "GraphFin-Analytical-v2.1"
+}
+
+export interface GroundTruthEvaluation {
+  labeledTotal: number;
+  positives: number;
+  negatives: number;
+  truePositives: number;
+  falsePositives: number;
+  falseNegatives: number;
+  trueNegatives: number;
+  precision: number;
+  recall: number;
+  f1Score: number;
+  prAuc?: number;
+  aggregationRule: string;
+  disclaimer: string;
+}
 
 export interface AnalysisSummary {
   datasetName: string;
   fileSizeBytes: number;
   totalTransactions: number;
   totalVolume: number;
+  currency?: string;               // Detected dataset currency ("INR", "USD", etc.)
+  isMixedCurrency?: boolean;
+  currencyBreakdown?: Record<string, number>;
   meanAmount: number;
   medianAmount: number;
   maxAmount: number;
+  accountVolumeMean?: number;
+  accountVolumeStdDev?: number;
+  accountVolumeThreshold?: number;
   uniqueAccounts: number;
   uniqueEdges: number;
   sourceOnlyAccounts: number;
@@ -78,23 +133,32 @@ export interface AnalysisSummary {
     fanInCount: number;
     cycleCount: number;
     volumeOutlierCount: number;
+    flowImbalanceCount?: number;
   };
+  thresholdConfig?: ThresholdConfig;
+  analysisEngine?: string;
+  algorithmVersion?: string;
+  totalRowsAccepted?: number;
+  totalRowsRejected?: number;
+  dataCompletenessPct?: number;
   backendDatasetId?: string;
-  backendStatus?: "idle" | "syncing" | "synced" | "offline";
+  backendStatus?: BackendMLStatus;
   backendModel?: string;
   backendError?: string;
   rawCsvContent?: string;
-  evaluation?: {
-    labeledTotal: number;
-    positives: number;
-    truePositives: number;
-    falsePositives: number;
-    precision: number;
-    recall: number;
-    f1Score: number;
-  };
+  evaluation?: GroundTruthEvaluation;
   processedAt: string;
 }
+
+export type BackendMLStatus =
+  | "client_completed"
+  | "ml_pending"
+  | "ml_verified"
+  | "ml_unavailable"
+  | "ml_failed"
+  | "idle"
+  | "syncing"
+  | "synced";
 
 export interface AnalysisResult {
   summary: AnalysisSummary;
@@ -102,6 +166,6 @@ export interface AnalysisResult {
   edges: TransferEdge[];
   topAnomalies: AccountNode[];
   backendDatasetId?: string;
-  backendStatus?: "idle" | "syncing" | "synced" | "offline";
+  backendStatus?: BackendMLStatus;
   backendModel?: string;
 }

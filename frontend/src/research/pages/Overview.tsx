@@ -1,4 +1,4 @@
-import { useResearch, TITLE, fmt } from "../state";
+import { useResearch, fmt } from "../state";
 import type { Overview as OverviewData } from "../contract";
 import { Metric, Panel, Notice } from "../ui";
 import { useSession } from "../sessionContext";
@@ -111,14 +111,14 @@ export default function Overview() {
             <Metric
               label="Total transactions"
               value={fmt(activeSession.summary.totalTransactions, 0)}
-              note={`$${activeSession.summary.totalVolume.toLocaleString("en-US", {
+              note={`${activeSession.summary.currency === "INR" ? "₹" : (activeSession.summary.currency || "$")}${activeSession.summary.totalVolume.toLocaleString("en-US", {
                 maximumFractionDigits: 2,
               })} total volume`}
             />
             <Metric
               label="Flagged anomalies"
               value={fmt(activeSession.summary.suspiciousAccountCount, 0)}
-              note="Score ≥ 0.45 or pattern trigger"
+              note="Score ≥ 0.60, or multi-pattern, or |z| ≥ 3.0"
             />
             <Metric
               label="Graph patterns"

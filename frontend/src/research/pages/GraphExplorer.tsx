@@ -906,9 +906,9 @@ export default function GraphExplorer() {
                             </td>
                             <td style={{ color: "#f5f5f5", fontWeight: 500 }}>{cp.id}</td>
                             <td style={{ textAlign: "right", color: "#ffffff", fontWeight: 600 }}>
-                              ${cp.amount.toLocaleString("en-US", { maximumFractionDigits: 2 })}
+                              {(activeSession?.summary.currency === "INR" ? "₹" : "$")}{(cp.totalAmount ?? cp.amount ?? ((cp.inAmount ?? 0) + (cp.outAmount ?? 0))).toLocaleString("en-US", { maximumFractionDigits: 2 })}
                             </td>
-                            <td style={{ textAlign: "right", color: "#a6a6a6" }}>{cp.count} tx</td>
+                            <td style={{ textAlign: "right", color: "#a6a6a6" }}>{cp.count ?? ((cp.inCount ?? 0) + (cp.outCount ?? 0))} tx</td>
                           </tr>
                         ))}
                       </tbody>

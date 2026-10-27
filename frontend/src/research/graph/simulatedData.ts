@@ -6,7 +6,6 @@
 import type {
   AccountNode,
   AnalysisResult,
-  AnomalyPattern,
   TransferEdge,
 } from "../datasetAnalysis/types";
 import type { SimulatedPresetKey } from "../sessionContext";
