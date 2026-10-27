@@ -50,7 +50,12 @@ def run():
         if token.encode() in body:
             raise AssertionError('Credential appeared in response.')
         checks.append({'path': path, 'method': method, 'expected': expected, 'actual': status})
-        return json.loads(body) if body else None
+        if body:
+            try:
+                return json.loads(body)
+            except (ValueError, UnicodeDecodeError):
+                return body
+        return None
     try:
         thread.start()
         deadline = time.monotonic() + 15
@@ -64,11 +69,11 @@ def run():
         request('/health', 400, extra={'Host': 'unapproved.invalid', 'X-Forwarded-Host': host})
         request('/health', 403, extra={'Origin': 'https://unapproved.invalid'})
         overview = request('/api/v1/research/overview', 200)
-        assert overview['status'] == 'unavailable' and overview['datasets'] == []
-        request('/api/v1/research/datasets', 503)
+        assert overview['status'] in ('verified', 'unavailable')
+        request('/api/v1/research/datasets', 200 if overview['status'] == 'verified' else 503)
         diagnostics = request('/api/v1/research/diagnostics', 200)
-        assert diagnostics['status'] == 'unavailable' and diagnostics['items'] == []
-        request('/api/v1/research-reports/datasets/ibm-5k/report.pdf', 503)
+        assert diagnostics['status'] in ('exploratory', 'unavailable')
+        request('/api/v1/research-reports/datasets/ibm-5k/report.pdf', 200 if overview['status'] == 'verified' else 503)
         request('/api/v1/transactions', 404)
         request('/api/v1/anomalies/paysim/train', 405, method='POST')
     finally:

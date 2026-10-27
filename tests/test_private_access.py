@@ -160,12 +160,29 @@ def test_browser_origin_not_allowed(private_case):
 def test_missing_artifacts_and_no_record_disclosure(private_case):
     c = private_case
     r = c.client.get('/api/v1/research/overview', headers=c.headers())
-    assert r.status_code == 200 and r.json()['status'] == 'unavailable' and r.json()['datasets'] == []
+    assert r.status_code == 200 and r.json()['status'] in ('verified', 'unavailable')
     d = c.client.get('/api/v1/research/diagnostics', headers=c.headers()).json()
-    assert d['status'] == 'unavailable' and d['items'] == []
-    assert c.client.get('/api/v1/research/datasets', headers=c.headers()).status_code == 503
+    assert d['status'] in ('exploratory', 'unavailable')
+    assert c.client.get('/api/v1/research/datasets', headers=c.headers()).status_code in (200, 503)
     g = c.client.get('/api/v1/graph-explorer/catalog', headers=c.headers()).json()
     assert all(x['status'] == 'unavailable' and x['approved_scope_nodes'] == 0 for x in g['datasets'])
+
+
+def test_explicit_missing_artifacts_and_no_record_disclosure(private_case, tmp_path):
+    from backend.app.services.research_catalog_service import ResearchCatalogService, get_research_catalog
+    empty_catalog = ResearchCatalogService(root=tmp_path)
+    private_case.client.app.dependency_overrides[get_research_catalog] = lambda: empty_catalog
+    try:
+        c = private_case
+        r = c.client.get('/api/v1/research/overview', headers=c.headers())
+        assert r.status_code == 200 and r.json()['status'] == 'unavailable' and r.json()['datasets'] == []
+        d = c.client.get('/api/v1/research/diagnostics', headers=c.headers()).json()
+        assert d['status'] == 'unavailable' and d['items'] == []
+        assert c.client.get('/api/v1/research/datasets', headers=c.headers()).status_code == 503
+        g = c.client.get('/api/v1/graph-explorer/catalog', headers=c.headers()).json()
+        assert all(x['status'] == 'unavailable' and x['approved_scope_nodes'] == 0 for x in g['datasets'])
+    finally:
+        private_case.client.app.dependency_overrides.pop(get_research_catalog, None)
 
 
 @pytest.mark.parametrize('key', ['GRAPHFIN_PRIVATE_TOKEN', 'GRAPHFIN_PRIVATE_HOSTS'])
