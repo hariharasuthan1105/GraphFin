@@ -2,9 +2,10 @@ import { useState } from "react";
 import { Heading, Panel, Notice, Qualifications } from "../ui";
 import { useSession } from "../sessionContext";
 import { DatasetReportDownload } from "../DatasetReportDownload";
+import { generateDatasetPdfReport } from "../datasetAnalysis/reportGenerator";
 
 export default function Reports() {
-  const { activeSession, loadBenchmarkSample } = useSession();
+  const { activeSession, loadBenchmarkSample, backendModel } = useSession();
   const [downloadSuccess, setDownloadSuccess] = useState<string | null>(null);
 
   // Generate downloadable JSON Audit Package for the uploaded session
@@ -272,14 +273,39 @@ export default function Reports() {
                 counterparty relationships in standard structured formats.
               </p>
 
-              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    generateDatasetPdfReport(activeSession, activeSession.backendModel || backendModel);
+                    setDownloadSuccess("Institutional PDF Audit Report generated and downloaded.");
+                    setTimeout(() => setDownloadSuccess(null), 3000);
+                  }}
+                  style={{
+                    background: "#842d35",
+                    color: "#ffffff",
+                    border: "1px solid #b44a50",
+                    padding: "8px 16px",
+                    borderRadius: "4px",
+                    fontFamily: "IBM Plex Mono, monospace",
+                    fontSize: "11px",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                  }}
+                >
+                  📄 Download Audit Report (PDF)
+                </button>
+
                 <button
                   type="button"
                   onClick={exportSessionJson}
                   style={{
-                    background: "#b44a50",
-                    color: "#ffffff",
-                    border: "1px solid #842d35",
+                    background: "#171719",
+                    color: "#f5f5f5",
+                    border: "1px solid #303034",
                     padding: "8px 16px",
                     borderRadius: "4px",
                     fontFamily: "IBM Plex Mono, monospace",

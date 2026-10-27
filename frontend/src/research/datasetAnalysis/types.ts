@@ -79,6 +79,11 @@ export interface AnalysisSummary {
     cycleCount: number;
     volumeOutlierCount: number;
   };
+  backendDatasetId?: string;
+  backendStatus?: "idle" | "syncing" | "synced" | "offline";
+  backendModel?: string;
+  backendError?: string;
+  rawCsvContent?: string;
   evaluation?: {
     labeledTotal: number;
     positives: number;
@@ -96,4 +101,7 @@ export interface AnalysisResult {
   accounts: AccountNode[];
   edges: TransferEdge[];
   topAnomalies: AccountNode[];
+  backendDatasetId?: string;
+  backendStatus?: "idle" | "syncing" | "synced" | "offline";
+  backendModel?: string;
 }

@@ -4,6 +4,7 @@ import { DatasetReportDownload } from "../DatasetReportDownload";
 import type { Page_Dataset_, Dataset } from "../contract";
 import { State, Heading, Panel, Table, Status, Hash, Notice, Qualifications } from "../ui";
 import { useSession } from "../sessionContext";
+import { generateDatasetPdfReport } from "../datasetAnalysis/reportGenerator";
 
 function Detail({ id }: { id: string }) {
   const r = useResearch<Dataset>("/datasets/" + id, "Dataset");
@@ -45,7 +46,7 @@ function Detail({ id }: { id: string }) {
 
 export default function Datasets() {
   const r = useResearch<Page_Dataset_>("/datasets", "Page_Dataset_");
-  const { activeSession, loadBenchmarkSample } = useSession();
+  const { activeSession, loadBenchmarkSample, backendModel } = useSession();
   const [activeTab, setActiveTab] = useState<"historical" | "custom">("custom");
   const [id, setId] = useState(() => {
     const requested = new URLSearchParams(location.hash.split("?")[1] ?? "").get("dataset_id");
@@ -198,7 +199,24 @@ export default function Datasets() {
                     </div>
                   </div>
 
-                  <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                  <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
+                    <button
+                      type="button"
+                      onClick={() => generateDatasetPdfReport(activeSession, activeSession.backendModel || backendModel)}
+                      style={{
+                        background: "#842d35",
+                        color: "#ffffff",
+                        border: "1px solid #b44a50",
+                        padding: "8px 16px",
+                        borderRadius: "4px",
+                        fontFamily: "IBM Plex Mono, monospace",
+                        fontSize: "11px",
+                        fontWeight: 600,
+                        cursor: "pointer",
+                      }}
+                    >
+                      📄 Download Audit Report (PDF)
+                    </button>
                     <a
                       href="#/analyze"
                       style={{
@@ -228,21 +246,6 @@ export default function Datasets() {
                       }}
                     >
                       View in Graph Explorer →
-                    </a>
-                    <a
-                      href="#/reports"
-                      style={{
-                        background: "#171719",
-                        color: "#f5f5f5",
-                        border: "1px solid #303034",
-                        padding: "8px 16px",
-                        borderRadius: "4px",
-                        fontFamily: "IBM Plex Mono, monospace",
-                        fontSize: "11px",
-                        textDecoration: "none",
-                      }}
-                    >
-                      Export Audit Report →
                     </a>
                   </div>
                 </div>

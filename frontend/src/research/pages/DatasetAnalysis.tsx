@@ -12,19 +12,27 @@ import {
 import { analyzeTransactionGraph } from "../datasetAnalysis/engine";
 import { AnalysisGraphCanvas } from "../datasetAnalysis/AnalysisGraphCanvas";
 import type {
-  AccountNode,
   AnalysisResult,
   ColumnMapping,
 } from "../datasetAnalysis/types";
 import { useSession } from "../sessionContext";
+import { generateDatasetPdfReport } from "../datasetAnalysis/reportGenerator";
 
 export default function DatasetAnalysis() {
-  const { activeSession, setActiveSession, setGraphMode } = useSession();
+  const {
+    activeSession,
+    setActiveSession,
+    setGraphMode,
+    syncSessionToBackend,
+    backendStatus,
+    backendModel,
+  } = useSession();
   const [step, setStep] = useState<"upload" | "mapping" | "results">(
     activeSession ? "results" : "upload"
   );
   const [fileName, setFileName] = useState(activeSession?.summary.datasetName || "");
   const [fileSize, setFileSize] = useState(activeSession?.summary.fileSizeBytes || 0);
+  const [rawCsvText, setRawCsvText] = useState<string>(activeSession?.summary.rawCsvContent || "");
   const [parsedTable, setParsedTable] = useState<ParsedTable | null>(null);
   const [mapping, setMapping] = useState<ColumnMapping>({
     sourceCol: "",
@@ -93,6 +101,7 @@ export default function DatasetAnalysis() {
     reader.onload = (e) => {
       try {
         const text = e.target?.result as string;
+        setRawCsvText(text);
         let table: ParsedTable;
         if (file.name.endsWith(".json")) {
           table = parseJsonTransactions(text);
@@ -117,6 +126,7 @@ export default function DatasetAnalysis() {
     setErrorMsg("");
     setFileName("synthetic_financial_network_benchmark.csv");
     setFileSize(SAMPLE_CSV_DATA.length);
+    setRawCsvText(SAMPLE_CSV_DATA);
     try {
       const table = parseDelimitedText(SAMPLE_CSV_DATA);
       const autoMap = autoDetectColumnMapping(table.headers);
@@ -138,6 +148,7 @@ export default function DatasetAnalysis() {
       try {
         const records = buildTransactionRecords(parsedTable, mapping);
         const analysis = analyzeTransactionGraph(records, fileName, fileSize);
+        analysis.summary.rawCsvContent = rawCsvText;
         setResult(analysis);
         setActiveSession(analysis);
         setGraphMode("uploaded");
@@ -147,6 +158,9 @@ export default function DatasetAnalysis() {
           setSelectedNodeId(analysis.accounts[0].id);
         }
         setStep("results");
+
+        // Sync with backend ML pipeline (Isolation Forest) in background
+        syncSessionToBackend(analysis, rawCsvText).catch(() => {});
       } catch (err) {
         setErrorMsg(err instanceof Error ? err.message : "Graph analysis encountered an error.");
       } finally {
@@ -154,6 +168,13 @@ export default function DatasetAnalysis() {
       }
     }, 50);
   };
+
+  // Keep result updated when activeSession changes (e.g. backend scores arrived)
+  useEffect(() => {
+    if (activeSession) {
+      setResult(activeSession);
+    }
+  }, [activeSession]);
 
   // 4. Reset
   const handleReset = () => {
@@ -528,30 +549,80 @@ export default function DatasetAnalysis() {
             }}
           >
             <div>
-              <span className="eyebrow red">ANALYSIS COMPLETE</span>
-              <h2 style={{ margin: "4px 0 0 0" }}>{result.summary.datasetName}</h2>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px", flexWrap: "wrap" }}>
+                <span className="eyebrow red">ANALYSIS COMPLETE</span>
+                <span
+                  style={{
+                    fontFamily: "IBM Plex Mono, monospace",
+                    fontSize: "10px",
+                    padding: "2px 8px",
+                    borderRadius: "3px",
+                    background: backendStatus === "synced" ? "#1f1416" : "#171719",
+                    border: backendStatus === "synced" ? "1px solid #b44a50" : "1px solid #303034",
+                    color: backendStatus === "synced" ? "#f5f5f5" : "#a6a6a6",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "5px",
+                  }}
+                >
+                  <span
+                    style={{
+                      width: "6px",
+                      height: "6px",
+                      borderRadius: "50%",
+                      background: backendStatus === "synced" ? "#ef4444" : backendStatus === "syncing" ? "#f59e0b" : "#77777d",
+                      display: "inline-block",
+                    }}
+                  />
+                  {backendStatus === "synced"
+                    ? `Backend ML: ${backendModel}`
+                    : backendStatus === "syncing"
+                    ? "Syncing Backend ML Pipeline..."
+                    : "Client-Side Graph Heuristics (Deterministic)"}
+                </span>
+              </div>
+              <h2 style={{ margin: 0 }}>{result.summary.datasetName}</h2>
             </div>
-            <div style={{ display: "flex", gap: "10px" }}>
+            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
               <button
                 type="button"
-                onClick={handleReset}
-                style={{ background: "#171719", color: "#f5f5f5", border: "1px solid #303034", padding: "8px 14px", fontSize: "12px" }}
+                onClick={() => generateDatasetPdfReport(result, result.backendModel || backendModel)}
+                style={{
+                  background: "#842d35",
+                  color: "#ffffff",
+                  border: "1px solid #b44a50",
+                  padding: "8px 16px",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  borderRadius: "2px",
+                }}
               >
-                ↺ UPLOAD NEW DATASET
+                📄 DOWNLOAD AUDIT REPORT (PDF)
               </button>
               <button
                 type="button"
                 onClick={handleExportCsv}
-                style={{ background: "#202023", color: "#f5f5f5", border: "1px solid #303034", padding: "8px 14px", fontSize: "12px" }}
+                style={{ background: "#171719", color: "#f5f5f5", border: "1px solid #303034", padding: "8px 14px", fontSize: "12px", cursor: "pointer", borderRadius: "2px" }}
               >
                 📥 EXPORT ANOMALIES (CSV)
               </button>
               <button
                 type="button"
                 onClick={handleExportJson}
-                style={{ background: "#202023", color: "#f5f5f5", border: "1px solid #303034", padding: "8px 14px", fontSize: "12px" }}
+                style={{ background: "#171719", color: "#f5f5f5", border: "1px solid #303034", padding: "8px 14px", fontSize: "12px", cursor: "pointer", borderRadius: "2px" }}
               >
                 📥 EXPORT SUMMARY (JSON)
+              </button>
+              <button
+                type="button"
+                onClick={handleReset}
+                style={{ background: "#101012", color: "#a6a6a6", border: "1px solid #303034", padding: "8px 14px", fontSize: "12px", cursor: "pointer", borderRadius: "2px" }}
+              >
+                ↺ UPLOAD NEW
               </button>
             </div>
           </div>

@@ -3,6 +3,7 @@ import { useState } from "react";
 import type { Page_Experiment_, ModelSeeds } from "../contract";
 import { State, Heading, Panel, Table, Tier, Chart, Notice, Qualifications } from "../ui";
 import { query } from "../client";
+import { useSession } from "../sessionContext";
 function summary(values: number[]) {
   const n = values.length;
   if (!n) return null;
@@ -130,7 +131,6 @@ function Models({ tier, method }: { tier: string; method: string }) {
     </>
   );
 }
-import { useSession } from "../sessionContext";
 
 export default function Seeds() {
   const { activeSession } = useSession();

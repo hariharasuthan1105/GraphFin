@@ -13,6 +13,7 @@ import {
 } from "../ui";
 import { query } from "../client";
 import { useSession } from "../sessionContext";
+import { generateDatasetPdfReport } from "../datasetAnalysis/reportGenerator";
 function Rankings({ experiment }: { experiment: Experiment }) {
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState("score_desc");
@@ -196,14 +197,16 @@ function Detail({ id }: { id: string }) {
   );
 }
 export default function Experiments() {
-  const { activeSession } = useSession();
-  const [tier, setTier] = useState("ibm-5k");
+  const { activeSession, backendModel, backendStatus } = useSession();
+  const [tier, setTier] = useState(() => (activeSession ? "runtime-active" : "ibm-5k"));
   const [method, setMethod] = useState("");
   const [page, setPage] = useState(1);
   const [id, setId] = useState<string>();
+  const isRuntime = tier === "runtime-active" && activeSession;
+
   const r = useResearch<Page_Experiment_>(
     query("/experiments", {
-      dataset_id: tier || undefined,
+      dataset_id: isRuntime ? undefined : tier || undefined,
       method: method || undefined,
       page_number: page,
       page_size: 10,
@@ -213,60 +216,9 @@ export default function Experiments() {
   return (
     <>
       <Heading index="05" title="Experiment registry">
-        Versioned methods. Frozen populations. Inspect the record behind each
-        result.
+        Versioned methods. Frozen populations and active runtime dataset model executions.
       </Heading>
 
-      {activeSession && (
-        <Panel title="Active Analysis Session Context" tag="INTERACTIVE PIPELINE">
-          <div className="panel-body">
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                gap: "12px",
-                marginBottom: "12px",
-              }}
-            >
-              <div>
-                <span style={{ fontSize: "10px", color: "#64748b", display: "block" }}>
-                  DATASET NAME
-                </span>
-                <strong style={{ fontSize: "13px", color: "#f8fafc" }}>
-                  {activeSession.summary.datasetName}
-                </strong>
-              </div>
-              <div>
-                <span style={{ fontSize: "10px", color: "#64748b", display: "block" }}>
-                  EXECUTION MODE
-                </span>
-                <strong style={{ fontSize: "13px", color: "#f5f5f5" }}>
-                  Deterministic Graph Heuristics
-                </strong>
-              </div>
-              <div>
-                <span style={{ fontSize: "10px", color: "#64748b", display: "block" }}>
-                  ACTIVE METRICS
-                </span>
-                <span style={{ fontSize: "12px", color: "#94a3b8" }}>
-                  Degree Asymmetry, Cycles, Fan-In/Out
-                </span>
-              </div>
-              <div>
-                <span style={{ fontSize: "10px", color: "#64748b", display: "block" }}>
-                  FLAGGED ANOMALIES
-                </span>
-                <strong style={{ fontSize: "13px", color: "#f43f5e" }}>
-                  {activeSession.summary.suspiciousAccountCount} accounts
-                </strong>
-              </div>
-            </div>
-            <p style={{ margin: 0, fontSize: "11px", color: "#94a3b8", lineHeight: 1.5 }}>
-              <strong>Scientific Note:</strong> The 86 historical registered experiments cataloged below are frozen benchmark models (E0–E6 Isolation Forest with 19 engineered features) trained on standardized splits. The active uploaded session executes client-side deterministic graph topology analysis.
-            </p>
-          </div>
-        </Panel>
-      )}
       <div className="filters">
         <label>
           Dataset scope
@@ -278,63 +230,177 @@ export default function Experiments() {
               setId(undefined);
             }}
           >
-            <option value="ibm-5k">IBM AML / 5K</option>
-            <option value="ibm-50k">IBM AML / ~50K</option>
-            <option value="">All / including historical</option>
+            {activeSession && (
+              <option value="runtime-active">
+                ✦ Active Session ({activeSession.summary.datasetName})
+              </option>
+            )}
+            <option value="ibm-5k">IBM AML / 5K (Historical)</option>
+            <option value="ibm-50k">IBM AML / ~50K (Historical)</option>
+            <option value="">All Historical Benchmarks (86 runs)</option>
           </select>
         </label>
-        <label>
-          Method
-          <select
-            value={method}
-            onChange={(e) => {
-              setMethod(e.target.value);
-              setPage(1);
-              setId(undefined);
-            }}
-          >
-            <option value="">All methods</option>
-            {[
-              "E0",
-              "E1",
-              "E2",
-              "E3",
-              "E4",
-              "E5",
-              "E6_BASE",
-              "E6_CREST",
-              "E0-E4",
-            ].map((x) => (
-              <option key={x}>{x}</option>
-            ))}
-          </select>
-        </label>
+        {!isRuntime && (
+          <label>
+            Method
+            <select
+              value={method}
+              onChange={(e) => {
+                setMethod(e.target.value);
+                setPage(1);
+                setId(undefined);
+              }}
+            >
+              <option value="">All methods</option>
+              {[
+                "E0",
+                "E1",
+                "E2",
+                "E3",
+                "E4",
+                "E5",
+                "E6_BASE",
+                "E6_CREST",
+                "E0-E4",
+              ].map((x) => (
+                <option key={x}>{x}</option>
+              ))}
+            </select>
+          </label>
+        )}
       </div>
-      {!r.data ? (
-        <State {...r} />
-      ) : (
-        <Panel title="Saved experiments" tag="IMMUTABLE / ARTIFACTS">
-          <Table
-            caption="Select an experiment to inspect metrics, identities and rankings"
-            headers={["Experiment", "Version", "Split", "AP", "Status"]}
-            rows={r.data.items.map((x) => [
-              <button
-                key="select"
-                onClick={() => setId(x.experiment_id)}
-                aria-pressed={id === x.experiment_id}
+
+      {isRuntime ? (
+        <>
+          <Panel
+            title={`Active Session Runtime Model: ${activeSession.backendModel || backendModel}`}
+            tag={activeSession.backendStatus === "synced" ? "BACKEND / TRAINED" : "CLIENT / HEURISTIC"}
+          >
+            <div className="panel-body">
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                  gap: "12px",
+                  marginBottom: "16px",
+                }}
               >
-                {x.experiment_id}
-              </button>,
-              x.version,
-              x.split_seed ?? "Unavailable",
-              fmt(x.metrics?.average_precision, 6),
-              x.status,
-            ])}
-          />
-          <Pager page={page} setPage={setPage} size={10} total={r.data.total} />
-        </Panel>
+                <div>
+                  <span style={{ fontSize: "10px", color: "#77777d", display: "block" }}>DATASET ID</span>
+                  <strong style={{ fontSize: "13px", color: "#f5f5f5" }}>{activeSession.summary.datasetName}</strong>
+                </div>
+                <div>
+                  <span style={{ fontSize: "10px", color: "#77777d", display: "block" }}>MODEL ARCHITECTURE</span>
+                  <strong style={{ fontSize: "13px", color: "#f5f5f5" }}>{activeSession.backendModel || backendModel}</strong>
+                </div>
+                <div>
+                  <span style={{ fontSize: "10px", color: "#77777d", display: "block" }}>TOTAL ACCOUNTS</span>
+                  <strong style={{ fontSize: "13px", color: "#f5f5f5" }}>{activeSession.accounts.length} scored</strong>
+                </div>
+                <div>
+                  <span style={{ fontSize: "10px", color: "#77777d", display: "block" }}>FLAGGED ANOMALIES</span>
+                  <strong style={{ fontSize: "13px", color: "#c04b52" }}>{activeSession.summary.suspiciousAccountCount} accounts</strong>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
+                <button
+                  type="button"
+                  onClick={() => generateDatasetPdfReport(activeSession, activeSession.backendModel || backendModel)}
+                  style={{
+                    background: "#842d35",
+                    color: "#ffffff",
+                    border: "1px solid #b44a50",
+                    padding: "8px 16px",
+                    borderRadius: "4px",
+                    fontFamily: "IBM Plex Mono, monospace",
+                    fontSize: "11px",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                  }}
+                >
+                  📄 Download Audit Report (PDF)
+                </button>
+                <a
+                  href="#/graph"
+                  style={{
+                    background: "#171719",
+                    color: "#f5f5f5",
+                    border: "1px solid #303034",
+                    padding: "8px 16px",
+                    borderRadius: "4px",
+                    fontFamily: "IBM Plex Mono, monospace",
+                    fontSize: "11px",
+                    textDecoration: "none",
+                  }}
+                >
+                  Inspect in Graph Explorer →
+                </a>
+                <a
+                  href="#/analyze"
+                  style={{
+                    background: "#171719",
+                    color: "#f5f5f5",
+                    border: "1px solid #303034",
+                    padding: "8px 16px",
+                    borderRadius: "4px",
+                    fontFamily: "IBM Plex Mono, monospace",
+                    fontSize: "11px",
+                    textDecoration: "none",
+                  }}
+                >
+                  Configure Features in Workbench →
+                </a>
+              </div>
+            </div>
+
+            <Table
+              caption="Active dataset continuous account anomaly rankings"
+              headers={["Rank", "Account ID", "Anomaly score", "In / Out degree", "Net flow", "Flagged patterns", "Graph lens"]}
+              rows={activeSession.accounts.slice(0, 25).map((acc, idx) => [
+                idx + 1,
+                acc.id,
+                acc.anomalyScore.toFixed(4),
+                `${acc.inDegree} / ${acc.outDegree}`,
+                `$${acc.netFlow.toLocaleString("en-US", { maximumFractionDigits: 0 })}`,
+                acc.patterns.length > 0 ? acc.patterns.join(", ") : "Normal Flow",
+                <a key="lens" href={`#/graph`}>Open in graph →</a>,
+              ])}
+            />
+          </Panel>
+          <Notice>
+            Scientific Note: Active runtime evaluation scores unstandardized custom transaction data. The 86 historical registered experiments cataloged under the historical scope are frozen benchmark models (E0–E6 Isolation Forest with 19 engineered features) trained on standardized splits.
+          </Notice>
+        </>
+      ) : (
+        <>
+          {!r.data ? (
+            <State {...r} />
+          ) : (
+            <Panel title="Saved experiments" tag="IMMUTABLE / ARTIFACTS">
+              <Table
+                caption="Select an experiment to inspect metrics, identities and rankings"
+                headers={["Experiment", "Version", "Split", "AP", "Status"]}
+                rows={r.data.items.map((x) => [
+                  <button
+                    key="select"
+                    onClick={() => setId(x.experiment_id)}
+                    aria-pressed={id === x.experiment_id}
+                  >
+                    {x.experiment_id}
+                  </button>,
+                  x.version,
+                  x.split_seed ?? "Unavailable",
+                  fmt(x.metrics?.average_precision, 6),
+                  x.status,
+                ])}
+              />
+              <Pager page={page} setPage={setPage} size={10} total={r.data.total} />
+            </Panel>
+          )}
+          {id && <Detail key={id} id={id} />}
+        </>
       )}
-      {id && <Detail key={id} id={id} />}
     </>
   );
 }

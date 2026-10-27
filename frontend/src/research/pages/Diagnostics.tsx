@@ -3,6 +3,7 @@ import { useState } from "react";
 import type { Page_Diagnostic_, Diagnostic } from "../contract";
 import { State, Heading, Panel, Table, Pager, Notice, Status } from "../ui";
 import { query } from "../client";
+import { useSession } from "../sessionContext";
 function Detail({ id }: { id: string }) {
   const r = useResearch<Diagnostic>("/diagnostics/" + id, "Diagnostic");
   return !r.data ? (
@@ -44,7 +45,6 @@ function Detail({ id }: { id: string }) {
     </Panel>
   );
 }
-import { useSession } from "../sessionContext";
 
 export default function Diagnostics() {
   const { activeSession } = useSession();

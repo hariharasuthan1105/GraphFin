@@ -96,6 +96,141 @@ export function getAuthHeaders(): Record<string, string> {
 
 const cache = new Map<string, { value: unknown; expires: number }>();
 
+export function backendApiUrl(path: string) {
+  return base + "/api/v1" + path;
+}
+
+export async function checkBackendHealth(): Promise<{ online: boolean; waking: boolean; message: string }> {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 6000);
+    const res = await fetch(backendApiUrl("/health"), {
+      signal: controller.signal,
+      headers: { Accept: "application/json" },
+    }).finally(() => clearTimeout(timeout));
+    if (res.ok) {
+      return { online: true, waking: false, message: "Backend active (Render Free Tier)" };
+    }
+    return { online: false, waking: false, message: `HTTP ${res.status}` };
+  } catch (err: any) {
+    if (err?.name === "AbortError") {
+      return { online: false, waking: true, message: "Backend is spinning up from sleep..." };
+    }
+    return { online: false, waking: false, message: "Backend offline (Local fallback active)" };
+  }
+}
+
+export async function uploadTransactionsCsv(
+  csvContent: string,
+  filename = "transactions.csv",
+  currency = "USD",
+): Promise<{ dataset_id: string; summary: any; valid_transactions: number }> {
+  const formData = new FormData();
+  const fileBlob = new Blob([csvContent], { type: "text/csv" });
+  formData.append("file", fileBlob, filename);
+
+  const res = await fetch(
+    backendApiUrl(`/transactions/upload?currency=${encodeURIComponent(currency)}`),
+    {
+      method: "POST",
+      body: formData,
+      headers: {
+        Accept: "application/json",
+        ...getAuthHeaders(),
+      },
+    },
+  );
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Upload failed (${res.status}): ${errText}`);
+  }
+  return await res.json();
+}
+
+export async function trainIsolationForest(
+  datasetId: string,
+  experimentLabel = "isolation_forest",
+): Promise<any> {
+  const res = await fetch(
+    backendApiUrl(
+      `/anomalies/${encodeURIComponent(datasetId)}/train?experiment_label=${encodeURIComponent(experimentLabel)}`,
+    ),
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify({
+        experiment_label: experimentLabel,
+        n_estimators: 100,
+        contamination: 0.05,
+        random_state: 42,
+        feature_groups: ["graph", "behavioral", "temporal"],
+      }),
+    },
+  );
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Model training failed (${res.status}): ${errText}`);
+  }
+  return await res.json();
+}
+
+export async function fetchUserAnomalies(
+  datasetId: string,
+  experimentLabel = "isolation_forest",
+  limit = 250,
+): Promise<{ total_users: number; anomalies_detected: number; users: Array<any> }> {
+  const res = await fetch(
+    backendApiUrl(
+      `/anomalies/${encodeURIComponent(datasetId)}/users?experiment_label=${encodeURIComponent(experimentLabel)}&limit=${limit}`,
+    ),
+    {
+      headers: {
+        Accept: "application/json",
+        ...getAuthHeaders(),
+      },
+    },
+  );
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Failed to fetch user anomalies (${res.status}): ${errText}`);
+  }
+  return await res.json();
+}
+
+export async function downloadBackendCustomReport(
+  datasetId: string,
+  experimentLabel = "isolation_forest",
+  format: "pdf" | "docx" | "csv" = "pdf",
+): Promise<void> {
+  const res = await fetch(backendApiUrl("/reports/generate"), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...getAuthHeaders(),
+    },
+    body: JSON.stringify({
+      source: "custom",
+      format,
+      dataset_id: datasetId,
+      experiment_label: experimentLabel,
+    }),
+  });
+  if (!res.ok) {
+    throw new Error(`Backend report download failed (${res.status})`);
+  }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `GraphFin_${datasetId}_Report.${format}`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export function authUrl(path: string) {
   return base + "/api/auth" + path;
 }

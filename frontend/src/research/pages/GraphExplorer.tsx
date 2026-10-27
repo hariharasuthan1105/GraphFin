@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react";
 import { Heading, Qualifications } from "../ui";
-import { fmt } from "../state";
 import { useGraphCatalog } from "../graph/client";
 import { useSession } from "../sessionContext";
 import {
@@ -10,6 +9,7 @@ import {
 import AnalysisGraphCanvas from "../datasetAnalysis/AnalysisGraphCanvas";
 import type { AccountNode } from "../datasetAnalysis/types";
 import { DatasetReportDownload } from "../DatasetReportDownload";
+import { generateDatasetPdfReport } from "../datasetAnalysis/reportGenerator";
 
 export default function GraphExplorer() {
   const {
@@ -19,6 +19,7 @@ export default function GraphExplorer() {
     simulatedPreset,
     setSimulatedPreset,
     loadBenchmarkSample,
+    backendModel,
   } = useSession();
 
   const metadata = useGraphCatalog();
@@ -741,8 +742,8 @@ export default function GraphExplorer() {
                     </span>
                   </div>
 
-                  {/* Pattern tags */}
-                  <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                  {/* Pattern tags and PDF Report Download */}
+                  <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", alignItems: "center" }}>
                     {selectedAccount.patterns.length > 0 ? (
                       selectedAccount.patterns.map((p) => (
                         <span key={p} className="inspector-pattern-badge">
@@ -763,6 +764,34 @@ export default function GraphExplorer() {
                       >
                         <b style={{ color: "#c04b52" }}>✓</b> STANDARD METRICS
                       </span>
+                    )}
+
+                    {graphMode === "uploaded" && activeGraphResult && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          generateDatasetPdfReport(
+                            activeGraphResult,
+                            activeGraphResult.backendModel || backendModel,
+                          )
+                        }
+                        style={{
+                          background: "#842d35",
+                          color: "#ffffff",
+                          border: "1px solid #b44a50",
+                          padding: "3px 8px",
+                          borderRadius: "3px",
+                          fontFamily: "IBM Plex Mono, monospace",
+                          fontSize: "10px",
+                          fontWeight: 600,
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "4px",
+                        }}
+                      >
+                        📄 Download Report (PDF)
+                      </button>
                     )}
                   </div>
                 </div>

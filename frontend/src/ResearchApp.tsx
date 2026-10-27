@@ -42,7 +42,7 @@ function MainShell() {
   const [route, setRoute] = useState(locationRoute);
   const [open, setOpen] = useState(false);
   const menu = useRef<HTMLButtonElement>(null);
-  const { appMode, setAppMode, activeSession } = useSession();
+  const { appMode, setAppMode, activeSession, isBackendOnline, backendStatus } = useSession();
 
   useEffect(() => {
     const update = () => {
@@ -255,6 +255,37 @@ function MainShell() {
                 ⚲ RESEARCH
               </button>
             </div>
+
+            <span style={{ color: "#303034" }}>|</span>
+
+            {/* Backend API Status Indicator */}
+            <span
+              style={{
+                fontFamily: "IBM Plex Mono, monospace",
+                fontSize: "10px",
+                letterSpacing: "0.04em",
+                color: isBackendOnline ? "#f5f5f5" : "#a6a6a6",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "5px",
+                background: "#101012",
+                padding: "4px 8px",
+                borderRadius: "3px",
+                border: "1px solid #303034",
+              }}
+              title={isBackendOnline ? "Python/FastAPI ML Backend: Online (Render)" : "Backend offline or waking (Local client heuristics active)"}
+            >
+              <span
+                style={{
+                  width: "6px",
+                  height: "6px",
+                  background: isBackendOnline ? "#22c55e" : backendStatus === "syncing" ? "#f59e0b" : "#77777d",
+                  borderRadius: "50%",
+                  display: "inline-block",
+                }}
+              />
+              {isBackendOnline ? "API: ONLINE" : backendStatus === "syncing" ? "API: SYNCING" : "API: STANDBY"}
+            </span>
 
             <span style={{ color: "#303034" }}>|</span>
 
