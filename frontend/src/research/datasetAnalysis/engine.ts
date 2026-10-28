@@ -160,7 +160,7 @@ export function analyzeTransactionGraph(
     dstCp.inAmount += tx.amount;
 
     // Directed Edge accumulation
-    const edgeKey = `${tx.source}->${tx.destination}`;
+    const edgeKey = JSON.stringify([tx.source, tx.destination]);
     const edge = edgeMap.get(edgeKey);
     if (edge) {
       edge.amount += tx.amount;
@@ -177,8 +177,8 @@ export function analyzeTransactionGraph(
 
   // 4. Mark Reciprocal Edges (direct bilateral exchange u <-> v)
   for (const [, edge] of edgeMap.entries()) {
-    const reverseKey = `${edge.target}->${edge.source}`;
-    if (edgeMap.has(reverseKey)) {
+    const reverseKey = JSON.stringify([edge.target, edge.source]);
+    if (edge.source !== edge.target && edgeMap.has(reverseKey)) {
       edge.isReciprocal = true;
     }
   }
@@ -315,6 +315,7 @@ export function analyzeTransactionGraph(
     // B. Directed multi-hop circular forwarding loop (3-hop u -> v -> w -> u or 4-hop u -> v -> w -> x -> u)
     let hasNoteworthyCycle = false;
     for (const [cpId, cp] of raw.counterparties.entries()) {
+      if (cpId === id) continue;
       if (cp.outCount >= 5 && cp.inCount >= 5) {
         hasNoteworthyCycle = true;
         break;
@@ -323,7 +324,7 @@ export function analyzeTransactionGraph(
         const vNode = nodeMap.get(cpId);
         if (vNode) {
           for (const [wId, wCp] of vNode.counterparties.entries()) {
-            if (wId !== id && wCp.outCount > 0) {
+            if (wId !== id && wId !== cpId && wCp.outCount > 0) {
               const wNode = nodeMap.get(wId);
               if (wNode) {
                 // 3-hop check: u -> v -> w -> u
@@ -338,7 +339,7 @@ export function analyzeTransactionGraph(
 
                 // 4-hop check: u -> v -> w -> x -> u
                 for (const [xId, xCp] of wNode.counterparties.entries()) {
-                  if (xId !== id && xId !== cpId && xCp.outCount > 0) {
+                  if (xId !== id && xId !== cpId && xId !== wId && xCp.outCount > 0) {
                     const xNode = nodeMap.get(xId);
                     if (xNode) {
                       const xToU = xNode.counterparties.get(id);
@@ -454,7 +455,7 @@ export function analyzeTransactionGraph(
   // 7. Network Density: E / (V * (V - 1))
   const density =
     totalAccounts > 1
-      ? edgeMap.size / (totalAccounts * (totalAccounts - 1))
+      ? Array.from(edgeMap.values()).filter(e => e.source !== e.target).length / (totalAccounts * (totalAccounts - 1))
       : 0;
 
   // 8. Ground-Truth Validation Evaluation (Only if labels are explicitly present)
@@ -462,7 +463,13 @@ export function analyzeTransactionGraph(
   const labeledNodes = accounts.filter((a) => a.isLabeledFraud !== undefined);
   const positiveLabels = accounts.filter((a) => a.isLabeledFraud === true);
 
-  if (positiveLabels.length > 0) {
+  const transactionLabels = {
+    normal: records.filter(r => r.label === 0 || r.label === false).length,
+    anomalous: records.filter(r => r.label === 1 || r.label === true).length,
+    unknown: records.filter(r => ![0, 1, false, true].includes(r.label as number | boolean)).length,
+  };
+  // Missing labels must not be silently treated as negative ground truth.
+  if (transactionLabels.unknown === 0 && positiveLabels.length > 0) {
     const totalPositives = positiveLabels.length;
     const totalNegatives = accounts.length - totalPositives;
 
@@ -477,16 +484,21 @@ export function analyzeTransactionGraph(
     const f1Score =
       precision + recall > 0 ? (2 * precision * recall) / (precision + recall) : 0.0;
 
-    // Average Precision (PR-AUC across full ranked list)
+    // Threshold-based average precision: tied scores enter together, independent of input order.
     let cumulativeTP = 0;
     let sumPrecision = 0;
-    for (let i = 0; i < accounts.length; i++) {
-      if (accounts[i].isLabeledFraud) {
-        cumulativeTP++;
-        sumPrecision += cumulativeTP / (i + 1);
+    for (let i = 0; i < accounts.length;) {
+      let end = i;
+      let groupTP = 0;
+      while (end < accounts.length && accounts[end].anomalyScore === accounts[i].anomalyScore) {
+        if (accounts[end].isLabeledFraud) groupTP++;
+        end++;
       }
+      cumulativeTP += groupTP;
+      sumPrecision += groupTP * cumulativeTP / end;
+      i = end;
     }
-    const prAuc = totalPositives > 0 ? sumPrecision / totalPositives : 0.0;
+    const prAuc = sumPrecision / totalPositives;
 
     evaluation = {
       labeledTotal: labeledNodes.length,
@@ -513,6 +525,8 @@ export function analyzeTransactionGraph(
 
   const summary: AnalysisSummary = {
     datasetName,
+    sourceRecords: rawTotal,
+    transactionLabels,
     fileSizeBytes,
     totalTransactions: records.length,
     totalVolume: Math.round(totalVolume * 100) / 100,
@@ -556,6 +570,6 @@ export function analyzeTransactionGraph(
     summary,
     accounts,
     edges: Array.from(edgeMap.values()),
-    topAnomalies: topAnomalies.length > 0 ? topAnomalies : accounts.slice(0, 5),
+    topAnomalies,
   };
 }

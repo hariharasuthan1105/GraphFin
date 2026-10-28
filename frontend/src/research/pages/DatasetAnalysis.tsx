@@ -1,4 +1,4 @@
-import { useState, useId, useEffect } from "react";
+import { useState, useId, useEffect, useRef } from "react";
 import { Heading, Panel, Notice } from "../ui";
 import { safeSummary } from "../sessionMetadata";
 import { fmt } from "../state";
@@ -7,14 +7,12 @@ import {
   parseDelimitedText,
   parseJsonTransactions,
   autoDetectColumnMapping,
-  buildTransactionRecords,
   buildTransactionRecordsDetailed,
   type ParsedTable,
 } from "../datasetAnalysis/parser";
 import { analyzeTransactionGraph } from "../datasetAnalysis/engine";
 import { AnalysisGraphCanvas } from "../datasetAnalysis/AnalysisGraphCanvas";
 import type {
-  AnalysisResult,
   ColumnMapping,
 } from "../datasetAnalysis/types";
 import { useSession } from "../sessionContext";
@@ -22,21 +20,28 @@ import { generateDatasetPdfReport } from "../datasetAnalysis/reportGenerator";
 
 export default function DatasetAnalysis() {
   const {
+    loadBenchmarkSample,
     activeSession,
     setActiveSession,
     setGraphMode,
     syncSessionToBackend,
     backendStatus,
     backendModel,
+    backendMessage,
   } = useSession();
+  const [initialSample] = useState(() => {
+    const hash = window.location.hash;
+    const requested = hash.includes('sample=1') || hash.includes('demo=1');
+    return requested ? {table: parseDelimitedText(SAMPLE_CSV_DATA), autostart: hash.includes('autostart=1') || hash.includes('run=1')} : null;
+  });
   const [step, setStep] = useState<"upload" | "mapping" | "results">(
-    activeSession ? "results" : "upload"
+    initialSample ? (initialSample.autostart ? "results" : "mapping") : activeSession ? "results" : "upload"
   );
-  const [fileName, setFileName] = useState(activeSession?.summary.datasetName || "");
-  const [fileSize, setFileSize] = useState(activeSession?.summary.fileSizeBytes || 0);
-  const [rawCsvText, setRawCsvText] = useState<string>(activeSession?.summary.rawCsvContent || "");
-  const [parsedTable, setParsedTable] = useState<ParsedTable | null>(null);
-  const [mapping, setMapping] = useState<ColumnMapping>({
+  const [fileName, setFileName] = useState(initialSample ? "synthetic_financial_benchmark.csv" : activeSession?.summary.datasetName || "");
+  const [fileSize, setFileSize] = useState(initialSample ? SAMPLE_CSV_DATA.length : activeSession?.summary.fileSizeBytes || 0);
+  const [rawCsvText, setRawCsvText] = useState<string>(initialSample ? SAMPLE_CSV_DATA : activeSession?.summary.rawCsvContent || "");
+  const [parsedTable, setParsedTable] = useState<ParsedTable | null>(initialSample?.table ?? null);
+  const [mapping, setMapping] = useState<ColumnMapping>(initialSample ? autoDetectColumnMapping(initialSample.table.headers) : {
     sourceCol: "",
     destinationCol: "",
     amountCol: "",
@@ -47,7 +52,7 @@ export default function DatasetAnalysis() {
   });
   const [errorMsg, setErrorMsg] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [result, setResult] = useState<AnalysisResult | null>(activeSession);
+  const result = activeSession;
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(
     activeSession?.topAnomalies[0]?.id || activeSession?.accounts[0]?.id || null
   );
@@ -56,37 +61,13 @@ export default function DatasetAnalysis() {
 
   const fileInputId = useId();
 
-  // Auto-load sample benchmark if URL hash contains sample=1 or demo=1
+  const sampleStarted = useRef(false);
   useEffect(() => {
-    const hash = window.location.hash || "";
-    if (hash.includes("sample=1") || hash.includes("demo=1")) {
-      setFileName("synthetic_financial_network_benchmark.csv");
-      setFileSize(SAMPLE_CSV_DATA.length);
-      try {
-        const table = parseDelimitedText(SAMPLE_CSV_DATA);
-        const autoMap = autoDetectColumnMapping(table.headers);
-        setParsedTable(table);
-        setMapping(autoMap);
-        if (hash.includes("autostart=1") || hash.includes("run=1")) {
-          const records = buildTransactionRecords(table, autoMap);
-          const analysis = analyzeTransactionGraph(
-            records,
-            "synthetic_financial_network_benchmark.csv",
-            SAMPLE_CSV_DATA.length,
-          );
-          setResult(analysis);
-          if (analysis.topAnomalies.length > 0) {
-            setSelectedNodeId(analysis.topAnomalies[0].id);
-          }
-          setStep("results");
-        } else {
-          setStep("mapping");
-        }
-      } catch (err) {
-        setErrorMsg(err instanceof Error ? err.message : "Failed to load sample dataset.");
-      }
+    if (initialSample?.autostart && !sampleStarted.current) {
+      sampleStarted.current = true;
+      loadBenchmarkSample();
     }
-  }, []);
+  }, [initialSample?.autostart, loadBenchmarkSample]);
 
   // 1. Handle File Selection
   const handleFile = (file: File) => {
@@ -159,7 +140,6 @@ export default function DatasetAnalysis() {
           analysis.summary.inputChecksum = Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, '0')).join('');
         }
         analysis.summary.rawCsvContent = rawCsvText;
-        setResult(analysis);
         setActiveSession(analysis);
         setGraphMode("uploaded");
         if (analysis.topAnomalies.length > 0) {
@@ -176,18 +156,10 @@ export default function DatasetAnalysis() {
     }, 50);
   };
 
-  // Keep result updated when activeSession changes (e.g. backend scores arrived)
-  useEffect(() => {
-    if (activeSession) {
-      setResult(activeSession);
-    }
-  }, [activeSession]);
-
   // 4. Reset
   const handleReset = () => {
     setStep("upload");
     setParsedTable(null);
-    setResult(null);
     setSelectedNodeId(null);
     setErrorMsg("");
   };
@@ -243,6 +215,7 @@ export default function DatasetAnalysis() {
       <Heading index="03" title="Interactive Analysis">
         Client-side transaction network construction, structural graph feature extraction, and anomaly pattern detection.
       </Heading>
+      {result && <p role="status">{backendMessage}</p>}
 
       <ol className="analysis-stages" aria-label="Analysis progress">{['Upload', 'Validate', 'Analyze', 'Results'].map((label, index) => <li key={label} aria-current={index === (isProcessing ? 2 : step === 'upload' ? 0 : step === 'mapping' ? 1 : 3) ? 'step' : undefined}><span>{String(index + 1).padStart(2, '0')}</span>{label}</li>)}</ol>
 

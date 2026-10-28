@@ -2,9 +2,10 @@
 Main FastAPI Application Entrypoint.
 """
 from contextlib import asynccontextmanager
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, JSONResponse
 import pandas as pd
 
 from .core.config import settings
@@ -63,6 +64,23 @@ app = FastAPI(
 
 # Register uniform exception handlers
 register_exception_handlers(app)
+
+
+@app.middleware("http")
+async def prevent_public_research_mutations(request, call_next):
+    """Fail closed if the local research entry point is accidentally hosted publicly.
+
+    Render must use the authenticated read-only gateway. Local research training
+    remains available without changing algorithms or the local workflow.
+    """
+    hosted = os.environ.get("RENDER", "").lower() == "true" or os.environ.get("GRAPHFIN_GATEWAY_ENV", "").lower() == "production"
+    if hosted and request.method not in {"GET", "HEAD", "OPTIONS"}:
+        return JSONResponse(
+            {"error": "PUBLIC_RESEARCH_READ_ONLY", "message": "Public dataset upload and model training are disabled. Use the local research pipeline."},
+            status_code=403,
+            headers={"Cache-Control": "no-store"},
+        )
+    return await call_next(request)
 
 # Configure CORS
 app.add_middleware(

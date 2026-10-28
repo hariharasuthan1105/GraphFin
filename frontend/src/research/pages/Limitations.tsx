@@ -24,7 +24,7 @@ export default function Limitations() {
               <strong style={{ color: "#f8fafc", display: "block" }}>
                 1. Browser Memory & Scale Boundaries
               </strong>
-              Local uploads accept at most 25 MB and 25,000 records. Larger files are rejected without partial analysis. Graph rendering shows a disclosed bounded subset; scores use all accepted records. Session data stays in memory across navigation and clears on refresh.
+              Local uploads accept at most 25 MB and 25,000 records. Larger files are rejected without partial analysis. Graph rendering shows a disclosed bounded subset; scores use all accepted records. Sessions clear on refresh unless you explicitly save a local recovery snapshot. Snapshots retain account aggregates, exclude raw rows, expire after 7 days and are removed on the next visit. Browser storage restrictions may prevent saving.
             </div>
             <div>
               <strong style={{ color: "#f8fafc", display: "block" }}>

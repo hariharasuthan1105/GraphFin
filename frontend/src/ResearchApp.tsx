@@ -1,6 +1,8 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { TITLE } from "./research/state";
-import { SessionProvider, useSession } from "./research/sessionContext";
+import { useSession } from "./research/sessionContext";
+import { SessionProvider } from "./research/SessionProvider";
+import LocalSessionControls from "./research/LocalSessionControls";
 import "./research/research.css";
 import "./research/typography.css";
 import "./research/cover.css";
@@ -343,6 +345,7 @@ function MainShell() {
           </div>
         </header>
 
+        <LocalSessionControls />
         <main id="main" tabIndex={-1} key={route}>
           <Suspense
             fallback={

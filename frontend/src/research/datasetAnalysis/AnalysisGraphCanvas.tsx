@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   forceSimulation,
   forceLink,
@@ -50,8 +50,6 @@ export function AnalysisGraphCanvas({
   modeBadge,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [nodes, setNodes] = useState<SimNode[]>([]);
-  const [links, setLinks] = useState<SimEdge[]>([]);
   const [hoveredNode, setHoveredNode] = useState<SimNode | null>(null);
   const [zoom, setZoom] = useState(1.0);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -59,7 +57,7 @@ export function AnalysisGraphCanvas({
   const panStartRef = useRef({ x: 0, y: 0 });
 
   // Compute collision-aware layout with structured preset geometries and automatic fit-to-view
-  useEffect(() => {
+  const {nodes, links} = useMemo(() => {
     const activeNodes = accounts.slice(0, maxRenderNodes);
     const activeIds = new Set(activeNodes.map((a) => a.id));
 
@@ -149,7 +147,7 @@ export function AnalysisGraphCanvas({
         inDegree: acc.inDegree,
         outDegree: acc.outDegree,
         totalDegree: acc.totalDegree,
-        isHighRisk: acc.anomalyScore >= 0.45 || acc.patterns.length > 0,
+        isHighRisk: acc.isFlaggedForReview ?? acc.anomalyScore >= 0.6,
         patterns: acc.patterns,
       };
     });
@@ -208,11 +206,16 @@ export function AnalysisGraphCanvas({
       }
     }
 
-    setNodes(simNodes);
-    setLinks(activeEdges);
-    setZoom(1.0);
-    setPan({ x: 0, y: 0 });
+    return {nodes: simNodes, links: activeEdges};
   }, [accounts, edges, preset, maxRenderNodes]);
+
+  const [previousLayout, setPreviousLayout] = useState(nodes);
+  if (previousLayout !== nodes) {
+    setPreviousLayout(nodes);
+    setZoom(1);
+    setPan({x: 0, y: 0});
+    setHoveredNode(null);
+  }
 
   // Handle Pan Drag
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -235,11 +238,11 @@ export function AnalysisGraphCanvas({
 
   // Original GraphFin Semantic Colors (Black / White / Red)
   const getNodeColor = (n: SimNode) => {
-    if (n.score >= 0.7) {
+    if (n.isHighRisk && n.score >= 0.7) {
       return { fill: "#ef4444", stroke: "#b91c1c", label: "Critical Anomaly" };
     }
-    if (n.score >= 0.45 || n.patterns.length > 0) {
-      return { fill: "#b44a50", stroke: "#842d35", label: "Suspicious Account" };
+    if (n.isHighRisk) {
+      return { fill: "#b44a50", stroke: "#842d35", label: "Flagged for review (heuristic)" };
     }
     return { fill: "#e5e7eb", stroke: "#9ca3af", label: "Standard Account" };
   };
@@ -247,7 +250,7 @@ export function AnalysisGraphCanvas({
   // Top 3 anomalies to optionally show badges for when unselected
   const topAnomalyIds = new Set(
     [...nodes]
-      .filter((n) => n.score >= 0.6)
+      .filter((n) => n.isHighRisk)
       .sort((a, b) => b.score - a.score)
       .slice(0, 3)
       .map((n) => n.id),
@@ -566,7 +569,7 @@ export function AnalysisGraphCanvas({
                 {/* Core Node Circle */}
                 <circle
                   r={n.radius}
-                  fill={n.score >= .45 || n.patterns.length ? "url(#node-alert)" : "url(#node-neutral)"}
+                  fill={n.isHighRisk ? "url(#node-alert)" : "url(#node-neutral)"}
                   stroke={isSelected ? "#ffffff" : style.stroke}
                   strokeWidth={isSelected ? 2.5 : 1.2}
                   opacity={0.95}

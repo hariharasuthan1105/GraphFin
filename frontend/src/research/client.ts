@@ -1,3 +1,4 @@
+import { boundedJsonFetch } from "./boundedFetch";
 import schemas from "./contract.schema.json";
 type Schema = {
   const?: unknown;
@@ -129,7 +130,7 @@ export async function uploadTransactionsCsv(
   const fileBlob = new Blob([csvContent], { type: "text/csv" });
   formData.append("file", fileBlob, filename);
 
-  const res = await fetch(
+  return await boundedJsonFetch(
     backendApiUrl(`/transactions/upload?currency=${encodeURIComponent(currency)}`),
     {
       method: "POST",
@@ -140,18 +141,13 @@ export async function uploadTransactionsCsv(
       },
     },
   );
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Upload failed (${res.status}): ${errText}`);
-  }
-  return await res.json();
 }
 
 export async function trainIsolationForest(
   datasetId: string,
   experimentLabel = "isolation_forest",
 ): Promise<any> {
-  const res = await fetch(
+  return await boundedJsonFetch(
     backendApiUrl(
       `/anomalies/${encodeURIComponent(datasetId)}/train?experiment_label=${encodeURIComponent(experimentLabel)}`,
     ),
@@ -171,11 +167,6 @@ export async function trainIsolationForest(
       }),
     },
   );
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Model training failed (${res.status}): ${errText}`);
-  }
-  return await res.json();
 }
 
 export async function fetchUserAnomalies(
@@ -183,7 +174,7 @@ export async function fetchUserAnomalies(
   experimentLabel = "isolation_forest",
   limit = 250,
 ): Promise<{ total_users: number; anomalies_detected: number; users: Array<any> }> {
-  const res = await fetch(
+  return await boundedJsonFetch(
     backendApiUrl(
       `/anomalies/${encodeURIComponent(datasetId)}/users?experiment_label=${encodeURIComponent(experimentLabel)}&limit=${limit}`,
     ),
@@ -194,11 +185,6 @@ export async function fetchUserAnomalies(
       },
     },
   );
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Failed to fetch user anomalies (${res.status}): ${errText}`);
-  }
-  return await res.json();
 }
 
 export async function downloadBackendCustomReport(

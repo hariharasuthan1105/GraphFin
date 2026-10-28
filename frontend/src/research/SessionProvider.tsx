@@ -1,4 +1,7 @@
-import React, { createContext, useContext, useEffect, useRef, useState } from "react";
+import { verifyMLResponse } from "./mlVerification";
+import { SessionContext, type AppMode, type GraphViewMode, type SimulatedPresetKey, type BackendSyncStatus } from "./sessionContext";
+import { prepareSavedAnalysis, saveLocalAnalysis, readLocalAnalysis, clearLocalAnalysis } from "./localSession";
+import React, { useEffect, useRef, useState } from "react";
 import type { AnalysisResult, AccountNode, BackendMLStatus } from "./datasetAnalysis/types";
 import { SAMPLE_CSV_DATA } from "./datasetAnalysis/sampleData";
 import { parseDelimitedText, autoDetectColumnMapping, buildTransactionRecordsDetailed } from "./datasetAnalysis/parser";
@@ -10,41 +13,6 @@ import {
   fetchUserAnomalies,
 } from "./client";
 
-export type AppMode = "research" | "interactive";
-export type GraphViewMode = "uploaded" | "simulated" | "research";
-export type SimulatedPresetKey =
-  | "mule-ring"
-  | "ponzi-cycle"
-  | "smurfing-fanout"
-  | "fanin-aggregation";
-
-export type BackendSyncStatus = BackendMLStatus;
-
-interface SessionContextType {
-  appMode: AppMode;
-  setAppMode: (mode: AppMode) => void;
-  activeSession: AnalysisResult | null;
-  setActiveSession: (session: AnalysisResult | null) => void;
-  graphMode: GraphViewMode;
-  setGraphMode: (mode: GraphViewMode) => void;
-  simulatedPreset: SimulatedPresetKey;
-  setSimulatedPreset: (preset: SimulatedPresetKey) => void;
-  loadBenchmarkSample: () => void;
-  clearSession: () => void;
-  backendStatus: BackendSyncStatus;
-  backendDatasetId: string | null;
-  backendModel: string;
-  backendMessage: string;
-  isBackendOnline: boolean;
-  syncSessionToBackend: (
-    session: AnalysisResult,
-    rawCsv?: string,
-    userConsent?: boolean,
-  ) => Promise<boolean>;
-}
-
-const SessionContext = createContext<SessionContextType | undefined>(undefined);
-
 export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [appMode, setAppMode] = useState<AppMode>("interactive");
   const [activeSession, setSessionState] = useState<AnalysisResult | null>(null);
@@ -55,17 +23,60 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [backendStatus, setBackendStatus] = useState<BackendSyncStatus>("idle");
   const [backendDatasetId, setBackendDatasetId] = useState<string | null>(null);
   const [backendModel, setBackendModel] = useState<string>("Client-Side Graph Heuristics v2.1");
-  const [backendMessage, setBackendMessage] = useState<string>("Client-side heuristic analysis completed.");
+  const [backendMessage, setBackendMessage] = useState<string>("Client-side graph analysis available; backend ML inference not verified.");
   const [isBackendOnline, setIsBackendOnline] = useState<boolean>(false);
 
+  const [selectedGraphAccount, setSelectedGraphAccount] = useState<string | null>(null);
+  const [storageMessage, setStorageMessage] = useState('');
+  const [storageBusy, setStorageBusy] = useState(false);
+  const [recovering, setRecovering] = useState(true);
+  const clearSavedSession = async () => {
+    setStorageBusy(true);
+    try { await clearLocalAnalysis(); setStorageMessage('Saved session cleared. Current analysis remains in memory.'); }
+    catch (err) { setStorageMessage(String(err)); }
+    finally { setStorageBusy(false); }
+  };
+  const saveAnalysisLocally = async () => {
+    if (!activeSession) return;
+    setStorageBusy(true);
+    try {
+      await saveLocalAnalysis(prepareSavedAnalysis({session: activeSession, graphMode, simulatedPreset, selectedGraphAccount}));
+      setStorageMessage('Snapshot saved on this device. Expires after 7 days; expired data is deleted when GraphFin next opens. Raw rows are not saved.');
+    } catch (err) { setStorageMessage(String(err)); }
+    finally { setStorageBusy(false); }
+  };
   const sessionRef = useRef<AnalysisResult | null>(null);
   const setActiveSession = (session: AnalysisResult | null) => {
+    if (sessionRef.current && sessionRef.current.summary !== session?.summary) {
+      void clearSavedSession();
+      setSelectedGraphAccount(null);
+    }
     sessionRef.current = session;
     setSessionState(session);
     setBackendStatus(session?.backendStatus ?? (session ? 'client_completed' : 'idle'));
     setBackendModel(session?.backendModel ?? 'Client-Side Graph Heuristics v2.1');
     setBackendDatasetId(session?.backendDatasetId ?? null);
+    setBackendMessage(session?.backendStatus === 'ml_verified' ? 'Backend model and complete account score response validated.' : 'Client-side graph analysis available; backend ML inference not verified.');
   };
+
+  useEffect(() => {
+    let mounted = true;
+    readLocalAnalysis().then(saved => {
+      if (!mounted || !saved) return;
+      sessionRef.current = saved.session;
+      setSessionState(saved.session);
+      setGraphMode(saved.graphMode);
+      setSimulatedPreset(saved.simulatedPreset);
+      setSelectedGraphAccount(saved.selectedGraphAccount);
+      setBackendStatus(saved.session.backendStatus === 'ml_verified' ? 'ml_verified' : 'client_completed');
+      setBackendModel(saved.session.backendModel || 'Client-Side Graph Heuristics v2.1');
+      setBackendDatasetId(saved.session.backendDatasetId ?? null);
+      setBackendMessage(saved.session.backendStatus === 'ml_verified' ? 'Restored previous validated ML results; backend availability has not been reverified.' : 'Client-side graph analysis available; backend ML inference not verified.');
+      setStorageMessage('Restored your locally saved snapshot. Raw rows and source preview were not retained. Re-upload the CSV for any authorized backend execution.');
+    }).catch(err => { if (mounted) setStorageMessage(String(err)); })
+      .finally(() => { if (mounted) setRecovering(false); });
+    return () => { mounted = false; };
+  }, []);
 
   // Probe backend health on mount (non-intrusive health ping)
   useEffect(() => {
@@ -142,12 +153,15 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         session.summary.currency || "Unknown"
       );
       const dsId = uploadRes.dataset_id;
+      if (!dsId || uploadRes.valid_transactions !== session.summary.totalTransactions) {
+        throw new Error('Backend accepted-record count differs from local analysis. ML inference is not verified.');
+      }
       if (sessionRef.current !== session) return false;
       setBackendDatasetId(dsId);
 
       // Step B: Train Isolation Forest model (100 trees, 0.05 contamination, 19 canonical features)
       setBackendMessage("Backend ML pending: Fitting Isolation Forest anomaly model on backend...");
-      await trainIsolationForest(dsId, "isolation_forest");
+      const training = await trainIsolationForest(dsId, "isolation_forest");
 
       if (sessionRef.current !== session) return false;
 
@@ -158,12 +172,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       if (sessionRef.current !== session) return false;
 
       if (userRes && Array.isArray(userRes.users) && userRes.users.length > 0) {
-        const userMap = new Map<string, any>();
-        userRes.users.forEach((u: any) => {
-          if (u.user_id) {
-            userMap.set(u.user_id, u);
-          }
-        });
+        const userMap = verifyMLResponse(session, dsId, training, userRes);
 
         // Associate Isolation Forest output with each account node
         // Semantics: preserve deterministic heuristic score as heuristicScore / anomalyScore,
@@ -180,6 +189,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
             return {
               ...acc,
               heuristicScore: acc.anomalyScore,
+              mlRawScore: rawScore,
               mlScore: normMlScore,
               mlRiskScore: riskScore,
               mlStatus: mlStatus,
@@ -191,6 +201,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         const updatedSession: AnalysisResult = {
           ...session,
           accounts: updatedAccounts,
+          topAnomalies: updatedAccounts.filter(a => a.isFlaggedForReview),
           backendDatasetId: dsId,
           backendStatus: "ml_verified",
           backendModel: "Isolation Forest (100 Trees, 19 Features)",
@@ -209,7 +220,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     } catch (err: any) {
       if (sessionRef.current !== session) return false;
       console.warn("Backend ML execution failed; preserving client heuristics:", err);
-      const isRestricted = err?.message?.includes("405") || err?.message?.includes("GATEWAY_READ_ONLY");
+      const isRestricted = err?.message?.includes("405") || err?.message?.includes("401") || err?.message?.includes("403") || err?.message?.includes("GATEWAY_READ_ONLY");
       const isTimeout = err?.name === "AbortError" || err?.message?.includes("timeout");
 
       const failStatus: BackendMLStatus = isRestricted || isTimeout ? "ml_unavailable" : "ml_failed";
@@ -249,7 +260,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       setGraphMode("uploaded");
       setBackendStatus("client_completed");
       setBackendModel("Client-Side Graph Heuristics v2.1");
-      setBackendMessage("Client-side heuristic analysis completed.");
+      setBackendMessage("Client-side graph analysis available; backend ML inference not verified.");
     } catch (err) {
       console.error("Failed to load benchmark sample", err);
     }
@@ -262,12 +273,13 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     setBackendDatasetId(null);
     setBackendStatus("idle");
     setBackendModel("Client-Side Graph Heuristics v2.1");
-    setBackendMessage("Client-side heuristic analysis completed.");
+    setBackendMessage("Client-side graph analysis available; backend ML inference not verified.");
   };
 
   return (
     <SessionContext.Provider
       value={{
+        selectedGraphAccount, setSelectedGraphAccount, saveAnalysisLocally, clearSavedSession, storageMessage, storageBusy,
         appMode,
         setAppMode,
         activeSession,
@@ -286,15 +298,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         syncSessionToBackend,
       }}
     >
-      {children}
+      {recovering ? <div role="status">Checking local session recovery…</div> : children}
     </SessionContext.Provider>
   );
-}
-
-export function useSession() {
-  const context = useContext(SessionContext);
-  if (!context) {
-    throw new Error("useSession must be used within a SessionProvider");
-  }
-  return context;
 }

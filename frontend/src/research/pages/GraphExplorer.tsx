@@ -13,6 +13,8 @@ import { generateDatasetPdfReport } from "../datasetAnalysis/reportGenerator";
 
 export default function GraphExplorer() {
   const {
+    selectedGraphAccount: selectedNodeId,
+    setSelectedGraphAccount: setSelectedNodeId,
     activeSession,
     graphMode,
     setGraphMode,
@@ -24,7 +26,6 @@ export default function GraphExplorer() {
 
   const metadata = useGraphCatalog();
   const [researchDataset, setResearchDataset] = useState("ibm-5k");
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [patternFilter, setPatternFilter] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -512,7 +513,7 @@ export default function GraphExplorer() {
               }}
             >
               <h3 style={{ margin: 0, fontSize: "13px", color: "#f5f5f5" }}>
-                Flagged Accounts & Risk Ranking
+                Account Review Ranking (Heuristic)
               </h3>
               <span
                 style={{
@@ -816,11 +817,7 @@ export default function GraphExplorer() {
                       {selectedAccount.anomalyScore.toFixed(3)}
                     </span>
                     <span className="metric-hint">
-                      {selectedAccount.anomalyScore >= 0.7
-                        ? "Critical Anomaly Tier"
-                        : selectedAccount.anomalyScore >= 0.45
-                        ? "Elevated Structural Risk"
-                        : "Standard Baseline"}
+                      {selectedAccount.isFlaggedForReview ? "Flagged for review (heuristic)" : "Not flagged for review"}
                     </span>
                   </div>
 
@@ -833,7 +830,7 @@ export default function GraphExplorer() {
                       <small style={{ fontSize: "12px", color: "#a6a6a6" }}>OUT</small>
                     </span>
                     <span className="metric-hint">
-                      {selectedAccount.totalDegree} total counterparties
+                      {selectedAccount.totalDegree} transaction incidences
                     </span>
                   </div>
 

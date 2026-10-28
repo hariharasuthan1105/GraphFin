@@ -53,6 +53,7 @@ export interface AccountNode {
   anomalyScore: number; // 0.00 to 1.00 (composite continuous score)
   heuristicScore?: number;
   mlScore?: number;
+  mlRawScore?: number;
   mlRiskScore?: number;
   mlStatus?: string;
   isFlaggedForReview?: boolean; // Statistically defensible classification
@@ -105,6 +106,7 @@ export interface GroundTruthEvaluation {
 }
 
 export interface AnalysisSummary {
+  transactionLabels?: { normal: number; anomalous: number; unknown: number };
   sourceRecords?: number;
   inputChecksum?: string;
   sourceColumns?: string[];

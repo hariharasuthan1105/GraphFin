@@ -271,6 +271,10 @@ export function generateDatasetPdfReport(
   doc.text('Source records:', col1X, y + 32);
   doc.text(String(analysis.summary.sourceRecords ?? ((analysis.summary.totalRowsAccepted ?? analysis.summary.totalTransactions) + (analysis.summary.totalRowsRejected ?? 0))), col1X + 24, y + 32);
   y += metaBoxHeight + 6;
+  const datasetLines = doc.splitTextToSize(`Dataset: ${analysis.summary.datasetName}`, contentWidth);
+  doc.setFontSize(7);
+  doc.text(datasetLines, margin, y);
+  y += datasetLines.length * 3.5 + 5;
 
   // Currency Incompatibility Warning if mixed
   if (analysis.summary.isMixedCurrency) {
@@ -467,7 +471,7 @@ export function generateDatasetPdfReport(
   const tableHeaders = [
     "Rank",
     "Account ID",
-    "Score",
+    "Heuristic",
     "In / Out",
     `Total Sent (${currency})`,
     `Total Recv (${currency})`,
@@ -594,7 +598,7 @@ export function generateDatasetPdfReport(
     doc.setFontSize(7);
     doc.setTextColor(MUTED_TEXT[0], MUTED_TEXT[1], MUTED_TEXT[2]);
     doc.text(
-      `Dataset ID: ${analysis.backendDatasetId || "in-memory-session"} | Pipeline: Verified Server-Side Execution on Render`,
+      `Dataset ID: ${analysis.backendDatasetId || "in-memory-session"} | Pipeline: Validated backend model/score response`,
       margin + 4,
       y + 9.5,
     );
@@ -637,9 +641,9 @@ export function generateDatasetPdfReport(
 
     const metrics = [
       { label: "Precision", val: `${(evalData.precision * 100).toFixed(1)}%`, sub: `TP: ${evalData.truePositives} / Flagged: ${evalData.truePositives + evalData.falsePositives}` },
-      { label: "Recall (Hubs)", val: `${(evalData.recall * 100).toFixed(1)}%`, sub: `Positives: ${evalData.positives}` },
+      { label: "Account recall", val: `${(evalData.recall * 100).toFixed(1)}%`, sub: `Label-associated: ${evalData.positives}` },
       { label: "F1 Score", val: evalData.f1Score.toFixed(4), sub: "Harmonic Mean" },
-      { label: "PR-AUC (AP)", val: evalData.prAuc ? evalData.prAuc.toFixed(4) : "N/A", sub: "Average Precision" },
+      { label: "Average precision", val: evalData.prAuc !== undefined ? evalData.prAuc.toFixed(4) : "N/A", sub: "Average Precision" },
     ];
 
     metrics.forEach((m, idx) => {
@@ -703,7 +707,7 @@ export function generateDatasetPdfReport(
 
   doc.setFillColor(BG_CARD[0], BG_CARD[1], BG_CARD[2]);
   doc.setDrawColor(BORDER_LIGHT[0], BORDER_LIGHT[1], BORDER_LIGHT[2]);
-  doc.rect(margin, y, contentWidth, 54, "FD");
+  doc.rect(margin, y, contentWidth, 58, "FD");
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7.5);
@@ -734,7 +738,7 @@ export function generateDatasetPdfReport(
     y + 21,
   );
   doc.text(
-    "- Topological Motifs (25%): Compounding presence of verified Fan-Out hubs, Fan-In collection sinks, and circular loops.",
+    "- Topological Motifs (25%): Compounding presence of detected Fan-Out hubs, Fan-In collection sinks, and circular loops.",
     margin + 6,
     y + 25,
   );
@@ -766,17 +770,17 @@ export function generateDatasetPdfReport(
     y + 40,
   );
   doc.text(
-    "Distinctions: Motifs indicate structural geometry; high scores indicate statistical extremity; flagged indicates compliance review priority.",
+    doc.splitTextToSize(`Flag rule: score >= ${thresh.suspiciousScoreThreshold}, OR at least 2 motifs with score >= 0.40, OR account volume Z >= 3.0. These are review indicators, not confirmed fraud.`, contentWidth - 8),
     margin + 4,
     y + 44,
   );
   doc.text(
     `Engine Executed: ${engine}`,
     margin + 4,
-    y + 49,
+    y + 53,
   );
 
-  y += 60;
+  y += 64;
 
   // Legal & Regulatory Compliance Disclaimer
   doc.setFillColor(BG_CARD[0], BG_CARD[1], BG_CARD[2]);
@@ -807,16 +811,21 @@ export function generateDatasetPdfReport(
     y + 17,
   );
   doc.text(
-    "Privacy Assurance: This audit report was compiled using ephemeral client-side memory. No visitor transaction data is permanently",
+    "Privacy: Raw transaction rows are excluded from optional local recovery. Saved account aggregates remain on this device;",
     margin + 4,
     y + 22,
   );
   doc.text(
-    "persisted or transferred to external servers without explicit user authorization.",
+    "saving or backend transmission requires explicit user authorization. Labels are not confirmed fraud findings.",
     margin + 4,
     y + 26,
   );
 
+  if (analysis.summary.transactionLabels) {
+    const labels = analysis.summary.transactionLabels;
+    const lines = doc.splitTextToSize(`Transaction labels: ${labels.normal} normal; ${labels.anomalous} anomalous; ${labels.unknown} unknown. Account review flags: ${analysis.summary.suspiciousAccountCount} (heuristic). Labels do not represent the number of flagged accounts. Backend ML: ${analysis.backendStatus === 'ml_verified' ? 'validated model response' : 'not verified'}.`, contentWidth - 8);
+    doc.text(lines, margin + 4, y + 42);
+  }
   if (totalPages >= 3) {
     renderFooter(3);
   }
