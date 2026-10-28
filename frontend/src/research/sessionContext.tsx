@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import type { AnalysisResult, AccountNode, BackendMLStatus } from "./datasetAnalysis/types";
 import { SAMPLE_CSV_DATA } from "./datasetAnalysis/sampleData";
-import { parseDelimitedText } from "./datasetAnalysis/parser";
+import { parseDelimitedText, autoDetectColumnMapping, buildTransactionRecordsDetailed } from "./datasetAnalysis/parser";
 import { analyzeTransactionGraph } from "./datasetAnalysis/engine";
 import {
   checkBackendHealth,
@@ -47,7 +47,7 @@ const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
 export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [appMode, setAppMode] = useState<AppMode>("interactive");
-  const [activeSession, setActiveSession] = useState<AnalysisResult | null>(null);
+  const [activeSession, setSessionState] = useState<AnalysisResult | null>(null);
   const [graphMode, setGraphMode] = useState<GraphViewMode>("simulated");
   const [simulatedPreset, setSimulatedPreset] =
     useState<SimulatedPresetKey>("mule-ring");
@@ -57,6 +57,15 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [backendModel, setBackendModel] = useState<string>("Client-Side Graph Heuristics v2.1");
   const [backendMessage, setBackendMessage] = useState<string>("Client-side heuristic analysis completed.");
   const [isBackendOnline, setIsBackendOnline] = useState<boolean>(false);
+
+  const sessionRef = useRef<AnalysisResult | null>(null);
+  const setActiveSession = (session: AnalysisResult | null) => {
+    sessionRef.current = session;
+    setSessionState(session);
+    setBackendStatus(session?.backendStatus ?? (session ? 'client_completed' : 'idle'));
+    setBackendModel(session?.backendModel ?? 'Client-Side Graph Heuristics v2.1');
+    setBackendDatasetId(session?.backendDatasetId ?? null);
+  };
 
   // Probe backend health on mount (non-intrusive health ping)
   useEffect(() => {
@@ -103,6 +112,12 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       return false;
     }
 
+    if (session.accounts.length > 1000) {
+      setBackendStatus('ml_unavailable');
+      setBackendMessage('Backend ML unavailable: this interface retrieves at most 1,000 account scores. Local analysis remains complete.');
+      return false;
+    }
+
     try {
       setBackendStatus("ml_pending");
       setBackendMessage("Backend ML pending: Transmitting dataset and fitting Isolation Forest (100 Trees, 19 Features)...");
@@ -110,28 +125,37 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       // Build canonical CSV content if raw text is not already available
       let csvData = rawCsv;
       if (!csvData) {
-        const rows = session.edges.map((e, idx) =>
-          `TX_${String(idx + 1).padStart(5, "0")},${e.source},${e.target},${e.amount},2026-10-27T10:00:00Z`
-        );
-        csvData = "transaction_id,sender_id,receiver_id,amount,timestamp\n" + rows.join("\n");
+        setBackendStatus("ml_unavailable");
+        setBackendMessage("Original CSV is unavailable. Re-upload a CSV to run backend ML; aggregated graph edges cannot reconstruct transactions.");
+        return false;
+      }
+      if (!session.summary.datasetName.toLowerCase().endsWith('.csv') || session.summary.isMixedCurrency || !session.summary.currency || session.summary.currency === 'Unknown') {
+        setBackendStatus("ml_unavailable");
+        setBackendMessage("Backend ML requires an original CSV with a known, uniform currency. Local heuristics remain available.");
+        return false;
       }
 
       // Step A: Upload to backend
       const uploadRes = await uploadTransactionsCsv(
         csvData,
         session.summary.datasetName,
-        session.summary.currency || "USD"
+        session.summary.currency || "Unknown"
       );
       const dsId = uploadRes.dataset_id;
+      if (sessionRef.current !== session) return false;
       setBackendDatasetId(dsId);
 
       // Step B: Train Isolation Forest model (100 trees, 0.05 contamination, 19 canonical features)
       setBackendMessage("Backend ML pending: Fitting Isolation Forest anomaly model on backend...");
       await trainIsolationForest(dsId, "isolation_forest");
 
+      if (sessionRef.current !== session) return false;
+
       // Step C: Fetch computed per-user anomaly scores
       setBackendMessage("Backend ML pending: Retrieving multidimensional anomaly scores...");
       const userRes = await fetchUserAnomalies(dsId, "isolation_forest", 1000);
+
+      if (sessionRef.current !== session) return false;
 
       if (userRes && Array.isArray(userRes.users) && userRes.users.length > 0) {
         const userMap = new Map<string, any>();
@@ -183,6 +207,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       setBackendMessage("Backend ML failed: Response did not return valid user anomaly records.");
       return false;
     } catch (err: any) {
+      if (sessionRef.current !== session) return false;
       console.warn("Backend ML execution failed; preserving client heuristics:", err);
       const isRestricted = err?.message?.includes("405") || err?.message?.includes("GATEWAY_READ_ONLY");
       const isTimeout = err?.name === "AbortError" || err?.message?.includes("timeout");
@@ -204,19 +229,18 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const loadBenchmarkSample = () => {
     try {
       const parsed = parseDelimitedText(SAMPLE_CSV_DATA);
-      const records = parsed.rows.map((r, idx) => ({
-        transaction_id: `TX_SAMPLE_${String(idx + 1).padStart(4, "0")}`,
-        source: r[3] || `SRC_${idx}`,
-        destination: r[4] || `DST_${idx}`,
-        amount: parseFloat(r[2]) || 100,
-        type: r[1] || "TRANSFER",
-        label: r[5] === "1" ? 1 : 0,
-      }));
+      const mapping = autoDetectColumnMapping(parsed.headers);
+      const built = buildTransactionRecordsDetailed(parsed, mapping);
+      const records = built.records;
       const result = analyzeTransactionGraph(
         records,
         "synthetic_financial_benchmark.csv",
         SAMPLE_CSV_DATA.length,
       );
+      result.datasetPreview = { headers: parsed.headers, rows: parsed.rows.slice(0, 20) };
+      result.summary.sourceColumns = parsed.headers;
+      result.summary.columnMapping = mapping;
+      result.summary.sourceRecords = parsed.rawTotalRows;
       result.summary.rawCsvContent = SAMPLE_CSV_DATA;
       result.backendStatus = "client_completed";
       result.backendModel = "Client-Side Graph Heuristics v2.1";
@@ -231,13 +255,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Pre-load benchmark sample on mount so app feels immediately rich and interactive
-  useEffect(() => {
-    if (!activeSession) {
-      loadBenchmarkSample();
-    }
-  }, []);
-
+  // Start empty until an explicit upload or demo action.
   const clearSession = () => {
     setActiveSession(null);
     setGraphMode("simulated");

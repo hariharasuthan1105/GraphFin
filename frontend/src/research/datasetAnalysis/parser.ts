@@ -62,7 +62,7 @@ export function parseDelimitedText(text: string, maxRows = 25000): ParsedTable {
         currentRow.push(currentField.trim());
         if (currentRow.some((c) => c.length > 0)) {
           rows.push(currentRow);
-          if (rows.length >= maxRows + 1) break; // header + maxRows
+          if (rows.length > maxRows + 1) throw new Error(`Dataset exceeds the ${maxRows.toLocaleString()} record limit. No partial analysis was performed.`);
         }
         currentRow = [];
         currentField = "";
@@ -71,6 +71,8 @@ export function parseDelimitedText(text: string, maxRows = 25000): ParsedTable {
       }
     }
   }
+
+  if (inQuotes) throw new Error("Unclosed quoted field in CSV.");
 
   // Flush remaining
   if (currentField.length > 0 || currentRow.length > 0) {
@@ -86,6 +88,7 @@ export function parseDelimitedText(text: string, maxRows = 25000): ParsedTable {
 
   const headers = rows[0].map((h, idx) => h || `Col_${idx + 1}`);
   const dataRows = rows.slice(1);
+  if (dataRows.length > maxRows) throw new Error(`Dataset exceeds the ${maxRows.toLocaleString()} record limit. No partial analysis was performed.`);
 
   return {
     headers,
@@ -117,8 +120,10 @@ export function parseJsonTransactions(jsonStr: string): ParsedTable {
     throw new Error("JSON file does not contain a list of transaction records.");
   }
 
-  const headers = Object.keys(items[0] as Record<string, unknown>);
-  const rows = items.slice(0, 25000).map((item) => {
+  if (items.length > 25000) throw new Error("Dataset exceeds the 25,000 record limit. No partial analysis was performed.");
+  if (items.some(item => !item || typeof item !== "object" || Array.isArray(item))) throw new Error("Each JSON record must be an object.");
+  const headers = [...new Set(items.flatMap(item => Object.keys(item as Record<string, unknown>)))];
+  const rows = items.map((item) => {
     const obj = item as Record<string, unknown>;
     return headers.map((h) => String(obj[h] ?? ""));
   });
@@ -239,7 +244,7 @@ export function buildTransactionRecordsDetailed(
     const rawAmt = row[amtIdx]?.replace(/[^0-9.-]/g, "");
     const amount = parseFloat(rawAmt || "0");
 
-    if (!source || !destination || isNaN(amount) || amount <= 0) {
+    if (!source || !destination || !Number.isFinite(amount) || amount <= 0) {
       rejectedRows++;
       continue; // skip invalid or non-positive records
     }

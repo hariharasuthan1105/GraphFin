@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { useResearch } from "../state";
 import type { Reproducibility as Data } from "../contract";
 import { State, Heading, Panel, Table, Hash, Notice, Status } from "../ui";
 import { useSession } from "../sessionContext";
 
 export default function Reproducibility() {
+  const [tab, setTab] = useState("Parameters");
   const { activeSession } = useSession();
   const r = useResearch<Data>("/reproducibility", "Reproducibility");
   return (
@@ -27,9 +29,11 @@ export default function Reproducibility() {
               <dt>Execution Timestamp</dt>
               <dd><code>{activeSession.summary.processedAt}</code></dd>
               <dt>Algorithm Framework</dt>
-              <dd>GraphFin Deterministic Heuristics v2.0 (Zero network latency, in-browser memory execution)</dd>
+              <dd>{activeSession.summary.algorithmVersion || "Version not recorded"} (in-browser heuristics)</dd>
+              <dt>Input text SHA-256</dt><dd><Hash value={activeSession.summary.inputChecksum} /></dd>
+              <dt>Accepted / rejected records</dt><dd>{activeSession.summary.totalRowsAccepted ?? activeSession.summary.totalTransactions} / {activeSession.summary.totalRowsRejected ?? 'Unavailable'}</dd>
               <dt>Replay Determinism</dt>
-              <dd><span style={{ color: "#f5f5f5", fontWeight: 600 }}><b style={{ color: "#c04b52" }}>✓</b> Verified Byte-Identical on Replay</span></dd>
+              <dd><span style={{ color: "#f5f5f5", fontWeight: 600 }}><b style={{ color: "#c04b52" }}>—</b> Not replay-verified for this uploaded session</span></dd>
             </dl>
           </div>
         </Panel>
@@ -61,7 +65,11 @@ export default function Reproducibility() {
             />
           </Panel>
           <Panel title="Frozen model configuration">
-            <dl className="definition">
+            <div className="panel-body"><div className="session-tabs">{['Environment', 'Parameters', 'Seeds', 'Dataset Identity'].map(label => <button key={label} aria-pressed={tab === label} onClick={() => setTab(label)}>{label}</button>)}</div>
+            {tab === 'Environment' && <p>Environment versions are unavailable through the saved API projection. No local environment is inferred.</p>}
+            {tab === 'Seeds' && <p className="technical">Recorded split seeds: {r.data.split_seeds.join(' / ')}. Model seeds are recorded per replay above.</p>}
+            {tab === 'Dataset Identity' && <>{r.data.replays.map(replay => <p key={replay.tier}>{replay.tier}: <Hash value={replay.dataset_sha256} /></p>)}</>}
+            {tab === 'Parameters' && <dl className="definition">
               <dt>Estimators</dt>
               <dd>{r.data.n_estimators}</dd>
               <dt>Max samples</dt>
@@ -74,7 +82,7 @@ export default function Reproducibility() {
               <dd>Unavailable through the Phase 7 API.</dd>
               <dt>Split membership hashes</dt>
               <dd>Available in each experiment's provenance view.</dd>
-            </dl>
+            </dl>}</div>
           </Panel>
           <Notice>
             5K: pinned primary/replay result-array equality. ~50K: saved full

@@ -1,5 +1,6 @@
 import { useState, useId, useEffect } from "react";
 import { Heading, Panel, Notice } from "../ui";
+import { safeSummary } from "../sessionMetadata";
 import { fmt } from "../state";
 import { SAMPLE_CSV_DATA } from "../datasetAnalysis/sampleData";
 import {
@@ -7,6 +8,7 @@ import {
   parseJsonTransactions,
   autoDetectColumnMapping,
   buildTransactionRecords,
+  buildTransactionRecordsDetailed,
   type ParsedTable,
 } from "../datasetAnalysis/parser";
 import { analyzeTransactionGraph } from "../datasetAnalysis/engine";
@@ -144,10 +146,18 @@ export default function DatasetAnalysis() {
     setErrorMsg("");
     setIsProcessing(true);
 
-    setTimeout(() => {
+    setTimeout(async () => {
       try {
-        const records = buildTransactionRecords(parsedTable, mapping);
-        const analysis = analyzeTransactionGraph(records, fileName, fileSize);
+        const parsed = buildTransactionRecordsDetailed(parsedTable, mapping);
+        const analysis = analyzeTransactionGraph(parsed.records, fileName, fileSize, undefined, parsed.rawTotalRows, parsed.rejectedRows);
+        analysis.summary.sourceRecords = parsedTable.rawTotalRows;
+        analysis.summary.sourceColumns = parsedTable.headers;
+        analysis.summary.columnMapping = mapping;
+        analysis.datasetPreview = { headers: parsedTable.headers, rows: parsedTable.rows.slice(0, 20) };
+        if (crypto.subtle && rawCsvText) {
+          const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(rawCsvText));
+          analysis.summary.inputChecksum = Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, '0')).join('');
+        }
         analysis.summary.rawCsvContent = rawCsvText;
         setResult(analysis);
         setActiveSession(analysis);
@@ -185,7 +195,7 @@ export default function DatasetAnalysis() {
   // 5. Exports
   const handleExportJson = () => {
     if (!result) return;
-    const blob = new Blob([JSON.stringify(result.summary, null, 2)], {
+    const blob = new Blob([JSON.stringify(safeSummary(result.summary), null, 2)], {
       type: "application/json",
     });
     const url = URL.createObjectURL(blob);
@@ -230,9 +240,11 @@ export default function DatasetAnalysis() {
 
   return (
     <>
-      <Heading index="02" title="Financial Dataset Analysis">
+      <Heading index="03" title="Interactive Analysis">
         Client-side transaction network construction, structural graph feature extraction, and anomaly pattern detection.
       </Heading>
+
+      <ol className="analysis-stages" aria-label="Analysis progress">{['Upload', 'Validate', 'Analyze', 'Results'].map((label, index) => <li key={label} aria-current={index === (isProcessing ? 2 : step === 'upload' ? 0 : step === 'mapping' ? 1 : 3) ? 'step' : undefined}><span>{String(index + 1).padStart(2, '0')}</span>{label}</li>)}</ol>
 
       {errorMsg && (
         <div className="auth-error-banner" role="alert" style={{ marginBottom: 20 }}>
@@ -555,7 +567,7 @@ export default function DatasetAnalysis() {
                     padding: "2px 8px",
                     borderRadius: "3px",
                     background:
-                      backendStatus === "ml_verified" || backendStatus === "synced"
+                      result.backendStatus === "ml_verified"
                         ? "#132318"
                         : backendStatus === "ml_pending" || backendStatus === "syncing"
                         ? "#231f13"
@@ -563,7 +575,7 @@ export default function DatasetAnalysis() {
                         ? "#261517"
                         : "#171719",
                     border:
-                      backendStatus === "ml_verified" || backendStatus === "synced"
+                      result.backendStatus === "ml_verified"
                         ? "1px solid #22c55e"
                         : backendStatus === "ml_pending" || backendStatus === "syncing"
                         ? "1px solid #f59e0b"
@@ -571,7 +583,7 @@ export default function DatasetAnalysis() {
                         ? "1px solid #ef4444"
                         : "1px solid #303034",
                     color:
-                      backendStatus === "ml_verified" || backendStatus === "synced"
+                      result.backendStatus === "ml_verified"
                         ? "#4ade80"
                         : backendStatus === "ml_pending" || backendStatus === "syncing"
                         ? "#fbbf24"
@@ -589,7 +601,7 @@ export default function DatasetAnalysis() {
                       height: "6px",
                       borderRadius: "50%",
                       background:
-                        backendStatus === "ml_verified" || backendStatus === "synced"
+                        result.backendStatus === "ml_verified"
                           ? "#22c55e"
                           : backendStatus === "ml_pending" || backendStatus === "syncing"
                           ? "#f59e0b"
@@ -599,7 +611,7 @@ export default function DatasetAnalysis() {
                       display: "inline-block",
                     }}
                   />
-                  {backendStatus === "ml_verified" || backendStatus === "synced"
+                  {result.backendStatus === "ml_verified"
                     ? `Backend ML completed and verified: ${result.backendModel || backendModel}`
                     : backendStatus === "ml_pending" || backendStatus === "syncing"
                     ? "Backend ML pending..."
@@ -661,7 +673,7 @@ export default function DatasetAnalysis() {
             <div className="metric">
               <span className="eyebrow">TRANSACTIONS</span>
               <strong>{fmt(result.summary.totalTransactions, 0)}</strong>
-              <small>Total volume: {result.summary.currency === "INR" ? "₹" : (result.summary.currency ? result.summary.currency + " " : "$")}{fmt(result.summary.totalVolume, 2)}</small>
+              <small>Total volume: {result.summary.currency === "INR" ? "₹" : (result.summary.currency ? result.summary.currency + " " : "Unknown ")}{fmt(result.summary.totalVolume, 2)}</small>
             </div>
             <div className="metric">
               <span className="eyebrow">UNIQUE ACCOUNTS</span>
@@ -692,7 +704,7 @@ export default function DatasetAnalysis() {
           <Panel
             title="Backend Machine Learning Verification (Isolation Forest)"
             tag={
-              backendStatus === "ml_verified" || backendStatus === "synced"
+              result.backendStatus === "ml_verified"
                 ? "ML VERIFIED"
                 : backendStatus === "ml_pending" || backendStatus === "syncing"
                 ? "ML PENDING"
@@ -707,7 +719,7 @@ export default function DatasetAnalysis() {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "20px", flexWrap: "wrap" }}>
                 <div style={{ flex: 1, minWidth: "280px" }}>
                   <p style={{ margin: "0 0 10px 0", fontSize: "12px", color: "#f5f5f5", lineHeight: 1.5 }}>
-                    {backendStatus === "ml_verified" || backendStatus === "synced" ? (
+                    {result.backendStatus === "ml_verified" ? (
                       <>
                         <strong style={{ color: "#4ade80" }}>✓ Verified Isolation Forest Execution:</strong>{" "}
                         Trained on {result.summary.uniqueAccounts} entities across canonical 19 graph, behavioral, and temporal features (100 trees, 0.05 contamination).
@@ -720,13 +732,13 @@ export default function DatasetAnalysis() {
                   </p>
                   <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", fontSize: "11px", color: "#a6a6a6" }}>
                     <span>• <strong>Destination:</strong> https://graphfin.onrender.com/api/v1</span>
-                    <span>• <strong>Storage:</strong> Ephemeral in-memory (no permanent retention)</span>
-                    <span>• <strong>Budget:</strong> Max 15,000 transactions, 10 MB payload</span>
+                    <span>• <strong>Storage:</strong> Remote retention depends on server policy; do not upload confidential data</span>
+                    <span>• <strong>Budget:</strong> Max 15,000 transactions, 1,000 accounts, 10 MB payload</span>
                   </div>
                 </div>
 
                 <div>
-                  {backendStatus === "ml_verified" || backendStatus === "synced" ? (
+                  {result.backendStatus === "ml_verified" ? (
                     <span
                       style={{
                         padding: "8px 14px",
@@ -750,7 +762,7 @@ export default function DatasetAnalysis() {
                           "GraphFin Privacy Consent:\n\n" +
                           "Do you authorize transmitting this dataset to https://graphfin.onrender.com for remote Isolation Forest fitting?\n\n" +
                           "• Purpose: 19 canonical graph feature extraction & Isolation Forest inference\n" +
-                          "• Ephemeral: Data is kept in memory during model fitting and NOT permanently saved\n" +
+                          "• Remote processing: Only upload data you are authorized to share; local-only analysis requires no transfer\n" +
                           "• Limits: Max 15,000 transactions, max 10 MB"
                         );
                         if (confirmed) {
@@ -995,7 +1007,7 @@ export default function DatasetAnalysis() {
                             wordBreak: "break-all",
                           }}
                         >
-                          {selectedAccount.netFlow < 0 ? "-" : "+"}{result.summary.currency === "INR" ? "₹" : (result.summary.currency ? result.summary.currency + " " : "$")}{fmt(Math.abs(selectedAccount.netFlow), 2)}
+                          {selectedAccount.netFlow < 0 ? "-" : "+"}{result.summary.currency === "INR" ? "₹" : (result.summary.currency ? result.summary.currency + " " : "Unknown ")}{fmt(Math.abs(selectedAccount.netFlow), 2)}
                         </div>
                         <span className="metric-hint">
                           {selectedAccount.netFlow < 0 ? "Net outflow (dispersal)" : "Net inflow (accumulation)"}
@@ -1050,7 +1062,7 @@ export default function DatasetAnalysis() {
                                     {cp.id}
                                   </td>
                                   <td style={{ textAlign: "right", color: "#f5f5f5", fontVariantNumeric: "tabular-nums" }}>
-                                    {(activeSession?.summary.currency === "INR" ? "₹" : "$")}{fmt(cp.totalAmount ?? cp.amount ?? ((cp.inAmount ?? 0) + (cp.outAmount ?? 0)), 2)}
+                                    {(activeSession?.summary.currency === "INR" ? "₹" : "Unknown ")}{fmt(cp.totalAmount ?? cp.amount ?? ((cp.inAmount ?? 0) + (cp.outAmount ?? 0)), 2)}
                                   </td>
                                   <td style={{ textAlign: "right", color: "#a6a6a6" }}>
                                     {cp.count ?? ((cp.inCount ?? 0) + (cp.outCount ?? 0))} tx

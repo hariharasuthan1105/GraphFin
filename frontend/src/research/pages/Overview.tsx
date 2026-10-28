@@ -5,10 +5,11 @@ import { useSession } from "../sessionContext";
 
 export default function Overview() {
   const r = useResearch<OverviewData>("/overview", "Overview");
-  const { appMode, setAppMode, activeSession, loadBenchmarkSample } = useSession();
+  const { appMode, setAppMode, activeSession, loadBenchmarkSample, backendStatus } = useSession();
 
   return (
     <>
+      {activeSession && <div className="session-ribbon"><span>Active dataset <strong>{activeSession.summary.datasetName}</strong></span><span>{activeSession.backendStatus === 'ml_verified' ? activeSession.backendModel : 'Client-side graph heuristics'} · {backendStatus === 'ml_pending' ? 'Backend pending' : 'Local analysis completed'}</span></div>}
       {/* Hero Header */}
       <section className="hero">
         <div className="hero-network" aria-hidden="true">
@@ -37,7 +38,7 @@ export default function Overview() {
           <div className="hero-word">
             GRAPHFIN<span style={{ color: "#c04b52" }}>_</span>
           </div>
-          <h1>Financial Network Intelligence</h1>
+          <h1>Overview</h1>
           <p>
             An interactive research platform for graph-based anomaly analysis.
             <br />
@@ -111,7 +112,7 @@ export default function Overview() {
             <Metric
               label="Total transactions"
               value={fmt(activeSession.summary.totalTransactions, 0)}
-              note={`${activeSession.summary.currency === "INR" ? "₹" : (activeSession.summary.currency || "$")}${activeSession.summary.totalVolume.toLocaleString("en-US", {
+              note={`${activeSession.summary.currency === "INR" ? "₹" : ((activeSession.summary.currency || "Unknown") + " ")}${activeSession.summary.totalVolume.toLocaleString("en-US", {
                 maximumFractionDigits: 2,
               })} total volume`}
             />
@@ -131,6 +132,8 @@ export default function Overview() {
               )}
               note={`${activeSession.summary.patternsDetected.fanOutCount} Fan-out · ${activeSession.summary.patternsDetected.fanInCount} Fan-in · ${activeSession.summary.patternsDetected.cycleCount} Cycle`}
             />
+            <Metric label="Network edges" value={fmt(activeSession.summary.uniqueEdges, 0)} note="Unique directed account relationships" />
+            <Metric label="Transaction volume" value={activeSession.summary.isMixedCurrency ? 'Mixed units' : activeSession.summary.totalVolume.toLocaleString(undefined, { maximumFractionDigits: 2 })} note={activeSession.summary.isMixedCurrency ? 'No FX normalization; monetary totals are not comparable' : (activeSession.summary.currency || 'Currency unknown')} />
           </div>
         ) : (
           <div

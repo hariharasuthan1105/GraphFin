@@ -197,7 +197,7 @@ function Detail({ id }: { id: string }) {
   );
 }
 export default function Experiments() {
-  const { activeSession, backendModel, backendStatus } = useSession();
+  const { activeSession, backendModel } = useSession();
   const [tier, setTier] = useState(() => (activeSession ? "runtime-active" : "ibm-5k"));
   const [method, setMethod] = useState("");
   const [page, setPage] = useState(1);
@@ -219,6 +219,7 @@ export default function Experiments() {
         Versioned methods. Frozen populations and active runtime dataset model executions.
       </Heading>
 
+      <div className="session-tabs" aria-label="Experiment source"><button aria-pressed={!isRuntime} onClick={() => { setTier('ibm-5k'); setPage(1); setId(undefined); }}>Historical Experiments</button><button aria-pressed={!!isRuntime} disabled={!activeSession} onClick={() => { setTier('runtime-active'); setPage(1); setId(undefined); }}>Active Analysis Session{!activeSession ? ' — no dataset' : ''}</button></div>
       <div className="filters">
         <label>
           Dataset scope
@@ -275,7 +276,7 @@ export default function Experiments() {
           <Panel
             title={`Active Session Runtime Model: ${activeSession.backendModel || backendModel}`}
             tag={
-              (activeSession.backendStatus === "ml_verified" || activeSession.backendStatus === "synced" || backendStatus === "ml_verified")
+              (activeSession.backendStatus === "ml_verified")
                 ? "BACKEND / TRAINED"
                 : "CLIENT / HEURISTIC"
             }

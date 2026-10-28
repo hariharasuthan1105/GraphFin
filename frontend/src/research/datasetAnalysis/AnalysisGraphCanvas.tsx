@@ -263,7 +263,7 @@ export function AnalysisGraphCanvas({
       onMouseLeave={handleMouseUp}
       style={{
         position: "relative",
-        background: "#080809",
+        background: "radial-gradient(ellipse at 50% 45%, #191724, #06090f 72%)",
         border: "1px solid #303034",
         borderRadius: "6px",
         overflow: "hidden",
@@ -311,7 +311,7 @@ export function AnalysisGraphCanvas({
               color: "#77777d",
             }}
           >
-            {nodes.length} accounts · {links.length} transfers
+            {nodes.length} / {accounts.length} accounts · {links.length} displayed edges
           </span>
         </div>
 
@@ -397,12 +397,15 @@ export function AnalysisGraphCanvas({
         </div>
       </div>
 
+      {accounts.length > nodes.length && <span className="graph-scope">Bounded view: first {maxRenderNodes} matching accounts. Scores use the full accepted graph.</span>}
       {/* SVG Canvas */}
       <svg
         viewBox="0 0 900 580"
         style={{ width: "100%", height: "100%", display: "block" }}
       >
         <defs>
+          <radialGradient id="node-neutral" cx="30%" cy="25%"><stop offset="0" stopColor="#ffffff"/><stop offset=".45" stopColor="#aabacb"/><stop offset="1" stopColor="#263446"/></radialGradient>
+          <radialGradient id="node-alert" cx="30%" cy="25%"><stop offset="0" stopColor="#ffb6bc"/><stop offset=".45" stopColor="#ff334d"/><stop offset="1" stopColor="#720f28"/></radialGradient>
           {/* Subtle grid pattern */}
           <pattern id="graph-grid" width="40" height="40" patternUnits="userSpaceOnUse">
             <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#141416" strokeWidth="0.8" />
@@ -448,7 +451,7 @@ export function AnalysisGraphCanvas({
         <rect width="100%" height="100%" fill="url(#graph-grid)" />
 
         {/* Pan & Zoom Transform Container */}
-        <g
+        <g className="graph-camera"
           transform={`translate(${pan.x + 450 * (1 - zoom)}, ${
             pan.y + 290 * (1 - zoom)
           }) scale(${zoom})`}
@@ -521,6 +524,8 @@ export function AnalysisGraphCanvas({
               <g
                 key={`node-${n.id}`}
                 transform={`translate(${n.x}, ${n.y})`}
+                role="button" tabIndex={0} aria-label={'Inspect account ' + n.id} aria-pressed={isSelected}
+                onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onSelectNode(n.id); } }}
                 onClick={() => onSelectNode(n.id)}
                 onMouseEnter={() => setHoveredNode(n)}
                 onMouseLeave={() => setHoveredNode(null)}
@@ -561,7 +566,7 @@ export function AnalysisGraphCanvas({
                 {/* Core Node Circle */}
                 <circle
                   r={n.radius}
-                  fill={style.fill}
+                  fill={n.score >= .45 || n.patterns.length ? "url(#node-alert)" : "url(#node-neutral)"}
                   stroke={isSelected ? "#ffffff" : style.stroke}
                   strokeWidth={isSelected ? 2.5 : 1.2}
                   opacity={0.95}

@@ -123,7 +123,7 @@ export async function checkBackendHealth(): Promise<{ online: boolean; waking: b
 export async function uploadTransactionsCsv(
   csvContent: string,
   filename = "transactions.csv",
-  currency = "USD",
+  currency = "Unknown",
 ): Promise<{ dataset_id: string; summary: any; valid_transactions: number }> {
   const formData = new FormData();
   const fileBlob = new Blob([csvContent], { type: "text/csv" });

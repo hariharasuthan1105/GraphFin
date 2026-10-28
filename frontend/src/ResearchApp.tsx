@@ -2,6 +2,9 @@ import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { TITLE } from "./research/state";
 import { SessionProvider, useSession } from "./research/sessionContext";
 import "./research/research.css";
+import "./research/typography.css";
+import "./research/cover.css";
+import Cover from "./research/Cover";
 
 const pages = {
   overview: lazy(() => import("./research/pages/Overview")),
@@ -32,7 +35,7 @@ const navItems = [
 ];
 
 function locationRoute() {
-  const r = window.location.hash.slice(2).split(/[/?]/)[0] || "overview";
+  const r = window.location.hash.slice(2).split(/[/?]/)[0] || "cover";
   if (r === "graph-explorer") return "graph";
   if (r === "dataset-reports") return "reports";
   return r;
@@ -49,6 +52,7 @@ function MainShell() {
   useEffect(() => {
     const update = () => {
       setRoute(locationRoute());
+      window.scrollTo({ top: 0, behavior: "instant" });
       setOpen(false);
     };
     window.addEventListener("hashchange", update);
@@ -56,7 +60,7 @@ function MainShell() {
   }, []);
 
   const currentItem = navItems.find((item) => item.key === route);
-  const currentLabel = currentItem?.label || "Research Dashboard";
+  const currentLabel = route === "cover" ? "Financial Intelligence" : currentItem?.label || "Research Dashboard";
 
   useEffect(() => {
     document.title = TITLE + " - " + currentLabel;
@@ -74,7 +78,7 @@ function MainShell() {
 
     if (activeRect.top < navRect.top || activeRect.bottom > navRect.bottom) {
       activeEl.scrollIntoView({
-        behavior: "smooth",
+        behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
         block: "nearest",
         inline: "nearest",
       });
@@ -90,6 +94,8 @@ function MainShell() {
   if (route === "workspace") {
     return null;
   }
+
+  if (route === "cover") return <Cover />;
 
   const Page = pages[route as keyof typeof pages];
 
@@ -114,7 +120,7 @@ function MainShell() {
           }
         }}
       >
-        <a className="brand" href="#/overview" aria-label="GraphFin overview" onClick={() => setOpen(false)}>
+        <a className="brand" href="#/" aria-label="GraphFin cover" onClick={() => setOpen(false)}>
           <span>GRAPHFIN</span>
           <b aria-hidden="true">_</b>
         </a>

@@ -1,4 +1,6 @@
-import { useState } from "react";
+const escapeHtml = (value: string) => value.replace(/[&<>]/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[char]!);
+import { safeSummary } from "../sessionMetadata";
+import { useEffect, useState } from "react";
 import { Heading, Panel, Notice, Qualifications } from "../ui";
 import { useSession } from "../sessionContext";
 import { DatasetReportDownload } from "../DatasetReportDownload";
@@ -7,6 +9,11 @@ import { generateDatasetPdfReport } from "../datasetAnalysis/reportGenerator";
 export default function Reports() {
   const { activeSession, loadBenchmarkSample, backendModel } = useSession();
   const [downloadSuccess, setDownloadSuccess] = useState<string | null>(null);
+
+  const [preview, setPreview] = useState<{ url: string; session: typeof activeSession } | null>(null);
+  const previewUrl = preview?.session === activeSession ? preview.url : null;
+  useEffect(() => () => { if (preview) URL.revokeObjectURL(preview.url); }, [preview]);
+
 
   // Generate downloadable JSON Audit Package for the uploaded session
   const exportSessionJson = () => {
@@ -18,12 +25,12 @@ export default function Reports() {
           {
             audit_metadata: {
               title: "GraphFin Financial Network Anomaly Audit Report",
-              generator: "GraphFin In-Browser Deterministic Analysis Engine v2.0",
+              generator: "GraphFin In-Browser Deterministic Analysis Engine v2.1",
               timestamp: activeSession.summary.processedAt,
               dataset_name: activeSession.summary.datasetName,
               file_size_bytes: activeSession.summary.fileSizeBytes,
             },
-            network_summary: activeSession.summary,
+            network_summary: safeSummary(activeSession.summary),
             flagged_anomalies: activeSession.topAnomalies,
             accounts_profiled: activeSession.accounts.map((a) => ({
               account_id: a.id,
@@ -107,7 +114,7 @@ export default function Reports() {
       <!DOCTYPE html>
       <html>
       <head>
-        <title>GraphFin Executive Audit Report - ${activeSession.summary.datasetName}</title>
+        <title>GraphFin Executive Audit Report - ${escapeHtml(activeSession.summary.datasetName)}</title>
         <style>
           body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 40px; color: #1e293b; line-height: 1.5; }
           h1 { font-size: 20px; border-bottom: 2px solid #0f172a; padding-bottom: 8px; margin-bottom: 4px; }
@@ -124,7 +131,7 @@ export default function Reports() {
       </head>
       <body>
         <h1>GraphFin — Transaction Network Anomaly Audit Report</h1>
-        <div class="subtitle">DATASET: ${activeSession.summary.datasetName} · PROCESSED: ${activeSession.summary.processedAt}</div>
+        <div class="subtitle">DATASET: ${escapeHtml(activeSession.summary.datasetName)} · PROCESSED: ${activeSession.summary.processedAt}</div>
         
         <div class="kpi-grid">
           <div class="kpi-card">
@@ -136,7 +143,7 @@ export default function Reports() {
             <div class="kpi-label">Transactions Parsed</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-val">${activeSession.summary.currency === "INR" ? "₹" : (activeSession.summary.currency ? activeSession.summary.currency + " " : "$")}${activeSession.summary.totalVolume.toLocaleString("en-US", { maximumFractionDigits: 2 })}</div>
+            <div class="kpi-val">${activeSession.summary.currency === "INR" ? "₹" : (activeSession.summary.currency ? activeSession.summary.currency + " " : "Unknown ")}${activeSession.summary.totalVolume.toLocaleString("en-US", { maximumFractionDigits: 2 })}</div>
             <div class="kpi-label">Total Transfer Volume</div>
           </div>
           <div class="kpi-card">
@@ -164,10 +171,10 @@ export default function Reports() {
                 (a, i) => `
               <tr>
                 <td>${i + 1}</td>
-                <td><strong>${a.id}</strong></td>
+                <td><strong>${escapeHtml(a.id)}</strong></td>
                 <td style="color: ${a.anomalyScore >= 0.7 ? "#e11d48" : "#d97706"};">${a.anomalyScore.toFixed(3)}</td>
                 <td>${a.inDegree} in / ${a.outDegree} out</td>
-                <td>${a.netFlow < 0 ? "-" : "+"}${activeSession.summary.currency === "INR" ? "₹" : (activeSession.summary.currency ? activeSession.summary.currency + " " : "$")}${Math.abs(a.netFlow).toLocaleString()}</td>
+                <td>${a.netFlow < 0 ? "-" : "+"}${activeSession.summary.currency === "INR" ? "₹" : (activeSession.summary.currency ? activeSession.summary.currency + " " : "Unknown ")}${Math.abs(a.netFlow).toLocaleString()}</td>
                 <td>${a.patterns.join(", ") || "Elevated Degree"}</td>
               </tr>
             `,
@@ -214,6 +221,7 @@ export default function Reports() {
         </div>
       )}
 
+      {activeSession && <Panel title="PDF document preview" tag="GENERATED FROM ACTIVE RESULTS"><div className="panel-body"><button onClick={() => { const pdf = generateDatasetPdfReport(activeSession, activeSession.backendModel || backendModel, false); setPreview({url: URL.createObjectURL(pdf.output('blob')), session: activeSession}); }}>Generate PDF preview</button>{previewUrl && <><p><a href={previewUrl} target="_blank" rel="noreferrer">Open PDF in a new tab ↗</a></p><iframe title="Active analysis PDF preview" src={previewUrl} style={{ width: '100%', height: 560, border: 0 }} /></>}</div></Panel>}
       {/* Uploaded Session Audit Export Card */}
       <Panel title="Interactive Analysis Audit Report" tag="SESSION EXPORT">
         <div className="panel-body">

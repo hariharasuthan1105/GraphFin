@@ -105,6 +105,10 @@ export interface GroundTruthEvaluation {
 }
 
 export interface AnalysisSummary {
+  sourceRecords?: number;
+  inputChecksum?: string;
+  sourceColumns?: string[];
+  columnMapping?: ColumnMapping;
   datasetName: string;
   fileSizeBytes: number;
   totalTransactions: number;
@@ -161,6 +165,7 @@ export type BackendMLStatus =
   | "synced";
 
 export interface AnalysisResult {
+  datasetPreview?: { headers: string[]; rows: string[][] };
   summary: AnalysisSummary;
   accounts: AccountNode[];
   edges: TransferEdge[];

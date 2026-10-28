@@ -1,6 +1,6 @@
 import { useResearch, fmt } from "../state";
 import { useState } from "react";
-import type { Page_Experiment_, Comparison as Data } from "../contract";
+import type { Page_Experiment_, Experiment } from "../contract";
 import {
   State,
   Heading,
@@ -14,33 +14,22 @@ import {
 } from "../ui";
 import { query } from "../client";
 import { useSession } from "../sessionContext";
-function Compare({ ids, metric }: { ids: string[]; metric: string }) {
-  const path =
-    "/comparisons?" +
-    ids.map((id) => "experiment_id=" + encodeURIComponent(id)).join("&") +
-    "&metric=" +
-    metric;
-  const r = useResearch<Data>(path, "Comparison");
-  return !r.data ? (
-    <State {...r} />
-  ) : (
-    <Panel title="Compatible model comparison" tag="DESCRIPTIVE / ONLY">
-      <Chart
-        labels={r.data.values.map((x) => x.experiment_id.split("-")[2])}
-        values={r.data.values.map((x) => x.value)}
-        title={metric.replaceAll("_", " ")}
-      />
-      <Table
-        caption="Exact stored values on the same held-out population"
-        headers={["Experiment", "Metric value"]}
-        rows={r.data.values.map((x) => [x.experiment_id, fmt(x.value, 8)])}
-      />
-      <div className="panel-body">
-        <Hash key="hash" value={r.data.population_identity} />
-        <p>{r.data.interpretation}</p>
-      </div>
-    </Panel>
-  );
+function Compare({ rows, metric }: { rows: Experiment[]; metric: string }) {
+  const keys = ['dataset_id', 'dataset_sha256', 'label_sha256', 'train_sha256', 'test_sha256', 'population_identity'] as const;
+  const first = rows[0];
+  const compatible = first && keys.every(key => first[key] && rows.every(row => row[key] === first[key]));
+  if (!compatible) return <Notice>Comparison unavailable: dataset, label, split, or held-out population identities are missing or incompatible.</Notice>;
+  const values = rows.map(row => {
+    if (metric === 'average_precision') return row.metrics?.average_precision;
+    if (metric === 'roc_auc') return row.metrics?.roc_auc;
+    const k = Number(metric.replace('precision_at_', ''));
+    return row.metrics?.retrieval?.find(point => point.k === k)?.precision;
+  });
+  return <Panel title="Compatible model comparison" tag="SAVED METRICS / SAME POPULATION">
+    <Chart labels={rows.map(row => row.method)} values={values} title={metric.replaceAll('_', ' ')} />
+    <Table caption="Exact stored values; matching dataset, labels, training split and held-out population" headers={['Experiment', 'Metric value']} rows={rows.map((row, index) => [row.experiment_id, fmt(values[index], 8)])} />
+    <div className="panel-body"><Hash value={first.population_identity} /><p>Descriptive comparison of saved results. No cross-dataset equivalence or new evaluation is claimed.</p></div>
+  </Panel>;
 }
 export default function Comparison() {
   const { activeSession } = useSession();
@@ -151,7 +140,7 @@ export default function Comparison() {
         <>
           <Compare
             key={tier + seed + metric}
-            ids={rows.map((x) => x.experiment_id)}
+            rows={rows}
             metric={metric}
           />
           <Panel title="Retrieval evidence" tag="POSITIVE HITS / RECALL">

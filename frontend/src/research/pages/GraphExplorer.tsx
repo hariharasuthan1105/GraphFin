@@ -356,7 +356,7 @@ export default function GraphExplorer() {
             }}
           >
             <h3 style={{ fontSize: "16px", color: "#f5f5f5", margin: "0 0 8px 0" }}>
-              {dsMeta?.name ?? researchDataset} — Aggregate Evidence Validated
+              {dsMeta?.name ?? researchDataset} — Historical Topology Unavailable
             </h3>
             <p
               style={{
@@ -368,9 +368,7 @@ export default function GraphExplorer() {
               }}
             >
               Raw transaction graphs for IBM AML and PaySim contain proprietary or unredacted
-              account identifiers that are intentionally excluded from the public deployment. All
-              numerical benchmarks, model evaluations (E0–E6), and seed stability metrics are fully
-              verified.
+              account identifiers that are intentionally excluded from the public deployment. Saved numerical benchmarks, model evaluations (E0–E6), and seed results remain available with their recorded provenance and limitations.
             </p>
 
             <div
@@ -852,7 +850,7 @@ export default function GraphExplorer() {
                       }}
                     >
                       {selectedAccount.netFlow < 0 ? "-" : selectedAccount.netFlow > 0 ? "+" : ""}
-                      ${Math.abs(selectedAccount.netFlow).toLocaleString("en-US", {
+                      {activeGraphResult.summary.isMixedCurrency ? "Mixed units " : (activeGraphResult.summary.currency || "Unknown") + " "}{Math.abs(selectedAccount.netFlow).toLocaleString("en-US", {
                         maximumFractionDigits: 0,
                       })}
                     </span>
@@ -906,7 +904,7 @@ export default function GraphExplorer() {
                             </td>
                             <td style={{ color: "#f5f5f5", fontWeight: 500 }}>{cp.id}</td>
                             <td style={{ textAlign: "right", color: "#ffffff", fontWeight: 600 }}>
-                              {(activeSession?.summary.currency === "INR" ? "₹" : "$")}{(cp.totalAmount ?? cp.amount ?? ((cp.inAmount ?? 0) + (cp.outAmount ?? 0))).toLocaleString("en-US", { maximumFractionDigits: 2 })}
+                              {(activeGraphResult.summary.isMixedCurrency ? "Mixed units " : (activeGraphResult.summary.currency || "Unknown") + " ")}{(cp.totalAmount ?? cp.amount ?? ((cp.inAmount ?? 0) + (cp.outAmount ?? 0))).toLocaleString("en-US", { maximumFractionDigits: 2 })}
                             </td>
                             <td style={{ textAlign: "right", color: "#a6a6a6" }}>{cp.count ?? ((cp.inCount ?? 0) + (cp.outCount ?? 0))} tx</td>
                           </tr>

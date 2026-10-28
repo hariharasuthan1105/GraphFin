@@ -15,9 +15,9 @@ function formatNumber(num: number, decimals = 2): string {
 /**
  * Format currency amount with detected dataset currency label
  */
-function formatCurrency(amount: number, currency = "USD", decimals = 2): string {
+function formatCurrency(amount: number, currency = "Unknown", decimals = 2): string {
   const formatted = formatNumber(amount, decimals);
-  const cleanCcy = (currency || "USD").toUpperCase().trim();
+  const cleanCcy = (currency || "Unknown").toUpperCase().trim();
   if (cleanCcy === "USD") {
     return `$${formatted}`;
   }
@@ -33,6 +33,7 @@ function formatCurrency(amount: number, currency = "USD", decimals = 2): string 
 export function generateDatasetPdfReport(
   analysis: AnalysisResult,
   executionEngine?: string,
+  download = true,
 ): jsPDF {
   const doc = new jsPDF({
     orientation: "portrait",
@@ -54,7 +55,7 @@ export function generateDatasetPdfReport(
   const BORDER_LIGHT = [225, 225, 230];
   const WHITE = [255, 255, 255];
 
-  const currency = analysis.summary.currency || "USD";
+  const currency = analysis.summary.currency || "Unknown";
   const engine =
     executionEngine ||
     analysis.summary.analysisEngine ||
@@ -71,7 +72,7 @@ export function generateDatasetPdfReport(
     doc.setFont("helvetica", "bold");
     doc.setFontSize(7.5);
     doc.setTextColor(RED_DARK[0], RED_DARK[1], RED_DARK[2]);
-    doc.text("GRAPHFIN RESEARCH DASHBOARD — FORENSIC AUDIT RECORD", margin, 17);
+    doc.text("GRAPHFIN RESEARCH DASHBOARD - FORENSIC AUDIT RECORD", margin, 17);
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7);
@@ -81,7 +82,7 @@ export function generateDatasetPdfReport(
     });
   };
 
-  const renderFooter = (pageNumber: number) => {
+  const renderFooter = (_pageNumber: number) => {
     const yFoot = pageHeight - 10;
     doc.setDrawColor(BORDER_LIGHT[0], BORDER_LIGHT[1], BORDER_LIGHT[2]);
     doc.setLineWidth(0.2);
@@ -97,7 +98,7 @@ export function generateDatasetPdfReport(
     );
 
     const auditStatus =
-      analysis.backendStatus === "synced"
+      analysis.backendStatus === "ml_verified"
         ? "Status: Backend ML Verified (Isolation Forest)"
         : "Status: Client-Side Forensic Heuristic Audit";
 
@@ -133,7 +134,7 @@ export function generateDatasetPdfReport(
   y += 6.5;
 
   // Metadata Box (Structured 3-Column Grid)
-  const metaBoxHeight = 32;
+  const metaBoxHeight = 38;
   doc.setFillColor(BG_CARD[0], BG_CARD[1], BG_CARD[2]);
   doc.setDrawColor(BORDER_LIGHT[0], BORDER_LIGHT[1], BORDER_LIGHT[2]);
   doc.setLineWidth(0.3);
@@ -188,9 +189,9 @@ export function generateDatasetPdfReport(
   doc.setFont("helvetica", "normal");
   doc.setTextColor(DARK_TEXT[0], DARK_TEXT[1], DARK_TEXT[2]);
   doc.text(
-    analysis.backendStatus === "synced"
-      ? "Backend Isolation Forest (19 features)"
-      : "Client Topological Heuristics v2.1",
+    analysis.backendStatus === "ml_verified"
+      ? "Backend Isolation Forest"
+      : "Graph heuristics v2.1",
     col1X + 20,
     rowY,
   );
@@ -267,6 +268,8 @@ export function generateDatasetPdfReport(
   doc.setTextColor(DARK_TEXT[0], DARK_TEXT[1], DARK_TEXT[2]);
   doc.text(`${analysis.summary.totalRowsRejected ?? 0} rows`, col3X + 28, rowY);
 
+  doc.text('Source records:', col1X, y + 32);
+  doc.text(String(analysis.summary.sourceRecords ?? ((analysis.summary.totalRowsAccepted ?? analysis.summary.totalTransactions) + (analysis.summary.totalRowsRejected ?? 0))), col1X + 24, y + 32);
   y += metaBoxHeight + 6;
 
   // Currency Incompatibility Warning if mixed
@@ -375,7 +378,7 @@ export function generateDatasetPdfReport(
   doc.setFontSize(7.5);
   doc.setTextColor(MUTED_TEXT[0], MUTED_TEXT[1], MUTED_TEXT[2]);
   doc.text(
-    "Structural motifs indicate topological divergence matching known structuring patterns. Detection of a motif is an investigative indicator, not confirmation of illegal activity.",
+    "Structural motifs are investigative indicators of network geometry, not confirmation of illegal activity.",
     margin,
     y,
   );
@@ -444,7 +447,7 @@ export function generateDatasetPdfReport(
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9.5);
   doc.setTextColor(RED_DARK[0], RED_DARK[1], RED_DARK[2]);
-  doc.text("3. TOP SUSPICIOUS ACCOUNTS (AUDIT FORENSIC RANKING)", margin, y);
+  doc.text("3. ACCOUNT ANOMALY RANKING (NOT ALL ACCOUNTS ARE FLAGGED)", margin, y);
   y += 4.5;
 
   doc.setFont("helvetica", "normal");
@@ -469,7 +472,7 @@ export function generateDatasetPdfReport(
     `Total Sent (${currency})`,
     `Total Recv (${currency})`,
     `Net Flow (${currency})`,
-    "Flagged Typologies",
+    "Observed Motifs",
   ];
 
   doc.setFillColor(DARK_TEXT[0], DARK_TEXT[1], DARK_TEXT[2]);
@@ -571,7 +574,7 @@ export function generateDatasetPdfReport(
   y += 8;
 
   // --- SECTION 4: BACKEND ML ISOLATION FOREST RESULTS (If executed) ---
-  if (analysis.backendStatus === "synced" && analysis.backendModel) {
+  if (analysis.backendStatus === "ml_verified" && analysis.backendModel) {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(9.5);
     doc.setTextColor(RED_DARK[0], RED_DARK[1], RED_DARK[2]);
@@ -716,22 +719,22 @@ export function generateDatasetPdfReport(
     y + 9,
   );
   doc.text(
-    "• Volume Extremity (30%): Standardized Z-score of account-level total volume against account volume distribution.",
+    "- Volume Extremity (30%): Standardized Z-score of account-level total volume against account volume distribution.",
     margin + 6,
     y + 13,
   );
   doc.text(
-    "• Degree Divergence (25%): Normalized Z-score of entity transaction degree against observed network degree distribution.",
+    "- Degree Divergence (25%): Normalized Z-score of entity transaction degree against observed network degree distribution.",
     margin + 6,
     y + 17,
   );
   doc.text(
-    "• Net Flow Asymmetry (20%): Volume-moderated absolute difference between total funds received and funds sent.",
+    "- Net Flow Asymmetry (20%): Volume-moderated absolute difference between total funds received and funds sent.",
     margin + 6,
     y + 21,
   );
   doc.text(
-    "• Topological Motifs (25%): Compounding presence of verified Fan-Out hubs, Fan-In collection sinks, and circular loops.",
+    "- Topological Motifs (25%): Compounding presence of verified Fan-Out hubs, Fan-In collection sinks, and circular loops.",
     margin + 6,
     y + 25,
   );
@@ -753,7 +756,7 @@ export function generateDatasetPdfReport(
     version: "GraphFin-Analytical-v2.1",
   };
   doc.text(
-    `Algorithm Version: ${thresh.version} | Volume Threshold: Z >= ${thresh.volumeZThreshold}σ | Degree Threshold: Z >= ${thresh.degreeZThreshold}σ`,
+    `Algorithm Version: ${thresh.version} | Volume Threshold: Z >= ${thresh.volumeZThreshold} SD | Degree Threshold: Z >= ${thresh.degreeZThreshold} SD`,
     margin + 4,
     y + 36,
   );
@@ -819,7 +822,7 @@ export function generateDatasetPdfReport(
   }
 
   // Trigger download if running in browser
-  if (typeof window !== "undefined") {
+  if (download && typeof window !== "undefined") {
     const filename = `GraphFin_Audit_Report_${analysis.summary.datasetName.replace(/[^a-zA-Z0-9_-]/g, "_")}.pdf`;
     doc.save(filename);
   }

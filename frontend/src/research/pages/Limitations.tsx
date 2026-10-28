@@ -24,7 +24,7 @@ export default function Limitations() {
               <strong style={{ color: "#f8fafc", display: "block" }}>
                 1. Browser Memory & Scale Boundaries
               </strong>
-              Client-side in-memory graph layout (d3-force) is engineered for datasets up to 10,000 transactions and 500 render nodes. Arbitrary massive datasets (&gt;25 MB) are bounded to prevent DOM freeze and browser thread starvation.
+              Local uploads accept at most 25 MB and 25,000 records. Larger files are rejected without partial analysis. Graph rendering shows a disclosed bounded subset; scores use all accepted records. Session data stays in memory across navigation and clears on refresh.
             </div>
             <div>
               <strong style={{ color: "#f8fafc", display: "block" }}>
@@ -51,12 +51,12 @@ export default function Limitations() {
       {!r.data ? (
         <State {...r} />
       ) : (
-        r.data.items.map((x) => (
-          <Panel key={x.topic} title={x.topic} tag={x.assessment}>
+        r.data.items.map((x, index) => (
+          <details key={x.topic} open><summary><span className="eyebrow">{String(index + 1).padStart(2, "0")}</span>{x.topic}</summary><p className="eyebrow">{x.assessment}</p>
             <div className="panel-body">
               <p>{x.description}</p>
             </div>
-          </Panel>
+          </details>
         ))
       )}
       <Panel title="Read the status precisely">

@@ -50,7 +50,7 @@ export function analyzeTransactionGraph(
     }
   }
 
-  let dominantCurrency = "USD";
+  let dominantCurrency = "Unknown";
   let isMixedCurrency = false;
   const currencyBreakdown: Record<string, number> = {};
 

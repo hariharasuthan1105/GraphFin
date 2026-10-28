@@ -145,7 +145,7 @@ export default function Seeds() {
       <Qualifications />
 
       {activeSession && (
-        <Panel title="Active Session: Determinism & Stability Audit" tag="STOCHASTIC AUDIT">
+        <Panel title="Active Session: Robustness Availability" tag="NO MULTI-SEED RERUNS">
           <div className="panel-body">
             <div
               style={{
@@ -165,17 +165,17 @@ export default function Seeds() {
                 <span style={{ fontSize: "10px", color: "#77777d", display: "block" }}>
                   SEED VARIANCE
                 </span>
-                <strong style={{ fontSize: "13px", color: "#f5f5f5" }}>0.000 (Deterministic)</strong>
+                <strong style={{ fontSize: "13px", color: "#f5f5f5" }}>Not measured</strong>
               </div>
               <div style={{ background: "#08090d", padding: "10px", borderRadius: "4px" }}>
                 <span style={{ fontSize: "10px", color: "#77777d", display: "block" }}>
                   RANK STABILITY
                 </span>
-                <strong style={{ fontSize: "13px", color: "#f5f5f5" }}>ρ = 1.0000 (Exact)</strong>
+                <strong style={{ fontSize: "13px", color: "#f5f5f5" }}>Not measured</strong>
               </div>
             </div>
             <p style={{ margin: 0, fontSize: "11px", color: "#94a3b8", lineHeight: 1.5 }}>
-              <strong>Methodology Disclosure:</strong> Interactive uploaded dataset analysis executes pure, deterministic topological graph algorithms (deterministic degree deviation, directed cycles, and flow asymmetry). Multi-seed stochastic variance is only applicable to the historical ensemble ML trees (Isolation Forest runs on IBM AML splits shown below).
+              <strong>Methodology Disclosure:</strong> No multi-seed reruns are recorded for this uploaded session. Deterministic heuristic scoring alone does not establish rank stability or robustness. The historical split-seed and model-seed results below are separate recorded experiments.
             </p>
           </div>
         </Panel>

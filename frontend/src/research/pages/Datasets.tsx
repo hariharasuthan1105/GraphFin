@@ -1,3 +1,4 @@
+import SessionDataset from "../SessionDataset";
 import { useState } from "react";
 import { useResearch, fmt } from "../state";
 import { DatasetReportDownload } from "../DatasetReportDownload";
@@ -55,7 +56,7 @@ export default function Datasets() {
 
   return (
     <div className="research-page datasets-page">
-      <Heading index="02" title="Dataset explorer & ingestion center">
+      <Heading index="02" title="Dataset Explorer">
         Explore verified historical benchmark datasets (IBM AML, PaySim) or inspect your active uploaded custom transaction dataset.
       </Heading>
 
@@ -110,6 +111,7 @@ export default function Datasets() {
 
       {activeTab === "custom" ? (
         <div>
+          <SessionDataset />
           {/* Custom Ingestion Card */}
           <Panel title="Active Custom Dataset Session" tag="CLIENT-SIDE PIPELINE">
             <div className="panel-body">
