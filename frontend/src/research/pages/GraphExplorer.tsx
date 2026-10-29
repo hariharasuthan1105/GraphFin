@@ -62,8 +62,7 @@ export default function GraphExplorer() {
       const found = activeGraphResult.accounts.find((a) => a.id === selectedNodeId);
       if (found) return found;
     }
-    // Default to the first anomaly or first account
-    return activeGraphResult.topAnomalies[0] || activeGraphResult.accounts[0] || null;
+    return null;
   }, [activeGraphResult, selectedNodeId]);
 
   const dsMeta = metadata.data?.datasets.find((x) => x.dataset_id === researchDataset);
@@ -685,8 +684,10 @@ export default function GraphExplorer() {
             <AnalysisGraphCanvas
               accounts={activeGraphResult.accounts}
               edges={activeGraphResult.edges}
+              currency={activeGraphResult.summary.isMixedCurrency ? "MIXED (unconverted units)" : activeGraphResult.summary.currency}
               selectedNode={selectedAccount?.id || null}
               onSelectNode={(id) => setSelectedNodeId(id)}
+              onClearSelection={() => setSelectedNodeId(null)}
               preset={graphMode === "simulated" ? simulatedPreset : undefined}
               modeBadge={
                 graphMode === "uploaded"

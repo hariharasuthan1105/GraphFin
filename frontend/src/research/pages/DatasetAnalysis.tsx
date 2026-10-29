@@ -918,8 +918,10 @@ export default function DatasetAnalysis() {
                   <AnalysisGraphCanvas
                     accounts={result.accounts}
                     edges={result.edges}
+                    currency={result.summary.isMixedCurrency ? "MIXED (unconverted units)" : result.summary.currency}
                     selectedNode={selectedNodeId}
                     onSelectNode={(id) => setSelectedNodeId(id)}
+                    onClearSelection={() => setSelectedNodeId(null)}
                   />
                 </div>
               </Panel>

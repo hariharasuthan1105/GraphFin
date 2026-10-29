@@ -1,4 +1,6 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { edgeGeometry } from "./edgeGeometry";
+import "./graphEdges.css";
 import {
   forceSimulation,
   forceLink,
@@ -15,9 +17,11 @@ interface Props {
   edges: TransferEdge[];
   selectedNode: string | null;
   onSelectNode: (id: string) => void;
+  onClearSelection?: () => void;
   preset?: string;
   maxRenderNodes?: number;
   modeBadge?: string;
+  currency?: string;
 }
 
 interface SimNode extends SimulationNodeDatum {
@@ -39,6 +43,7 @@ interface SimEdge extends SimulationLinkDatum<SimNode> {
   source: string | SimNode;
   target: string | SimNode;
   amount: number;
+  count: number;
   isReciprocal?: boolean;
 }
 
@@ -47,16 +52,31 @@ export function AnalysisGraphCanvas({
   edges,
   selectedNode,
   onSelectNode,
+  onClearSelection,
   preset,
   maxRenderNodes = 60,
   modeBadge,
+  currency,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [hoveredNode, setHoveredNode] = useState<SimNode | null>(null);
   const [zoom, setZoom] = useState(1.0);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
-  const panStartRef = useRef({ x: 0, y: 0 });
+  const panStartRef = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
+  const [hoveredEdge, setHoveredEdge] = useState<number | null>(null);
+  const [viewportScale, setViewportScale] = useState(1);
+  const graphId = useId().replace(/:/g, '');
+  const id = (name: string) => `${graphId}-${name}`;
+  useEffect(() => {
+    const element = containerRef.current;
+    if (!element) return;
+    const observer = new ResizeObserver(([entry]) => {
+      setViewportScale(Math.min(entry.contentRect.width / 900, entry.contentRect.height / 580));
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
 
   // Compute collision-aware layout with structured preset geometries and automatic fit-to-view
   const {nodes, links} = useMemo(() => {
@@ -163,6 +183,7 @@ export function AnalysisGraphCanvas({
         source: e.source,
         target: e.target,
         amount: e.amount,
+        count: e.count,
         isReciprocal: e.isReciprocal,
       }));
 
@@ -219,26 +240,39 @@ export function AnalysisGraphCanvas({
     setZoom(1);
     setPan({x: 0, y: 0});
     setHoveredNode(null);
+    setHoveredEdge(null);
   }
 
-  // Handle Pan Drag
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).tagName === "svg" || (e.target as HTMLElement).tagName === "rect") {
-      setIsPanning(true);
-      panStartRef.current = { x: e.clientX - pan.x, y: e.clientY - pan.y };
-    }
+  // Pointer deltas are converted to viewBox units; camera drag never trails the pointer.
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0 || (e.target as Element).closest('button, [role="button"]')) return;
+    setIsPanning(true);
+    panStartRef.current = { x: e.clientX, y: e.clientY, panX: pan.x, panY: pan.y };
+    e.currentTarget.setPointerCapture(e.pointerId);
   };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (isPanning) {
-      setPan({
-        x: e.clientX - panStartRef.current.x,
-        y: e.clientY - panStartRef.current.y,
-      });
-    }
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (isPanning) setPan({
+      x: panStartRef.current.panX + (e.clientX - panStartRef.current.x) / viewportScale,
+      y: panStartRef.current.panY + (e.clientY - panStartRef.current.y) / viewportScale,
+    });
   };
-
-  const handleMouseUp = () => setIsPanning(false);
+  const screenScale = Math.max(0.05, viewportScale * zoom);
+  const directedPairs = new Set(links.map(link => JSON.stringify([(link.source as SimNode).id, (link.target as SimNode).id])));
+  const renderedLinks = links.map((link, index) => {
+    const source = link.source as SimNode, target = link.target as SimNode;
+    const connected = selectedNode === source.id || selectedNode === target.id;
+    const hovered = hoveredEdge === index;
+    const flagged = source.isHighRisk || target.isHighRisk;
+    const state = hovered ? 'hovered' : connected ? 'selected' : flagged ? 'flagged' : 'normal';
+    const color = state === 'hovered' ? '#FFFFFF' : state === 'selected' ? '#FFD3DB' : flagged ? '#F05A70' : '#A8C5DB';
+    const opacity = selectedNode && !connected && !hovered ? 0.58 : flagged ? 0.95 : 0.88;
+    const width = hovered ? 3.8 : connected ? 3.5 : flagged ? 2.5 : 2.2;
+    const reciprocal = source.id !== target.id && directedPairs.has(JSON.stringify([target.id, source.id]));
+    return { ...link, source, target, index, connected, hovered, flagged, state, color, opacity, width,
+      ...edgeGeometry(source, target, reciprocal, screenScale, source.id === target.id) };
+  });
+  const relatedIds = new Set(renderedLinks.filter(link => link.connected).flatMap(link => [link.source.id, link.target.id]));
+  const edgeTooltip = hoveredEdge === null ? null : renderedLinks[hoveredEdge];
 
   // Original GraphFin Semantic Colors (Black / White / Red)
   const getNodeColor = (n: SimNode) => {
@@ -262,15 +296,16 @@ export function AnalysisGraphCanvas({
 
   return (
     <div
-      className="graph-canvas-container"
+      className="graph-canvas-container premium-graph"
       ref={containerRef}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={() => setIsPanning(false)}
+      onPointerCancel={() => setIsPanning(false)}
+      onLostPointerCapture={() => setIsPanning(false)}
       style={{
         position: "relative",
-        background: "radial-gradient(ellipse at 50% 45%, #191724, #06090f 72%)",
+        background: "radial-gradient(ellipse at 50% 45%, #101C2B, #06090F 72%)",
         border: "1px solid #303034",
         borderRadius: "6px",
         overflow: "hidden",
@@ -280,7 +315,7 @@ export function AnalysisGraphCanvas({
       }}
     >
       {/* Top Bar: Controls + Scope Tag */}
-      <div
+      <div className="graph-surface-toolbar"
         style={{
           position: "absolute",
           top: "12px",
@@ -289,11 +324,13 @@ export function AnalysisGraphCanvas({
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
+          flexWrap: "wrap",
+          gap: "8px",
           zIndex: 10,
           pointerEvents: "none",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <div className="graph-surface-caption" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           {modeBadge && (
             <span
               style={{
@@ -401,124 +438,67 @@ export function AnalysisGraphCanvas({
           >
             RESET
           </button>
+          {selectedNode && onClearSelection && <button type="button" className="graph-clear-selection" aria-label="Clear account selection" onClick={onClearSelection}>ALL</button>}
         </div>
       </div>
 
-      {accounts.length > nodes.length && <span className="graph-scope">Bounded view: first {maxRenderNodes} matching accounts. Scores use the full accepted graph.</span>}
       {/* SVG Canvas */}
       <svg
         viewBox="0 0 900 580"
-        style={{ width: "100%", height: "100%", display: "block" }}
+        aria-label="Directed transaction network"
+        style={{ width: "100%", height: "100%", display: "block", touchAction: "none" }}
       >
         <defs>
-          <radialGradient id="node-neutral" cx="30%" cy="25%"><stop offset="0" stopColor="#ffffff"/><stop offset=".45" stopColor="#aabacb"/><stop offset="1" stopColor="#263446"/></radialGradient>
-          <radialGradient id="node-alert" cx="30%" cy="25%"><stop offset="0" stopColor="#ffb6bc"/><stop offset=".45" stopColor="#ff334d"/><stop offset="1" stopColor="#720f28"/></radialGradient>
+          <radialGradient id={id("node-neutral")} cx="30%" cy="25%"><stop offset="0" stopColor="#ffffff"/><stop offset=".45" stopColor="#aabacb"/><stop offset="1" stopColor="#263446"/></radialGradient>
+          <radialGradient id={id("node-alert")} cx="30%" cy="25%"><stop offset="0" stopColor="#ffb6bc"/><stop offset=".45" stopColor="#ff334d"/><stop offset="1" stopColor="#720f28"/></radialGradient>
           {/* Subtle grid pattern */}
-          <pattern id="graph-grid" width="40" height="40" patternUnits="userSpaceOnUse">
-            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#141416" strokeWidth="0.8" />
+          <pattern id={id("graph-grid")} width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#52718A" strokeOpacity="0.07" strokeWidth="0.8" />
           </pattern>
 
-          {/* Directional arrowheads */}
-          <marker
-            id="arrow-gray"
-            viewBox="0 0 10 10"
-            refX="17"
-            refY="5"
-            markerWidth="4.5"
-            markerHeight="4.5"
-            orient="auto-start-reverse"
-          >
-            <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#4a4a52" />
-          </marker>
-          <marker
-            id="arrow-red"
-            viewBox="0 0 10 10"
-            refX="18"
-            refY="5"
-            markerWidth="5"
-            markerHeight="5"
-            orient="auto-start-reverse"
-          >
-            <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#842d35" />
-          </marker>
-          <marker
-            id="arrow-alert"
-            viewBox="0 0 10 10"
-            refX="19"
-            refY="5"
-            markerWidth="5.5"
-            markerHeight="5.5"
-            orient="auto-start-reverse"
-          >
-            <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#ef4444" />
-          </marker>
+          {/* One shared glow pass; no per-edge shadow filters. */}
+          <filter id={id("edge-glow")} x="-15%" y="-15%" width="130%" height="130%" colorInterpolationFilters="sRGB">
+            <feGaussianBlur stdDeviation={1.6 / screenScale} />
+          </filter>
+          {([['normal','#A8C5DB'],['flagged','#F05A70'],['selected','#FFD3DB'],['hovered','#FFFFFF']] as const).map(([state,color]) => (
+            <marker key={state} id={id(`arrow-${state}`)} viewBox="0 0 10 10" refX="9" refY="5"
+              markerUnits="userSpaceOnUse" markerWidth={(state === 'selected' || state === 'hovered' ? 10 : 8) / screenScale}
+              markerHeight={(state === 'selected' || state === 'hovered' ? 10 : 8) / screenScale} orient="auto">
+              <path d="M 0 1 L 9 5 L 0 9 L 2.2 5 Z" fill={color} />
+            </marker>
+          ))}
         </defs>
 
         {/* Background Grid */}
-        <rect width="100%" height="100%" fill="url(#graph-grid)" />
+        <rect width="100%" height="100%" fill={`url(#${id("graph-grid")})`} />
 
         {/* Pan & Zoom Transform Container */}
-        <g className="graph-camera"
+        <g className="graph-camera" style={isPanning ? { transition: "none" } : undefined}
           transform={`translate(${pan.x + 450 * (1 - zoom)}, ${
             pan.y + 290 * (1 - zoom)
           }) scale(${zoom})`}
         >
-          {/* Directed Edges */}
-          {links.map((link, idx) => {
-            const u =
-              typeof link.source === "object"
-                ? link.source
-                : nodes.find((n) => n.id === link.source);
-            const v =
-              typeof link.target === "object"
-                ? link.target
-                : nodes.find((n) => n.id === link.target);
-            if (!u || !v) return null;
-
-            const isConnectedToSelected = selectedNode === u.id || selectedNode === v.id;
-            const isSuspiciousEdge = u.isHighRisk || v.isHighRisk;
-            const isCriticalEdge = u.score >= 0.7 && v.score >= 0.7;
-
-            let strokeColor = "#383840";
-            let marker = "url(#arrow-gray)";
-            let strokeWidth = 1.2;
-            let opacity = 0.55;
-
-            if (selectedNode) {
-              if (isConnectedToSelected) {
-                strokeColor = "#ef4444";
-                marker = "url(#arrow-alert)";
-                strokeWidth = 2.2;
-                opacity = 1.0;
-              } else {
-                opacity = 0.15; // Dim non-connected edges to focus on selected account's counterparties
-              }
-            } else if (isCriticalEdge) {
-              strokeColor = "#ef4444";
-              marker = "url(#arrow-alert)";
-              strokeWidth = 1.8;
-              opacity = 0.9;
-            } else if (isSuspiciousEdge) {
-              strokeColor = "#842d35";
-              marker = "url(#arrow-red)";
-              strokeWidth = 1.5;
-              opacity = 0.75;
-            }
-
-            return (
-              <line
-                key={`link-${u.id}-${v.id}-${idx}`}
-                x1={u.x}
-                y1={u.y}
-                x2={v.x}
-                y2={v.y}
-                stroke={strokeColor}
-                strokeWidth={strokeWidth}
-                markerEnd={marker}
-                opacity={opacity}
-              />
-            );
-          })}
+          {/* All edges render before nodes. Glow is composited once for this bounded layer. */}
+          <g className="graph-edge-halos" filter={`url(#${id('edge-glow')})`} pointerEvents="none" aria-hidden="true">
+            {renderedLinks.map(link => <path key={link.index} d={link.path} fill="none" stroke={link.color}
+              strokeWidth={link.width + 4} vectorEffect="non-scaling-stroke" opacity={link.connected || link.hovered ? 0.28 : link.flagged ? 0.18 : 0.10} />)}
+          </g>
+          <g className="graph-edges">
+            {renderedLinks.map(link => <g key={`${link.source.id}-${link.target.id}`}>
+              <path className="graph-edge-line" data-source={link.source.id} data-target={link.target.id}
+                data-state={link.state} data-kind={link.kind} data-count={link.count} data-amount={link.amount}
+                d={link.path} fill="none" stroke={link.color} strokeWidth={link.width}
+                vectorEffect="non-scaling-stroke" strokeLinecap="round" opacity={link.opacity}
+                markerEnd={`url(#${id(`arrow-${link.state}`)})`} pointerEvents="none" />
+              <path className="graph-edge-hit" d={link.path} fill="none" stroke="transparent" strokeWidth={14}
+                vectorEffect="non-scaling-stroke" pointerEvents="stroke" role="button" tabIndex={0}
+                aria-label={`Transfer ${link.source.id} to ${link.target.id}: ${link.count} transactions; aggregate ${currency || 'unknown currency'} ${link.amount.toLocaleString()}. Inspect source account.`}
+                onPointerEnter={() => { setHoveredEdge(link.index); setHoveredNode(null); }}
+                onPointerLeave={() => setHoveredEdge(null)} onFocus={() => setHoveredEdge(link.index)} onBlur={() => setHoveredEdge(null)}
+                onClick={() => onSelectNode(link.source.id)}
+                onKeyDown={event => { if(event.key === 'Enter' || event.key === ' ') {event.preventDefault(); onSelectNode(link.source.id);} }} />
+            </g>)}
+          </g>
 
           {/* Account Nodes */}
           {nodes.map((n) => {
@@ -526,6 +506,11 @@ export function AnalysisGraphCanvas({
             const isHovered = hoveredNode?.id === n.id;
             const style = getNodeColor(n);
             const showBadge = isSelected || isHovered || (!selectedNode && topAnomalyIds.has(n.id));
+            const displayId = n.id.length > 22 ? n.id.slice(0, 20) + '…' : n.id;
+            const labelWidth = Math.max(65, displayId.length * 7.2 + 14);
+            const projectedX = pan.x + 450 * (1 - zoom) + n.x * zoom;
+            const labelX = projectedX + (n.radius + (labelWidth + 8) / screenScale) * zoom > 885
+              ? -n.radius - (labelWidth + 8) / screenScale : n.radius + 8 / screenScale;
 
             return (
               <g
@@ -534,7 +519,7 @@ export function AnalysisGraphCanvas({
                 role="button" tabIndex={0} aria-label={'Inspect account ' + n.id} aria-pressed={isSelected}
                 onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onSelectNode(n.id); } }}
                 onClick={() => onSelectNode(n.id)}
-                onMouseEnter={() => setHoveredNode(n)}
+                onMouseEnter={() => { setHoveredNode(n); setHoveredEdge(null); }}
                 onMouseLeave={() => setHoveredNode(null)}
                 style={{ cursor: "pointer" }}
               >
@@ -570,10 +555,11 @@ export function AnalysisGraphCanvas({
                   />
                 )}
 
+                {relatedIds.has(n.id) && !isSelected && <circle className="graph-neighbor-ring" r={n.radius + 4} fill="none" stroke="#C8DEEC" strokeWidth={1.2} vectorEffect="non-scaling-stroke" opacity={0.7} />}
                 {/* Core Node Circle */}
                 <circle
                   r={n.radius}
-                  fill={n.isHighRisk ? "url(#node-alert)" : "url(#node-neutral)"}
+                  fill={`url(#${id(n.isHighRisk ? "node-alert" : "node-neutral")})`}
                   stroke={isSelected ? "#ffffff" : style.stroke}
                   strokeWidth={isSelected ? 2.5 : 1.2}
                   opacity={0.95}
@@ -581,11 +567,12 @@ export function AnalysisGraphCanvas({
 
                 {/* Clean Label: Only for Hovered, Selected, or Top 3 Anomalies */}
                 {showBadge && (
-                  <g transform={`translate(${n.radius + 8}, -11)`}>
+                  <g transform={`translate(${labelX}, ${-11 / screenScale}) scale(${1 / screenScale})`}>
+                    <title>{n.id}</title>
                     <rect
                       x={-4}
                       y={-2}
-                      width={Math.max(65, n.id.length * 7.2 + 14)}
+                      width={labelWidth}
                       height={22}
                       fill="#101012"
                       stroke={isSelected ? "#ffffff" : n.score >= 0.7 ? "#ef4444" : "#303034"}
@@ -601,7 +588,7 @@ export function AnalysisGraphCanvas({
                       fontFamily="IBM Plex Mono, monospace"
                       fontWeight={600}
                     >
-                      {n.id}
+                      {displayId}
                     </text>
                   </g>
                 )}
@@ -611,9 +598,15 @@ export function AnalysisGraphCanvas({
         </g>
       </svg>
 
+      {edgeTooltip && <div className="graph-edge-tooltip" role="tooltip">
+        <strong>{edgeTooltip.source.id} <span aria-label="to">→</span> {edgeTooltip.target.id}</strong>
+        <span>{edgeTooltip.count.toLocaleString()} {edgeTooltip.count === 1 ? 'transaction' : 'transactions'} · Aggregate {currency || 'Unknown currency'} {edgeTooltip.amount.toLocaleString(undefined,{maximumFractionDigits:2})}</span>
+        <small>{edgeTooltip.flagged ? 'Touches an account flagged by the heuristic; transfer itself is not independently classified.' : 'Recorded directed relationship; silver-blue does not certify a safe transfer.'}</small>
+      </div>}
       {/* Floating Hover Tooltip HUD */}
       {hoveredNode && (
         <div
+          className="graph-node-tooltip"
           style={{
             position: "absolute",
             bottom: "16px",
@@ -696,49 +689,14 @@ export function AnalysisGraphCanvas({
         </div>
       )}
 
-      {/* Semantic Legend Bar (Bottom Left) */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: "12px",
-          left: "14px",
-          display: "flex",
-          gap: "12px",
-          alignItems: "center",
-          background: "rgba(16, 16, 18, 0.92)",
-          padding: "5px 10px",
-          borderRadius: "4px",
-          border: "1px solid #303034",
-          fontSize: "10px",
-          fontFamily: "IBM Plex Mono, monospace",
-          color: "#a6a6a6",
-          zIndex: 10,
-        }}
-      >
-        <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-          <span
-            style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#e5e7eb", border: "1px solid #9ca3af" }}
-          />
-          Standard
-        </span>
-        <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-          <span
-            style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#b44a50", border: "1px solid #842d35" }}
-          />
-          Suspicious
-        </span>
-        <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-          <span
-            style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#ef4444", border: "1px solid #b91c1c" }}
-          />
-          Critical Anomaly
-        </span>
-        <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-          <span
-            style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#ef4444", border: "2px solid #ffffff" }}
-          />
-          Selected
-        </span>
+      <div className="graph-surface-footer">
+        <div className="graph-edge-legend" aria-label="Graph legend">
+          <span><i style={{background:'#A8C5DB'}} />Recorded transfer →</span>
+          <span><i style={{background:'#F05A70'}} />Touches flagged account</span>
+          <span><i style={{background:'#FFD3DB'}} />Selected neighborhood</span>
+        </div>
+        <span className="graph-scope">{nodes.length} / {accounts.length} accounts · {links.length} / {edges.length} directed edges shown.
+          {accounts.length > nodes.length || edges.length > links.length ? ` Bounded view: up to ${maxRenderNodes} accounts / 180 edges; scores use the full accepted graph.` : ' Repeated transfers share one directed edge; arrows point to the recipient.'}</span>
       </div>
     </div>
   );

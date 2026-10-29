@@ -58,6 +58,7 @@ jobs:
         run: |
           node tests/test_stability.cjs
           node tests/test_graph_report.cjs
+          node tests/test_edge_geometry.cjs
 
       - name: Execute Backend Security & Host Access Suite (63 tests)
         run: |
