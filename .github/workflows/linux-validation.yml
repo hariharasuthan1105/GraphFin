@@ -54,6 +54,11 @@ jobs:
         run: |
           python -m scripts.check_startup
 
+      - name: Verify Graph Metrics and Audit Report Regression
+        run: |
+          node tests/test_stability.cjs
+          node tests/test_graph_report.cjs
+
       - name: Execute Backend Security & Host Access Suite (63 tests)
         run: |
           python -m pytest tests/test_private_access.py -v

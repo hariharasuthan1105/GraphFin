@@ -1,3 +1,4 @@
+import { inspectNetworkCycles } from "./networkMetrics";
 /**
  * GraphFin Client-Side Graph Analysis & Anomaly Detection Engine
  * Constructs directed weighted transaction graphs, extracts structural metrics,
@@ -241,6 +242,8 @@ export function analyzeTransactionGraph(
   const outDegreeThreshold = meanOutDegree + thresholds.degreeZThreshold * Math.max(1, outDegStdDev);
   const inDegreeThreshold = meanInDegree + thresholds.degreeZThreshold * Math.max(1, inDegStdDev);
 
+  const cycleInspection = inspectNetworkCycles(Array.from(edgeMap.values()), accountVolumeMean);
+
   // 6. Detect Structural Patterns & Calculate Continuous Anomaly Scores
   let sourceOnlyCount = 0;
   let sinkOnlyCount = 0;
@@ -310,57 +313,9 @@ export function analyzeTransactionGraph(
       flowImbalanceTotal++;
     }
 
-    // Pattern 5: Noteworthy Cycle (Clearly distinguishes ordinary bilateral trade from laundering loops)
-    // A. High-intensity reciprocal round-tripping (>= 5 transfers back and forth, or heavy reciprocal volume)
-    // B. Directed multi-hop circular forwarding loop (3-hop u -> v -> w -> u or 4-hop u -> v -> w -> x -> u)
-    let hasNoteworthyCycle = false;
-    for (const [cpId, cp] of raw.counterparties.entries()) {
-      if (cpId === id) continue;
-      if (cp.outCount >= 5 && cp.inCount >= 5) {
-        hasNoteworthyCycle = true;
-        break;
-      }
-      if (cp.outCount > 0) {
-        const vNode = nodeMap.get(cpId);
-        if (vNode) {
-          for (const [wId, wCp] of vNode.counterparties.entries()) {
-            if (wId !== id && wId !== cpId && wCp.outCount > 0) {
-              const wNode = nodeMap.get(wId);
-              if (wNode) {
-                // 3-hop check: u -> v -> w -> u
-                const wToU = wNode.counterparties.get(id);
-                if (wToU && wToU.outCount > 0) {
-                  const loopMinVol = Math.min(cp.outAmount, wCp.outAmount, wToU.outAmount);
-                  if (loopMinVol > accountVolumeMean * 0.15 || accountVolumeMean === 0) {
-                    hasNoteworthyCycle = true;
-                    break;
-                  }
-                }
-
-                // 4-hop check: u -> v -> w -> x -> u
-                for (const [xId, xCp] of wNode.counterparties.entries()) {
-                  if (xId !== id && xId !== cpId && xId !== wId && xCp.outCount > 0) {
-                    const xNode = nodeMap.get(xId);
-                    if (xNode) {
-                      const xToU = xNode.counterparties.get(id);
-                      if (xToU && xToU.outCount > 0) {
-                        const loop4Vol = Math.min(cp.outAmount, wCp.outAmount, xCp.outAmount, xToU.outAmount);
-                        if (loop4Vol > accountVolumeMean * 0.15 || accountVolumeMean === 0) {
-                          hasNoteworthyCycle = true;
-                          break;
-                        }
-                      }
-                    }
-                  }
-                }
-                if (hasNoteworthyCycle) break;
-              }
-            }
-          }
-        }
-      }
-      if (hasNoteworthyCycle) break;
-    }
+    // Pattern 5: configured structural loop indicator, not evidence of laundering.
+    // Reciprocal pairs require >= 5 transfers each way; 3/4-account loops also require the volume cutoff.
+    const hasNoteworthyCycle = cycleInspection.noteworthyAccounts.has(id);
 
     if (hasNoteworthyCycle) {
       patterns.push("CYCLE");
@@ -428,6 +383,11 @@ export function analyzeTransactionGraph(
 
     accounts.push({
       id,
+      incomingTransactionCount: inDeg,
+      outgoingTransactionCount: outDeg,
+      uniqueInDegree: Array.from(raw.counterparties).filter(([cp, value]) => cp !== id && value.inCount > 0).length,
+      uniqueOutDegree: Array.from(raw.counterparties).filter(([cp, value]) => cp !== id && value.outCount > 0).length,
+      uniqueCounterpartyCount: Array.from(raw.counterparties.keys()).filter(cp => cp !== id).length,
       inDegree: inDeg,
       outDegree: outDeg,
       totalDegree: totDeg,
@@ -469,7 +429,7 @@ export function analyzeTransactionGraph(
     unknown: records.filter(r => ![0, 1, false, true].includes(r.label as number | boolean)).length,
   };
   // Missing labels must not be silently treated as negative ground truth.
-  if (transactionLabels.unknown === 0 && positiveLabels.length > 0) {
+  if (transactionLabels.unknown === 0 && positiveLabels.length > 0 && cycleInspection.diagnostics.threeCycleScanComplete && cycleInspection.diagnostics.fourCycleScanComplete) {
     const totalPositives = positiveLabels.length;
     const totalNegatives = accounts.length - totalPositives;
 
@@ -523,7 +483,27 @@ export function analyzeTransactionGraph(
   const completeness =
     rawTotal > 0 ? parseFloat(((records.length / rawTotal) * 100).toFixed(1)) : 100.0;
 
+  const timestampValues = records.filter(r => r.timestamp !== undefined && String(r.timestamp).trim() !== '');
+  // Numeric step counters are not asserted to be calendar timestamps.
+  const parsedTimes = timestampValues.map(r => String(r.timestamp)).filter(value => /^\d{4}-\d{2}-\d{2}/.test(value) && Number.isFinite(Date.parse(value))).sort((a,b) => Date.parse(a) - Date.parse(b));
+  const simpleEdges = Array.from(edgeMap.values()).filter(e => e.source !== e.target).length;
   const summary: AnalysisSummary = {
+    datasetOrigin: 'uploaded',
+    timestampCoverage: { present: timestampValues.length, parseable: parsedTimes.length,
+      earliest: parsedTimes.length ? parsedTimes[0] : undefined,
+      latest: parsedTimes.length ? parsedTimes[parsedTimes.length - 1] : undefined },
+    averageIncomingTransactions: records.length / totalAccounts,
+    averageOutgoingTransactions: records.length / totalAccounts,
+    averageTransactionIncidences: avgDegree,
+    averageUniqueTotalDegree: 2 * simpleEdges / totalAccounts,
+    maxUniqueInDegree: Math.max(...accounts.map(a => a.uniqueInDegree ?? 0)),
+    maxUniqueOutDegree: Math.max(...accounts.map(a => a.uniqueOutDegree ?? 0)),
+    simpleDirectedEdges: simpleEdges,
+    selfTransferTransactions: records.filter(r => r.source === r.destination).length,
+    selfLoopEdges: edgeMap.size - simpleEdges,
+    repeatedDirectedPairs: Array.from(edgeMap.values()).filter(e => e.count > 1).length,
+    extraRepeatedTransactions: records.length - edgeMap.size,
+    cycleDiagnostics: cycleInspection.diagnostics,
     datasetName,
     sourceRecords: rawTotal,
     transactionLabels,

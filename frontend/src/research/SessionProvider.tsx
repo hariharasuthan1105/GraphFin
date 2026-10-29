@@ -248,6 +248,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         "synthetic_financial_benchmark.csv",
         SAMPLE_CSV_DATA.length,
       );
+      result.summary.datasetOrigin = "synthetic";
       result.datasetPreview = { headers: parsed.headers, rows: parsed.rows.slice(0, 20) };
       result.summary.sourceColumns = parsed.headers;
       result.summary.columnMapping = mapping;

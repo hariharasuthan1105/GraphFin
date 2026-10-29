@@ -1,3 +1,4 @@
+import NetworkMetricSummary from "../NetworkMetricSummary";
 import { useState, useMemo } from "react";
 import { Heading, Qualifications } from "../ui";
 import { useGraphCatalog } from "../graph/client";
@@ -74,6 +75,7 @@ export default function GraphExplorer() {
       </Heading>
 
       <Qualifications />
+      {activeGraphResult && <NetworkMetricSummary summary={activeGraphResult.summary} />}
 
       {/* Primary Graph Mode Switcher */}
       <div
@@ -503,13 +505,15 @@ export default function GraphExplorer() {
       {activeGraphResult && (
         <div className="analysis-workbench-grid">
           {/* Left Column: Account Anomaly Filter & Ranking */}
-          <div className="analysis-ranking-col">
+          <div className="analysis-ranking-col" style={{ minWidth: 0 }}>
             <div
               style={{
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
                 marginBottom: "8px",
+                flexWrap: "wrap",
+                gap: "6px",
               }}
             >
               <h3 style={{ margin: 0, fontSize: "13px", color: "#f5f5f5" }}>
@@ -822,7 +826,7 @@ export default function GraphExplorer() {
                   </div>
 
                   <div className="inspector-metric-card">
-                    <span className="metric-label">TOPOLOGICAL DEGREE</span>
+                    <span className="metric-label">TRANSACTION COUNTS</span>
                     <span className="metric-number">
                       {selectedAccount.inDegree}{" "}
                       <small style={{ fontSize: "12px", color: "#a6a6a6" }}>IN</small> /{" "}
@@ -830,7 +834,7 @@ export default function GraphExplorer() {
                       <small style={{ fontSize: "12px", color: "#a6a6a6" }}>OUT</small>
                     </span>
                     <span className="metric-hint">
-                      {selectedAccount.totalDegree} transaction incidences
+                      {selectedAccount.totalDegree} transaction incidences; unique neighbors: {selectedAccount.uniqueInDegree ?? "N/A"} in / {selectedAccount.uniqueOutDegree ?? "N/A"} out; counterparties: {selectedAccount.uniqueCounterpartyCount ?? "N/A"}
                     </span>
                   </div>
 

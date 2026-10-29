@@ -35,8 +35,11 @@ export default function Reports() {
             accounts_profiled: activeSession.accounts.map((a) => ({
               account_id: a.id,
               anomaly_score: a.anomalyScore,
-              in_degree: a.inDegree,
-              out_degree: a.outDegree,
+              incoming_transaction_count: a.inDegree,
+              unique_in_degree: a.uniqueInDegree,
+              unique_out_degree: a.uniqueOutDegree,
+              unique_counterparty_count: a.uniqueCounterpartyCount,
+              outgoing_transaction_count: a.outDegree,
               net_flow_volume: a.netFlow,
               detected_patterns: a.patterns,
             })),
@@ -66,15 +69,18 @@ export default function Reports() {
       "rank",
       "account_id",
       "anomaly_score",
-      "in_degree",
-      "out_degree",
+      "incoming_transaction_count",
+      "outgoing_transaction_count",
+      "unique_in_degree",
+      "unique_out_degree",
+      "unique_counterparties",
       "total_sent",
       "total_received",
       "net_flow",
       "patterns",
     ].join(",");
 
-    const rows = activeSession.accounts
+    const rows = activeSession.accounts.slice()
       .sort((a, b) => b.anomalyScore - a.anomalyScore)
       .map((acc, idx) =>
         [
@@ -83,6 +89,9 @@ export default function Reports() {
           acc.anomalyScore.toFixed(4),
           acc.inDegree,
           acc.outDegree,
+          acc.uniqueInDegree ?? "",
+          acc.uniqueOutDegree ?? "",
+          acc.uniqueCounterpartyCount ?? "",
           acc.totalSent.toFixed(2),
           acc.totalReceived.toFixed(2),
           acc.netFlow.toFixed(2),
@@ -173,9 +182,9 @@ export default function Reports() {
                 <td>${i + 1}</td>
                 <td><strong>${escapeHtml(a.id)}</strong></td>
                 <td style="color: ${a.anomalyScore >= 0.7 ? "#e11d48" : "#d97706"};">${a.anomalyScore.toFixed(3)}</td>
-                <td>${a.inDegree} in / ${a.outDegree} out</td>
+                <td>${a.inDegree} incoming tx / ${a.outDegree} outgoing tx</td>
                 <td>${a.netFlow < 0 ? "-" : "+"}${activeSession.summary.currency === "INR" ? "₹" : (activeSession.summary.currency ? activeSession.summary.currency + " " : "Unknown ")}${Math.abs(a.netFlow).toLocaleString()}</td>
-                <td>${a.patterns.join(", ") || "Elevated Degree"}</td>
+                <td>${a.patterns.join(", ") || "Elevated transaction count"}</td>
               </tr>
             `,
               )
@@ -184,7 +193,7 @@ export default function Reports() {
         </table>
 
         <div class="disclaimer">
-          <strong>Methodology Disclosure:</strong> Anomaly rankings are derived from deterministic topological and transaction flow metrics (in/out degree asymmetry, volume outliers, directed fan-in/fan-out, and cycle participation). These metrics indicate structural network anomalies and do not constitute legal determinations of financial misconduct.
+          <strong>Methodology Disclosure:</strong> Anomaly rankings are derived from deterministic topological and transaction flow metrics (incoming/outgoing transaction-count asymmetry, volume outliers, directed fan-in/fan-out, and cycle participation). These metrics indicate structural network anomalies and do not constitute legal determinations of financial misconduct.
         </div>
       </body>
       </html>

@@ -1,3 +1,4 @@
+import type { CycleDiagnostics } from "./networkMetrics";
 /**
  * GraphFin Dataset Analysis Types
  * Defines data structures for client-side transaction parsing, graph construction,
@@ -42,6 +43,11 @@ export interface AccountCounterparty {
 }
 
 export interface AccountNode {
+  incomingTransactionCount?: number;
+  outgoingTransactionCount?: number;
+  uniqueInDegree?: number;
+  uniqueOutDegree?: number;
+  uniqueCounterpartyCount?: number;
   id: string;
   inDegree: number;
   outDegree: number;
@@ -106,6 +112,20 @@ export interface GroundTruthEvaluation {
 }
 
 export interface AnalysisSummary {
+  datasetOrigin?: 'synthetic' | 'uploaded';
+  timestampCoverage?: { present: number; parseable: number; earliest?: string; latest?: string };
+  averageIncomingTransactions?: number;
+  averageOutgoingTransactions?: number;
+  averageTransactionIncidences?: number;
+  averageUniqueTotalDegree?: number;
+  maxUniqueInDegree?: number;
+  maxUniqueOutDegree?: number;
+  simpleDirectedEdges?: number;
+  selfTransferTransactions?: number;
+  selfLoopEdges?: number;
+  repeatedDirectedPairs?: number;
+  extraRepeatedTransactions?: number;
+  cycleDiagnostics?: CycleDiagnostics;
   transactionLabels?: { normal: number; anomalous: number; unknown: number };
   sourceRecords?: number;
   inputChecksum?: string;

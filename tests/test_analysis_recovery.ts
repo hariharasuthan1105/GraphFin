@@ -200,8 +200,9 @@ if (!csvPath) {
   console.log("TEST 6: Institutional PDF Report Generation...");
   const pdfDoc = generateDatasetPdfReport(analysis, "GraphFin Client-Side Graph Topological Heuristics Engine v2.1", false);
   const pdfBytes = pdfDoc.output("arraybuffer");
-  assert(pdfBytes.byteLength > 20000, `PDF must have substantial content, got ${pdfBytes.byteLength} bytes`);
-  console.log(`  ✓ Generated valid audit PDF (${pdfBytes.byteLength} bytes) with 3 institutional pages.\n`);
+  assert(pdfBytes.byteLength > 4000, `PDF should contain a complete document, got ${pdfBytes.byteLength} bytes`);
+  assert(pdfDoc.getNumberOfPages() >= 4 && pdfDoc.getNumberOfPages() <= 7, "Report should contain its substantive sections with dynamic pagination");
+  console.log(`  ✓ Generated compressed audit PDF (${pdfBytes.byteLength} bytes), ${pdfDoc.getNumberOfPages()} pages.\n`);
 }
 
 // -----------------------------------------------------------------------------

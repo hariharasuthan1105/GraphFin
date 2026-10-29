@@ -1,0 +1,41 @@
+const fs=require('fs'),path=require('path'),assert=require('assert/strict');
+const ts=require('../frontend/node_modules/typescript');
+require.extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText,f);
+const {analyzeTransactionGraph:analyze}=require('../frontend/src/research/datasetAnalysis/engine.ts');
+const {inspectNetworkCycles}=require('../frontend/src/research/datasetAnalysis/networkMetrics.ts');
+const {generateDatasetPdfReport}=require('../frontend/src/research/datasetAnalysis/reportGenerator.ts');
+const {buildReportData}=require('../frontend/src/research/datasetAnalysis/reportData.ts');
+const parser=require('../frontend/src/research/datasetAnalysis/parser.ts');
+const tx=(a,b,v=10,label)=>({transaction_id:'fixture',source:a,destination:b,amount:v,currency:'INR',label});
+const normal=[tx('A','B'),tx('B','C'),tx('C','D')];
+const dated=analyze([{...tx('A','B'),timestamp:'2026-01-01T01:00:00+05:30'},{...tx('B','C'),timestamp:'2025-12-31T22:00:00Z'}]);
+assert.equal(dated.summary.timestampCoverage.earliest,'2026-01-01T01:00:00+05:30');
+const repeated=[tx('A','B'),tx('A','B'),tx('B','A'),tx('A','A')];
+const rep=analyze(repeated);const a=rep.accounts.find(a=>a.id==='A');
+assert.equal(a.incomingTransactionCount,2);assert.equal(a.outgoingTransactionCount,3);assert.equal(a.uniqueInDegree,1);assert.equal(a.uniqueOutDegree,1);assert.equal(a.uniqueCounterpartyCount,1);
+assert.equal(rep.summary.uniqueEdges,3);assert.equal(rep.summary.simpleDirectedEdges,2);assert.equal(rep.summary.averageUniqueTotalDegree,2);assert.equal(rep.summary.averageTransactionIncidences,4);assert.equal(rep.summary.selfTransferTransactions,1);
+const triangles=[tx('A','B',100),tx('B','C',100),tx('C','A',100)];
+const tri=analyze(triangles);assert.equal(tri.summary.cycleDiagnostics.directedThreeCycles,1);assert.equal(tri.summary.cycleDiagnostics.noteworthyLoops,1);assert.equal(tri.summary.patternsDetected.cycleCount,3);assert.equal(tri.summary.suspiciousAccountCount,0);
+assert.equal(inspectNetworkCycles(tri.edges,10000).diagnostics.qualifyingThreeCycles,0);
+assert.equal(inspectNetworkCycles(tri.edges,200).diagnostics.qualifyingThreeCycles,1);
+const both=analyze([...triangles,tx('B','A'),tx('C','B'),tx('A','C')]);assert.equal(both.summary.cycleDiagnostics.directedThreeCycles,2);
+const reciprocal=Array.from({length:5},()=>[tx('X','Y'),tx('Y','X')]).flat();assert.equal(analyze(reciprocal).summary.cycleDiagnostics.repeatedReciprocalPairs,1);
+assert.equal(analyze(Array.from({length:10},()=>tx('X','X'))).summary.cycleDiagnostics.noteworthyLoops,0);
+assert.equal(inspectNetworkCycles(both.edges,10,1).diagnostics.threeCycleScanComplete,false);
+const labels=[tx('A','B',10,1),tx('C','D',10,0)];const labelled=analyze(labels);assert.equal(labelled.summary.evaluation.prAuc,0.5);
+assert.deepEqual(labelled.accounts.map(a=>a.anomalyScore),analyze(labels.map(r=>({...r,label:undefined,pattern_type:'random'}))).accounts.map(a=>a.anomalyScore));
+const many=[];for(let h=0;h<20;h++)for(let i=0;i<20;i++)many.push(tx('H'+h,'R'+h+'_'+i,10000));for(let i=0;i<2000;i++)many.push(tx('BG'+i,'BG'+(i+1),1));
+assert.ok(analyze(many).summary.suspiciousAccountCount>15);
+const long=[...Array.from({length:15},(_,i)=>tx('HUB_'+ 'long-account-'.repeat(9),'RECEIVER_'+i,10000)),...Array.from({length:40},(_,i)=>tx('BACKGROUND_'+i,'TARGET_'+i,1))];
+assert.ok(analyze(long).summary.suspiciousAccountCount>0);
+const fixtures={normal,repeated,triangles,reciprocal,missing_labels:normal,mixed:[tx('A','B'),{...tx('B','C'),currency:'USD'}],no_flags:triangles,many_flags:many,long_identifiers:long,large_supported:Array.from({length:25000},(_,i)=>tx('L'+i%500,'L'+(i+1)%500,10))};
+const output=process.env.GRAPHFIN_REPORT_OUTPUT_DIR;if(output)fs.mkdirSync(output,{recursive:true});const reports=[];
+function report(name,result){const doc=generateDatasetPdfReport(result,undefined,false);assert.ok(doc.getNumberOfPages()>=4);assert.equal(buildReportData(result).flags.length,result.summary.suspiciousAccountCount);if(output)fs.writeFileSync(path.join(output,name+'.pdf'),Buffer.from(doc.output('arraybuffer')));reports.push({name,pages:doc.getNumberOfPages(),accounts:result.summary.uniqueAccounts,flags:result.summary.suspiciousAccountCount,cycles:result.summary.cycleDiagnostics});}
+for(const [name,records]of Object.entries(fixtures))report(name,analyze(records,name==='long_identifiers'?'Long_dataset_identity_'.repeat(9)+'.csv':name+'.csv'));
+if(process.env.GRAPHFIN_BENCHMARK_CSV){const raw=fs.readFileSync(process.env.GRAPHFIN_BENCHMARK_CSV,'utf8');const table=parser.parseDelimitedText(raw);const records=parser.buildTransactionRecordsDetailed(table,parser.autoDetectColumnMapping(table.headers));const b=analyze(records.records,path.basename(process.env.GRAPHFIN_BENCHMARK_CSV),Buffer.byteLength(raw),undefined,records.rawTotalRows,records.rejectedRows);b.summary.datasetOrigin='synthetic';
+ assert.equal(b.summary.averageUniqueTotalDegree,19.72);assert.equal(b.summary.averageTransactionIncidences,20);assert.equal(b.summary.cycleDiagnostics.directedThreeCycles,335);assert.equal(b.summary.cycleDiagnostics.directedFourCycles,2362);assert.equal(b.summary.cycleDiagnostics.noteworthyLoops,0);assert.equal(b.summary.suspiciousAccountCount,9);assert.equal(b.summary.totalVolume,27216411.41);assert.equal(b.summary.evaluation.positives,328);assert.equal(b.summary.evaluation.prAuc,0.5211);
+ const hub=b.accounts.find(a=>a.id==='ACC000662');assert.equal(hub.outgoingTransactionCount,59);assert.equal(hub.uniqueOutDegree,10);assert.equal(hub.uniqueInDegree,5);
+ const withoutLabels=analyze(records.records.map(r=>({...r,label:undefined,pattern_type:undefined})));assert.deepEqual(b.accounts.map(a=>[a.id,a.anomalyScore,a.isFlaggedForReview]),withoutLabels.accounts.map(a=>[a.id,a.anomalyScore,a.isFlaggedForReview]));
+ report('benchmark',b);if(output){fs.writeFileSync(path.join(output,'benchmark-summary.json'),JSON.stringify(b.summary,null,2));fs.writeFileSync(path.join(output,'evaluation-inputs.json'),JSON.stringify(b.accounts.map(a=>({score:a.anomalyScore,label:a.isLabeledFraud,flag:a.isFlaggedForReview}))));}
+}
+if(output)fs.writeFileSync(path.join(output,'manifest.json'),JSON.stringify(reports,null,2));console.log(JSON.stringify({result:'PASS',reports},null,2));

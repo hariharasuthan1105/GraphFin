@@ -1,3 +1,4 @@
+import NetworkMetricSummary from "../NetworkMetricSummary";
 import { useState, useId, useEffect, useRef } from "react";
 import { Heading, Panel, Notice } from "../ui";
 import { safeSummary } from "../sessionMetadata";
@@ -180,11 +181,11 @@ export default function DatasetAnalysis() {
 
   const handleExportCsv = () => {
     if (!result) return;
-    const header = "Account_ID,Anomaly_Score,In_Degree,Out_Degree,Total_Degree,Total_Sent,Total_Received,Net_Flow,Patterns\n";
+    const header = "Account_ID,Anomaly_Score,Incoming_Transactions,Outgoing_Transactions,Transaction_Incidences,Unique_In_Degree,Unique_Out_Degree,Unique_Counterparties,Total_Sent,Total_Received,Net_Flow,Patterns\n";
     const rows = result.accounts
       .map(
         (a) =>
-          `"${a.id}",${a.anomalyScore},${a.inDegree},${a.outDegree},${a.totalDegree},${a.totalSent},${a.totalReceived},${a.netFlow},"${a.patterns.join(";")}"`
+          `"${a.id}",${a.anomalyScore},${a.inDegree},${a.outDegree},${a.totalDegree},${a.uniqueInDegree??""},${a.uniqueOutDegree??""},${a.uniqueCounterpartyCount??""},${a.totalSent},${a.totalReceived},${a.netFlow},"${a.patterns.join(";")}"`
       )
       .join("\n");
     const blob = new Blob([header + rows], { type: "text/csv" });
@@ -215,7 +216,7 @@ export default function DatasetAnalysis() {
       <Heading index="03" title="Interactive Analysis">
         Client-side transaction network construction, structural graph feature extraction, and anomaly pattern detection.
       </Heading>
-      {result && <p role="status">{backendMessage}</p>}
+      {result && <><p role="status">{backendMessage}</p><NetworkMetricSummary summary={result.summary} /></>}
 
       <ol className="analysis-stages" aria-label="Analysis progress">{['Upload', 'Validate', 'Analyze', 'Results'].map((label, index) => <li key={label} aria-current={index === (isProcessing ? 2 : step === 'upload' ? 0 : step === 'mapping' ? 1 : 3) ? 'step' : undefined}><span>{String(index + 1).padStart(2, '0')}</span>{label}</li>)}</ol>
 
@@ -668,7 +669,7 @@ export default function DatasetAnalysis() {
                   result.summary.patternsDetected.cycleCount}
               </strong>
               <small>
-                {result.summary.patternsDetected.fanOutCount} Fan-out | {result.summary.patternsDetected.fanInCount} Fan-in | {result.summary.patternsDetected.cycleCount} Cycle
+                {result.summary.patternsDetected.fanOutCount} Fan-out | {result.summary.patternsDetected.fanInCount} Fan-in | {result.summary.patternsDetected.cycleCount} accounts in qualifying loops
               </small>
             </div>
           </div>
@@ -842,7 +843,7 @@ export default function DatasetAnalysis() {
                       <tr style={{ background: "#101012", borderBottom: "1px solid #303034", position: "sticky", top: 0 }}>
                         <th style={{ padding: "8px", textAlign: "left" }}>Account ID</th>
                         <th style={{ padding: "8px", textAlign: "right" }}>Score</th>
-                        <th style={{ padding: "8px", textAlign: "center" }}>Deg (In/Out)</th>
+                        <th style={{ padding: "8px", textAlign: "center" }}>Tx (In/Out)</th>
                         <th style={{ padding: "8px", textAlign: "left" }}>Patterns</th>
                       </tr>
                     </thead>
@@ -962,12 +963,12 @@ export default function DatasetAnalysis() {
                       )}
 
                       <div className="inspector-metric-card">
-                        <span className="metric-label">TOPOLOGICAL DEGREE</span>
+                        <span className="metric-label">TRANSACTION COUNTS</span>
                         <div className="metric-number">
                           {selectedAccount.inDegree} <span style={{ fontSize: "11px", color: "#a6a6a6" }}>IN</span> / {selectedAccount.outDegree} <span style={{ fontSize: "11px", color: "#a6a6a6" }}>OUT</span>
                         </div>
                         <span className="metric-hint">
-                          {selectedAccount.totalDegree} total transfer edges
+                          {selectedAccount.totalDegree} transaction incidences; unique neighbors: {selectedAccount.uniqueInDegree ?? "N/A"} in / {selectedAccount.uniqueOutDegree ?? "N/A"} out; counterparties: {selectedAccount.uniqueCounterpartyCount ?? "N/A"}
                         </span>
                       </div>
 

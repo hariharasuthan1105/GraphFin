@@ -1,840 +1,113 @@
-import { jsPDF } from "jspdf";
-import type { AnalysisResult } from "./types";
+import type { AnalysisResult } from './types';
+import { AuditLayout } from './pdfLayout';
+import { buildReportData } from './reportData';
 
-/**
- * Format number with commas and specified decimals
- */
-function formatNumber(num: number, decimals = 2): string {
-  if (num === undefined || num === null || isNaN(num)) return "0.00";
-  return num.toLocaleString("en-US", {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  });
-}
+const TITLE = 'Machine Learning Enhanced Graph-Based Anomaly Detection for Financial Transactions';
+const n = (v: number | undefined, d=0) => v === undefined || !Number.isFinite(v) ? 'Not recorded' : v.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const patterns: Record<string,string> = {FAN_IN:'Fan-in',FAN_OUT:'Fan-out',VOLUME_OUTLIER:'Volume outlier',FLOW_IMBALANCE:'Flow imbalance',CYCLE:'Qualifying loop'};
 
-/**
- * Format currency amount with detected dataset currency label
- */
-function formatCurrency(amount: number, currency = "Unknown", decimals = 2): string {
-  const formatted = formatNumber(amount, decimals);
-  const cleanCcy = (currency || "Unknown").toUpperCase().trim();
-  if (cleanCcy === "USD") {
-    return `$${formatted}`;
-  }
-  return `${cleanCcy} ${formatted}`;
-}
+/** Searchable, locally generated report driven by one canonical report model. */
+export function generateDatasetPdfReport(analysis: AnalysisResult, _executionEngine?: string, download=true) {
+  const r=buildReportData(analysis),s=r.summary,c=r.cycles,e=r.evaluation,p=new AuditLayout(r.reportId);
+  const money=(v:number,d=2)=>`${r.currency} ${n(v,d)}`;
+  const incomplete=!!c&&(!c.threeCycleScanComplete||!c.fourCycleScanComplete);
+  let section=1;
+  p.text('TRANSACTION NETWORK',16,34,24,true);p.text('ANALYSIS REPORT',16,45,24,true);
+  p.y=55;p.paragraph(TITLE,11);
+  p.text('CLIENT-SIDE GRAPH HEURISTIC ANALYSIS',16,p.y+2,9,true,'#A52C3B');p.y+=12;
+  p.paragraph(`Dataset: ${s.datasetName}`,10);
+  p.paragraph(`Generated: ${r.generatedAt} | Report: ${r.reportId}`,8.5);
+  p.paragraph(`Origin: ${r.origin}. Algorithm: ${r.algorithmVersion}.`,8.5);
+  p.cards([
+    {label:'ACCEPTED TRANSACTIONS',value:n(r.acceptedRecords)},
+    {label:'UNIQUE ACCOUNTS',value:n(s.uniqueAccounts)},
+    {label:'DIRECTED ACCOUNT PAIRS',value:n(s.uniqueEdges)},
+    {label:'ACCOUNTS FOR REVIEW',value:n(r.flags.length),detail:'Heuristic flags; not confirmed fraud'},
+    {label:'TRANSACTION VOLUME',value:money(s.totalVolume),detail:s.isMixedCurrency?'Mixed units; no FX normalization':`${r.currency} reported currency`},
+    {label:'REJECTED / SOURCE ROWS',value:`${n(r.rejectedRecords)} / ${n(r.sourceRecords)}`,detail:`${n(s.dataCompletenessPct,1)}% accepted`},
+  ]);
+  p.section(section++,'Executive summary');
+  p.paragraph(`${n(r.acceptedRecords)} accepted transfers connect ${n(s.uniqueAccounts)} accounts through ${n(s.uniqueEdges)} directed account pairs. The heuristic selected ${n(r.flags.length)} accounts for review. Scores combine account-volume extremity, transaction-count divergence, flow asymmetry and structural indicators; they are not fraud probabilities.`);
+  p.note('KEY FINDINGS',`${n(s.patternsDetected.volumeOutlierCount)} account-volume outliers, ${n(s.patternsDetected.fanInCount)} fan-in and ${n(s.patternsDetected.fanOutCount)} fan-out indicators were observed. Indicators overlap and do not sum to unique suspicious accounts. ${c?`${n(c.directedThreeCycles)} directed three-account cycles were observed${c.threeCycleScanComplete?'':' (lower bound)'}; ${n(c.noteworthyLoops)} loops meet noteworthy criteria${incomplete?' (lower bound)':''}.`:'Cycle census was not recorded in this saved session.'}`);
+  if(r.integrityWarning)p.note('INTEGRITY WARNING',r.integrityWarning);
+  if(s.isMixedCurrency)p.note('CURRENCY LIMITATION','Amounts combine different currency units. The total is an unconverted arithmetic sum, not a monetary valuation. Volume rankings are not comparable across currencies.');
 
-/**
- * Generates an institutional-grade PDF Forensic Audit Report for any uploaded transaction dataset.
- * Adheres strictly to GraphFin's original red/black/white visual identity, eliminates text
- * overlap via computed grid layouts, respects dataset currency, wraps pattern names, and
- * separates structural motifs from flagged forensic compliance reviews.
- */
-export function generateDatasetPdfReport(
-  analysis: AnalysisResult,
-  executionEngine?: string,
-  download = true,
-): jsPDF {
-  const doc = new jsPDF({
-    orientation: "portrait",
-    unit: "mm",
-    format: "a4",
-  });
+  p.nextPage();p.section(section++,'Dataset & network profile','Transaction counts and simple-graph degrees describe different properties.');
+  const t=s.timestampCoverage;
+  p.table(['Dataset profile','Recorded value'],[
+    ['Source file',s.datasetName],['Source / accepted / rejected',`${n(r.sourceRecords)} / ${n(r.acceptedRecords)} / ${n(r.rejectedRecords)}`],
+    ['Unique accounts / currency',`${n(s.uniqueAccounts)} / ${r.currency}${s.isMixedCurrency?' (unconverted)':''}`],
+    ['Timestamp coverage',t?`${n(t.present)} present; ${n(t.parseable)} parseable ISO calendar values`:'Not recorded'],
+    ['Calendar range',t?.earliest&&t.latest?`${t.earliest} to ${t.latest} (source timezone semantics)`:'Unavailable; step counters are not calendar dates'],
+    ['Total / median amount',`${money(s.totalVolume)} / ${money(s.medianAmount)}`],
+  ],[60,118],9);
+  p.table(['Network statistic','Value'],[
+    ['Unique directed edges / self-loop edges',`${n(s.uniqueEdges)} / ${n(s.selfLoopEdges)}`],
+    ['Simple directed edges (excluding self-loops)',n(s.simpleDirectedEdges)],
+    ['Density: simple edges / N(N-1)',n(s.networkDensity,6)],
+    ['Average incoming / outgoing transactions',`${n(s.averageIncomingTransactions,2)} / ${n(s.averageOutgoingTransactions,2)}`],
+    ['Average transaction incidences: 2T / N',n(s.averageTransactionIncidences??s.avgDegree,2)],
+    ['Average unique-neighbor total degree: 2E / N',n(s.averageUniqueTotalDegree,2)],
+    ['Maximum unique in-degree / out-degree',`${n(s.maxUniqueInDegree)} / ${n(s.maxUniqueOutDegree)}`],
+    ['Maximum incoming / outgoing transactions',`${n(s.maxInDegree)} / ${n(s.maxOutDegree)}`],
+    ['Source-only / sink-only / intermediary accounts',`${n(s.sourceOnlyAccounts)} / ${n(s.sinkOnlyAccounts)} / ${n(s.intermediaryAccounts)}`],
+    ['Repeated directed pairs / additional transfers',`${n(s.repeatedDirectedPairs)} / ${n(s.extraRepeatedTransactions)}`],
+    ['Self-transfers (included in transaction totals)',n(s.selfTransferTransactions)],
+  ],[121,57],9);
+  p.note('METRIC DEFINITIONS','Unique neighbors exclude self. A reciprocal neighbor contributes once to each directional degree, but once to the counterparty union. Repeated transfers increase transaction counts and amounts without adding an edge. Self-transfers count once incoming and once outgoing; they add no simple-graph neighbors.');
 
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 14;
-  const contentWidth = pageWidth - margin * 2;
+  p.nextPage();p.section(section++,'Patterns & account findings','Account indicators overlap. Cycle counts are deduplicated loops, not accounts.');
+  p.bars([
+    {label:'Fan-in indicators',value:s.patternsDetected.fanInCount,unit:'accounts'},
+    {label:'Fan-out indicators',value:s.patternsDetected.fanOutCount,unit:'accounts'},
+    {label:'Volume outliers',value:s.patternsDetected.volumeOutlierCount,unit:'accounts'},
+    ...(c?[{label:'Directed three-account cycles',value:c.directedThreeCycles,unit:'cycles'},{label:'Qualifying noteworthy loops',value:c.noteworthyLoops,unit:'loops'}]:[]),
+    {label:'Flagged for review',value:r.flags.length,unit:'accounts'},
+  ]);
+  p.paragraph(c?`Cycle census: ${n(c.directedThreeCycles)} directed 3-account cycles; ${n(c.directedFourCycles)} directed 4-account cycles; ${n(c.reciprocalPairs)} reciprocal pairs. Qualifying: ${n(c.qualifyingThreeCycles)} three-cycles, ${n(c.qualifyingFourCycles)} four-cycles and ${n(c.repeatedReciprocalPairs)} repeated reciprocal pairs. ${n(s.patternsDetected.cycleCount)} accounts participate in qualifying loops.`:'Cycle census unavailable for this saved session; re-run analysis.',9);
+  if(incomplete)p.note('BOUNDED SCAN - LOWER BOUNDS',`The scan reached its ${n(c?.operationLimit)}-operation budget. Cycle counts and cycle-driven scores may be incomplete. Benchmark evaluation is withheld.`);
+  p.paragraph(`Showing ${r.rankings.length} of ${r.flags.length} flagged accounts, ordered by heuristic score (ties by ID). Tx in/out are transaction counts; Cp is the distinct counterparty union excluding self. Amounts use ${r.currency}, rounded to whole units in this table.`,9);
+  if(r.rankings.length)p.table(['Rank','Account ID','Score','Tx in / out','Cp','Sent','Received','Net flow','Indicators'],r.rankings.map((a,i)=>[
+    String(i+1),a.id,a.anomalyScore.toFixed(4),`${n(a.incomingTransactionCount??a.inDegree)} / ${n(a.outgoingTransactionCount??a.outDegree)}`,n(a.uniqueCounterpartyCount),n(a.totalSent),n(a.totalReceived),`${a.netFlow>0?'+':''}${n(a.netFlow)}`,a.patterns.map(v=>patterns[v]||v).join(', ')||'None',
+  ]),[11,23,15,14,11,23,23,23,35],8);
+  else p.note('NO ACCOUNTS FLAGGED','No account met the review rule. This does not establish that every transaction is normal or that all anomalous behavior was detected.');
+  p.paragraph('Review: configured score threshold, OR at least two indicators with score >= 0.40, OR account-volume Z >= 3.0. Full definitions follow in Methodology.',9);
 
-  // Authentic GraphFin Color Palette
-  const RED_PRIMARY = [180, 74, 80]; // #b44a50
-  const RED_DARK = [132, 45, 53];    // #842d35
-  const DARK_TEXT = [24, 24, 27];     // #18181b
-  const MUTED_TEXT = [95, 95, 102];   // #5f5f66
-  const BG_CARD = [250, 250, 252];    // #fafafc
-  const BORDER_LIGHT = [225, 225, 230];
-  const WHITE = [255, 255, 255];
-
-  const currency = analysis.summary.currency || "Unknown";
-  const engine =
-    executionEngine ||
-    analysis.summary.analysisEngine ||
-    "GraphFin Client-Side Graph Topological Heuristics Engine v2.1";
-
-  const totalPages = analysis.summary.evaluation ? 3 : 2;
-
-  const renderHeader = (pageNumber: number) => {
-    // Top Accent Strip
-    doc.setFillColor(RED_PRIMARY[0], RED_PRIMARY[1], RED_PRIMARY[2]);
-    doc.rect(margin, 10, contentWidth, 2.5, "F");
-
-    // Header Meta
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(7.5);
-    doc.setTextColor(RED_DARK[0], RED_DARK[1], RED_DARK[2]);
-    doc.text("GRAPHFIN RESEARCH DASHBOARD - FORENSIC AUDIT RECORD", margin, 17);
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7);
-    doc.setTextColor(MUTED_TEXT[0], MUTED_TEXT[1], MUTED_TEXT[2]);
-    doc.text(`A4 Forensic Audit | Page ${pageNumber} of ${totalPages}`, pageWidth - margin, 17, {
-      align: "right",
-    });
-  };
-
-  const renderFooter = (_pageNumber: number) => {
-    const yFoot = pageHeight - 10;
-    doc.setDrawColor(BORDER_LIGHT[0], BORDER_LIGHT[1], BORDER_LIGHT[2]);
-    doc.setLineWidth(0.2);
-    doc.line(margin, yFoot - 3, margin + contentWidth, yFoot - 3);
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7);
-    doc.setTextColor(MUTED_TEXT[0], MUTED_TEXT[1], MUTED_TEXT[2]);
-    doc.text(
-      "GraphFin Anomaly Detection System | Canonical: https://github.com/hariharasuthan1105/GraphFin",
-      margin,
-      yFoot,
-    );
-
-    const auditStatus =
-      analysis.backendStatus === "ml_verified"
-        ? "Status: Backend ML Verified (Isolation Forest)"
-        : "Status: Client-Side Forensic Heuristic Audit";
-
-    doc.text(auditStatus, pageWidth - margin, yFoot, { align: "right" });
-  };
-
-  // ==========================================
-  // PAGE 1: TITLE, DATASET METADATA & GRAPH TOPOLOGY
-  // ==========================================
-  renderHeader(1);
-  let y = 23;
-
-  // Institutional Title
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(13);
-  doc.setTextColor(DARK_TEXT[0], DARK_TEXT[1], DARK_TEXT[2]);
-  doc.text("Machine Learning Enhanced Graph-Based Anomaly Detection", margin, y);
-  y += 5.5;
-  doc.text("for Financial Transactions", margin, y);
-  y += 5.5;
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-  doc.setTextColor(MUTED_TEXT[0], MUTED_TEXT[1], MUTED_TEXT[2]);
-  const genDate = analysis.summary.processedAt
-    ? new Date(analysis.summary.processedAt).toUTCString()
-    : new Date().toUTCString();
-  doc.text(
-    `Dataset Forensic Audit & Topological Analysis Report | Timestamp: ${genDate}`,
-    margin,
-    y,
-  );
-  y += 6.5;
-
-  // Metadata Box (Structured 3-Column Grid)
-  const metaBoxHeight = 38;
-  doc.setFillColor(BG_CARD[0], BG_CARD[1], BG_CARD[2]);
-  doc.setDrawColor(BORDER_LIGHT[0], BORDER_LIGHT[1], BORDER_LIGHT[2]);
-  doc.setLineWidth(0.3);
-  doc.rect(margin, y, contentWidth, metaBoxHeight, "FD");
-
-  // Title of Box
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(7.5);
-  doc.setTextColor(RED_DARK[0], RED_DARK[1], RED_DARK[2]);
-  doc.text("DATASET AUDIT METADATA & INGESTION SUMMARY", margin + 4, y + 5.5);
-
-  const col1X = margin + 4;
-  const col2X = margin + 64;
-  const col3X = margin + 124;
-
-  doc.setFontSize(7.5);
-
-  // Column 1: Source & Coverage
-  let rowY = y + 11;
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(MUTED_TEXT[0], MUTED_TEXT[1], MUTED_TEXT[2]);
-  doc.text("Dataset File:", col1X, rowY);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(DARK_TEXT[0], DARK_TEXT[1], DARK_TEXT[2]);
-  const dsName =
-    analysis.summary.datasetName.length > 28
-      ? analysis.summary.datasetName.slice(0, 26) + "…"
-      : analysis.summary.datasetName;
-  doc.text(dsName, col1X + 20, rowY);
-
-  rowY += 5;
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(MUTED_TEXT[0], MUTED_TEXT[1], MUTED_TEXT[2]);
-  doc.text("File Size:", col1X, rowY);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(DARK_TEXT[0], DARK_TEXT[1], DARK_TEXT[2]);
-  doc.text(`${(analysis.summary.fileSizeBytes / 1024).toFixed(1)} KB`, col1X + 20, rowY);
-
-  rowY += 5;
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(MUTED_TEXT[0], MUTED_TEXT[1], MUTED_TEXT[2]);
-  doc.text("Data Coverage:", col1X, rowY);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(DARK_TEXT[0], DARK_TEXT[1], DARK_TEXT[2]);
-  const compStr = `${analysis.summary.dataCompletenessPct ?? 100.0}% (${formatNumber(analysis.summary.totalRowsAccepted ?? analysis.summary.totalTransactions, 0)} accepted)`;
-  doc.text(compStr, col1X + 20, rowY);
-
-  rowY += 5;
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(MUTED_TEXT[0], MUTED_TEXT[1], MUTED_TEXT[2]);
-  doc.text("Pipeline:", col1X, rowY);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(DARK_TEXT[0], DARK_TEXT[1], DARK_TEXT[2]);
-  doc.text(
-    analysis.backendStatus === "ml_verified"
-      ? "Backend Isolation Forest"
-      : "Graph heuristics v2.1",
-    col1X + 20,
-    rowY,
-  );
-
-  // Column 2: Volume & Transactions
-  rowY = y + 11;
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(MUTED_TEXT[0], MUTED_TEXT[1], MUTED_TEXT[2]);
-  doc.text("Transactions:", col2X, rowY);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(DARK_TEXT[0], DARK_TEXT[1], DARK_TEXT[2]);
-  doc.text(formatNumber(analysis.summary.totalTransactions, 0), col2X + 24, rowY);
-
-  rowY += 5;
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(MUTED_TEXT[0], MUTED_TEXT[1], MUTED_TEXT[2]);
-  doc.text("Monitored Vol:", col2X, rowY);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(DARK_TEXT[0], DARK_TEXT[1], DARK_TEXT[2]);
-  doc.text(formatCurrency(analysis.summary.totalVolume, currency, 2), col2X + 24, rowY);
-
-  rowY += 5;
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(MUTED_TEXT[0], MUTED_TEXT[1], MUTED_TEXT[2]);
-  doc.text("Mean Tx Amt:", col2X, rowY);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(DARK_TEXT[0], DARK_TEXT[1], DARK_TEXT[2]);
-  doc.text(formatCurrency(analysis.summary.meanAmount, currency, 2), col2X + 24, rowY);
-
-  rowY += 5;
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(MUTED_TEXT[0], MUTED_TEXT[1], MUTED_TEXT[2]);
-  doc.text("Currency:", col2X, rowY);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(DARK_TEXT[0], DARK_TEXT[1], DARK_TEXT[2]);
-  doc.text(
-    analysis.summary.isMixedCurrency
-      ? "MIXED (See Incompatibility Warning)"
-      : `${currency} (Uniform)`,
-    col2X + 24,
-    rowY,
-  );
-
-  // Column 3: Accounts & Findings
-  rowY = y + 11;
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(MUTED_TEXT[0], MUTED_TEXT[1], MUTED_TEXT[2]);
-  doc.text("Unique Accounts:", col3X, rowY);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(DARK_TEXT[0], DARK_TEXT[1], DARK_TEXT[2]);
-  doc.text(formatNumber(analysis.summary.uniqueAccounts, 0), col3X + 28, rowY);
-
-  rowY += 5;
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(MUTED_TEXT[0], MUTED_TEXT[1], MUTED_TEXT[2]);
-  doc.text("Directed Edges:", col3X, rowY);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(DARK_TEXT[0], DARK_TEXT[1], DARK_TEXT[2]);
-  doc.text(formatNumber(analysis.summary.uniqueEdges, 0), col3X + 28, rowY);
-
-  rowY += 5;
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(MUTED_TEXT[0], MUTED_TEXT[1], MUTED_TEXT[2]);
-  doc.text("Flagged Review:", col3X, rowY);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(RED_DARK[0], RED_DARK[1], RED_DARK[2]);
-  doc.text(`${formatNumber(analysis.summary.suspiciousAccountCount, 0)} accounts`, col3X + 28, rowY);
-
-  rowY += 5;
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(MUTED_TEXT[0], MUTED_TEXT[1], MUTED_TEXT[2]);
-  doc.text("Rejected Rows:", col3X, rowY);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(DARK_TEXT[0], DARK_TEXT[1], DARK_TEXT[2]);
-  doc.text(`${analysis.summary.totalRowsRejected ?? 0} rows`, col3X + 28, rowY);
-
-  doc.text('Source records:', col1X, y + 32);
-  doc.text(String(analysis.summary.sourceRecords ?? ((analysis.summary.totalRowsAccepted ?? analysis.summary.totalTransactions) + (analysis.summary.totalRowsRejected ?? 0))), col1X + 24, y + 32);
-  y += metaBoxHeight + 6;
-  const datasetLines = doc.splitTextToSize(`Dataset: ${analysis.summary.datasetName}`, contentWidth);
-  doc.setFontSize(7);
-  doc.text(datasetLines, margin, y);
-  y += datasetLines.length * 3.5 + 5;
-
-  // Currency Incompatibility Warning if mixed
-  if (analysis.summary.isMixedCurrency) {
-    doc.setFillColor(254, 242, 242);
-    doc.setDrawColor(RED_PRIMARY[0], RED_PRIMARY[1], RED_PRIMARY[2]);
-    doc.rect(margin, y, contentWidth, 9, "FD");
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(7.5);
-    doc.setTextColor(RED_DARK[0], RED_DARK[1], RED_DARK[2]);
-    doc.text(
-      "WARNING: Dataset contains multiple currencies. Aggregated volume amounts combine disparate currency units without FX normalization.",
-      margin + 3,
-      y + 5.5,
-    );
-    y += 12;
+  if(e){
+    p.nextPage();p.section(section++,'Benchmark evaluation','Synthetic test-label convention; not validated real-world fraud detection performance.');
+    p.cards([{label:'PRECISION',value:`${n(e.precision*100,1)}%`},{label:'RECALL',value:`${n(e.recall*100,2)}%`},{label:'F1 SCORE',value:n(e.f1Score,4)},{label:'AVERAGE PRECISION',value:n(e.prAuc,4)}],2);
+    p.table(['Unit of analysis','Count / meaning'],[
+      ['Transaction labels',`${n(s.transactionLabels?.anomalous)} positive; ${n(s.transactionLabels?.normal)} normal; ${n(s.transactionLabels?.unknown)} unknown`],
+      ['Account label association',`${n(e.positives)} accounts in at least one positive transaction`],
+      ['Heuristic review flags',`${n(r.flags.length)} accounts selected by the review rule`],
+    ],[65,113],10);
+    p.table(['Account confusion matrix','Label-associated positive','Label-associated negative'],[
+      ['Flagged for review',`TP: ${n(e.truePositives)}`,`FP: ${n(e.falsePositives)}`],
+      ['Not flagged',`FN: ${n(e.falseNegatives)}`,`TN: ${n(e.trueNegatives)}`],
+    ],[70,54,54],10);
+    p.note('INTERPRETATION',`${n(e.truePositives)} of ${n(e.positives)} label-associated accounts were selected; ${n(e.falseNegatives)} were not. Precision of ${n(e.precision*100,1)}% on ${n(r.flags.length)} flags does not imply broad detection coverage. Recall is ${n(e.recall*100,2)}%. Average precision uses all continuous account scores, grouping ties at each threshold.`);
+    p.paragraph(e.aggregationRule);p.paragraph(e.disclaimer);
+    p.paragraph('Labels and pattern-type annotations are excluded from scoring. Precision, recall and F1 use account review decisions; average precision uses the full ranking. All four metrics use the same account label-association convention.');
   }
 
-  // --- SECTION 1: TOPOLOGICAL & STRUCTURAL GRAPH METRICS ---
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(9.5);
-  doc.setTextColor(RED_DARK[0], RED_DARK[1], RED_DARK[2]);
-  doc.text("1. TOPOLOGICAL & STRUCTURAL GRAPH METRICS", margin, y);
-  y += 4.5;
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(7.5);
-  doc.setTextColor(MUTED_TEXT[0], MUTED_TEXT[1], MUTED_TEXT[2]);
-  doc.text(
-    "Directed funds-flow graph topology models entity accounts as vertices and transactions as directed weighted arcs.",
-    margin,
-    y,
-  );
-  y += 5.5;
-
-  // Topology Table (Clean 4-column key-value grid)
-  const topoRows = [
-    [
-      "Network Density",
-      analysis.summary.networkDensity.toFixed(6),
-      "Max In-Degree",
-      formatNumber(analysis.summary.maxInDegree, 0),
-    ],
-    [
-      "Average Degree",
-      analysis.summary.avgDegree.toFixed(2),
-      "Max Out-Degree",
-      formatNumber(analysis.summary.maxOutDegree, 0),
-    ],
-    [
-      "Source-Only Accounts",
-      formatNumber(analysis.summary.sourceOnlyAccounts, 0),
-      "Sink-Only Accounts",
-      formatNumber(analysis.summary.sinkOnlyAccounts, 0),
-    ],
-    [
-      "Intermediary Accounts",
-      formatNumber(analysis.summary.intermediaryAccounts, 0),
-      "Median Tx Amount",
-      formatCurrency(analysis.summary.medianAmount, currency, 2),
-    ],
-    [
-      "Account Volume Mean",
-      formatCurrency(analysis.summary.accountVolumeMean ?? 0, currency, 2),
-      "Account Vol Outlier Thresh",
-      formatCurrency(analysis.summary.accountVolumeThreshold ?? 0, currency, 2),
-    ],
-  ];
-
-  const colW = contentWidth / 4;
-  const cellHeight = 5.5;
-
-  topoRows.forEach((row) => {
-    doc.setFillColor(BG_CARD[0], BG_CARD[1], BG_CARD[2]);
-    doc.rect(margin, y, colW, cellHeight, "F");
-    doc.rect(margin + colW * 2, y, colW, cellHeight, "F");
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(7);
-    doc.setTextColor(MUTED_TEXT[0], MUTED_TEXT[1], MUTED_TEXT[2]);
-    doc.text(row[0], margin + 2.5, y + 3.8);
-    doc.text(row[2], margin + colW * 2 + 2.5, y + 3.8);
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7.5);
-    doc.setTextColor(DARK_TEXT[0], DARK_TEXT[1], DARK_TEXT[2]);
-    doc.text(row[1], margin + colW + 2.5, y + 3.8);
-    doc.text(row[3], margin + colW * 3 + 2.5, y + 3.8);
-
-    doc.setDrawColor(BORDER_LIGHT[0], BORDER_LIGHT[1], BORDER_LIGHT[2]);
-    doc.setLineWidth(0.2);
-    doc.rect(margin, y, contentWidth, cellHeight, "S");
-    y += cellHeight;
-  });
-
-  y += 7;
-
-  // --- SECTION 2: DETECTED AML TYPOLOGIES & STRUCTURAL MOTIFS ---
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(9.5);
-  doc.setTextColor(RED_DARK[0], RED_DARK[1], RED_DARK[2]);
-  doc.text("2. AML TYPOLOGY DETECTION & STRUCTURAL MOTIFS", margin, y);
-  y += 4.5;
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(7.5);
-  doc.setTextColor(MUTED_TEXT[0], MUTED_TEXT[1], MUTED_TEXT[2]);
-  doc.text(
-    "Structural motifs are investigative indicators of network geometry, not confirmation of illegal activity.",
-    margin,
-    y,
-  );
-  y += 5.5;
-
-  const patterns = [
-    {
-      name: "Fan-Out (Smurfing / Dispersal Hub)",
-      count: analysis.summary.patternsDetected.fanOutCount,
-      desc: "Account with out-degree > 2.5 sigma from network out-degree distribution and out/in degree ratio >= 2.5.",
-    },
-    {
-      name: "Fan-In (Mule Aggregation Hub)",
-      count: analysis.summary.patternsDetected.fanInCount,
-      desc: "Account with in-degree > 2.5 sigma from network in-degree distribution and in/out degree ratio >= 2.5.",
-    },
-    {
-      name: "Noteworthy Cycles & Reciprocal Loops",
-      count: analysis.summary.patternsDetected.cycleCount,
-      desc: "Multi-hop directed routing loops (len >= 3) or repeated reciprocal flow exceeding 5 round-trips.",
-    },
-    {
-      name: "Account-Level Volume Outliers",
-      count: analysis.summary.patternsDetected.volumeOutlierCount,
-      desc: "Accounts whose total volume exceeds 2.5 sigma from the account-level volume distribution.",
-    },
-  ];
-
-  patterns.forEach((p) => {
-    doc.setFillColor(BG_CARD[0], BG_CARD[1], BG_CARD[2]);
-    doc.setDrawColor(BORDER_LIGHT[0], BORDER_LIGHT[1], BORDER_LIGHT[2]);
-    doc.setLineWidth(0.2);
-    doc.rect(margin, y, contentWidth, 9.5, "FD");
-
-    // Red badge for count
-    doc.setFillColor(RED_PRIMARY[0], RED_PRIMARY[1], RED_PRIMARY[2]);
-    doc.rect(margin + 2, y + 2, 14, 5.5, "F");
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(7.5);
-    doc.setTextColor(WHITE[0], WHITE[1], WHITE[2]);
-    doc.text(String(p.count), margin + 9, y + 5.8, { align: "center" });
-
-    // Pattern Name & Description
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(7.5);
-    doc.setTextColor(DARK_TEXT[0], DARK_TEXT[1], DARK_TEXT[2]);
-    doc.text(p.name, margin + 20, y + 4.2);
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(6.8);
-    doc.setTextColor(MUTED_TEXT[0], MUTED_TEXT[1], MUTED_TEXT[2]);
-    doc.text(p.desc, margin + 20, y + 7.8);
-
-    y += 11;
-  });
-
-  renderFooter(1);
-
-  // ==========================================
-  // PAGE 2: SUSPICIOUS ACCOUNT RANKINGS
-  // ==========================================
-  doc.addPage();
-  renderHeader(2);
-  y = 23;
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(9.5);
-  doc.setTextColor(RED_DARK[0], RED_DARK[1], RED_DARK[2]);
-  doc.text("3. ACCOUNT ANOMALY RANKING (NOT ALL ACCOUNTS ARE FLAGGED)", margin, y);
-  y += 4.5;
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(7.5);
-  doc.setTextColor(MUTED_TEXT[0], MUTED_TEXT[1], MUTED_TEXT[2]);
-  doc.text(
-    "Accounts ranked by composite anomaly score derived from account volume extremity, degree divergence, and topological motifs.",
-    margin,
-    y,
-  );
-  y += 5.5;
-
-  // Table Layout (8 Columns with generous widths)
-  // Total width: 182mm
-  // Rank(10), ID(28), Score(16), In/Out(16), Sent(28), Recv(28), Net(22), Typologies(34)
-  const colWidths = [10, 28, 16, 16, 28, 28, 22, 34];
-  const tableHeaders = [
-    "Rank",
-    "Account ID",
-    "Heuristic",
-    "In / Out",
-    `Total Sent (${currency})`,
-    `Total Recv (${currency})`,
-    `Net Flow (${currency})`,
-    "Observed Motifs",
-  ];
-
-  doc.setFillColor(DARK_TEXT[0], DARK_TEXT[1], DARK_TEXT[2]);
-  doc.rect(margin, y, contentWidth, 6, "F");
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(6.8);
-  doc.setTextColor(WHITE[0], WHITE[1], WHITE[2]);
-
-  let curX = margin;
-  tableHeaders.forEach((h, i) => {
-    doc.text(h, curX + 2, y + 4.2);
-    curX += colWidths[i];
-  });
-  y += 6;
-
-  // Top accounts list
-  const rankedAccounts = (analysis.topAnomalies.length > 0 ? analysis.topAnomalies : analysis.accounts).slice(0, 15);
-
-  rankedAccounts.forEach((acc, idx) => {
-    const isEven = idx % 2 === 0;
-    doc.setFillColor(isEven ? 255 : 248, isEven ? 255 : 249, isEven ? 255 : 250);
-    doc.rect(margin, y, contentWidth, 6.8, "F");
-    doc.setDrawColor(BORDER_LIGHT[0], BORDER_LIGHT[1], BORDER_LIGHT[2]);
-    doc.setLineWidth(0.15);
-    doc.line(margin, y + 6.8, margin + contentWidth, y + 6.8);
-
-    curX = margin;
-
-    // Rank
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(7);
-    doc.setTextColor(acc.anomalyScore >= 0.7 ? RED_PRIMARY[0] : DARK_TEXT[0], acc.anomalyScore >= 0.7 ? RED_PRIMARY[1] : DARK_TEXT[1], acc.anomalyScore >= 0.7 ? RED_PRIMARY[2] : DARK_TEXT[2]);
-    doc.text(`#${idx + 1}`, curX + 2, y + 4.6);
-    curX += colWidths[0];
-
-    // Account ID
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(DARK_TEXT[0], DARK_TEXT[1], DARK_TEXT[2]);
-    const cleanId = acc.id.length > 15 ? acc.id.slice(0, 13) + "…" : acc.id;
-    doc.text(cleanId, curX + 2, y + 4.6);
-    curX += colWidths[1];
-
-    // Score
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(acc.anomalyScore >= 0.7 ? RED_DARK[0] : DARK_TEXT[0], acc.anomalyScore >= 0.7 ? RED_DARK[1] : DARK_TEXT[1], acc.anomalyScore >= 0.7 ? RED_DARK[2] : DARK_TEXT[2]);
-    doc.text(acc.anomalyScore.toFixed(4), curX + 2, y + 4.6);
-    curX += colWidths[2];
-
-    // In / Out Degree
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(DARK_TEXT[0], DARK_TEXT[1], DARK_TEXT[2]);
-    doc.text(`${acc.inDegree} / ${acc.outDegree}`, curX + 2, y + 4.6);
-    curX += colWidths[3];
-
-    // Total Sent
-    doc.text(formatNumber(acc.totalSent, 0), curX + 2, y + 4.6);
-    curX += colWidths[4];
-
-    // Total Received
-    doc.text(formatNumber(acc.totalReceived, 0), curX + 2, y + 4.6);
-    curX += colWidths[5];
-
-    // Net Flow
-    const netSign = acc.netFlow > 0 ? "+" : "";
-    doc.text(`${netSign}${formatNumber(acc.netFlow, 0)}`, curX + 2, y + 4.6);
-    curX += colWidths[6];
-
-    // Flagged Typologies (Clean readable abbreviations and 2-line wrapping)
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(6.2);
-    doc.setTextColor(
-      acc.patterns.length > 0 ? RED_DARK[0] : MUTED_TEXT[0],
-      acc.patterns.length > 0 ? RED_DARK[1] : MUTED_TEXT[1],
-      acc.patterns.length > 0 ? RED_DARK[2] : MUTED_TEXT[2],
-    );
-    const PATTERN_LABELS: Record<string, string> = {
-      VOLUME_OUTLIER: "Vol Outlier",
-      FAN_OUT: "Fan-Out",
-      FAN_IN: "Fan-In",
-      CYCLE: "Cycle Loop",
-      FLOW_IMBALANCE: "Flow Imbal",
-    };
-    const patsStr =
-      acc.patterns.length > 0
-        ? acc.patterns.map((p) => PATTERN_LABELS[p] || p).join(", ")
-        : "Normal";
-    const wrappedPats = doc.splitTextToSize(patsStr, colWidths[7] - 3);
-    if (wrappedPats.length > 1) {
-      doc.text(wrappedPats[0], curX + 2, y + 3.2);
-      doc.text(wrappedPats[1], curX + 2, y + 5.8);
-    } else {
-      doc.text(wrappedPats[0] || "", curX + 2, y + 4.6);
-    }
-
-    y += 6.8;
-  });
-
-  y += 8;
-
-  // --- SECTION 4: BACKEND ML ISOLATION FOREST RESULTS (If executed) ---
-  if (analysis.backendStatus === "ml_verified" && analysis.backendModel) {
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(9.5);
-    doc.setTextColor(RED_DARK[0], RED_DARK[1], RED_DARK[2]);
-    doc.text("4. BACKEND ISOLATION FOREST VERIFICATION", margin, y);
-    y += 4.5;
-
-    doc.setFillColor(BG_CARD[0], BG_CARD[1], BG_CARD[2]);
-    doc.setDrawColor(BORDER_LIGHT[0], BORDER_LIGHT[1], BORDER_LIGHT[2]);
-    doc.rect(margin, y, contentWidth, 14, "FD");
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(7.5);
-    doc.setTextColor(DARK_TEXT[0], DARK_TEXT[1], DARK_TEXT[2]);
-    doc.text(`Model: ${analysis.backendModel}`, margin + 4, y + 5);
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7);
-    doc.setTextColor(MUTED_TEXT[0], MUTED_TEXT[1], MUTED_TEXT[2]);
-    doc.text(
-      `Dataset ID: ${analysis.backendDatasetId || "in-memory-session"} | Pipeline: Validated backend model/score response`,
-      margin + 4,
-      y + 9.5,
-    );
-    y += 18;
-  }
-
-  // --- SECTION 5: GROUND-TRUTH BENCHMARK EVALUATION (If labels present) ---
-  if (analysis.summary.evaluation) {
-    const evalData = analysis.summary.evaluation;
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(9.5);
-    doc.setTextColor(RED_DARK[0], RED_DARK[1], RED_DARK[2]);
-    doc.text("5. SYNTHETIC GROUND-TRUTH BENCHMARK EVALUATION", margin, y);
-    y += 4.5;
-
-    const wrappedRule = doc.splitTextToSize(
-      evalData.aggregationRule ||
-        "Account associated with synthetic anomaly if it participated in >= 1 labeled transaction.",
-      contentWidth - 8,
-    );
-    const wrappedDisc = doc.splitTextToSize(
-      evalData.disclaimer ||
-        "Synthetic test-label convention for algorithmic benchmarking only; does not confirm illegal fraud.",
-      contentWidth - 8,
-    );
-    const totalBoxHeight = 28 + wrappedRule.length * 3.5 + wrappedDisc.length * 3.5;
-
-    doc.setFillColor(BG_CARD[0], BG_CARD[1], BG_CARD[2]);
-    doc.setDrawColor(BORDER_LIGHT[0], BORDER_LIGHT[1], BORDER_LIGHT[2]);
-    doc.rect(margin, y, contentWidth, totalBoxHeight, "FD");
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(7.2);
-    doc.setTextColor(MUTED_TEXT[0], MUTED_TEXT[1], MUTED_TEXT[2]);
-    doc.text("BENCHMARK METRICS (ACCOUNT LEVEL)", margin + 4, y + 5.2);
-
-    // Metric Badges Grid
-    const mColW = (contentWidth - 8) / 4;
-    const badgeY = y + 8;
-
-    const metrics = [
-      { label: "Precision", val: `${(evalData.precision * 100).toFixed(1)}%`, sub: `TP: ${evalData.truePositives} / Flagged: ${evalData.truePositives + evalData.falsePositives}` },
-      { label: "Account recall", val: `${(evalData.recall * 100).toFixed(1)}%`, sub: `Label-associated: ${evalData.positives}` },
-      { label: "F1 Score", val: evalData.f1Score.toFixed(4), sub: "Harmonic Mean" },
-      { label: "Average precision", val: evalData.prAuc !== undefined ? evalData.prAuc.toFixed(4) : "N/A", sub: "Average Precision" },
-    ];
-
-    metrics.forEach((m, idx) => {
-      const bX = margin + 4 + idx * mColW;
-      doc.setFillColor(WHITE[0], WHITE[1], WHITE[2]);
-      doc.setDrawColor(BORDER_LIGHT[0], BORDER_LIGHT[1], BORDER_LIGHT[2]);
-      doc.rect(bX, badgeY, mColW - 3, 14, "FD");
-
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(6.8);
-      doc.setTextColor(MUTED_TEXT[0], MUTED_TEXT[1], MUTED_TEXT[2]);
-      doc.text(m.label, bX + 2, badgeY + 4);
-
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(10);
-      doc.setTextColor(RED_DARK[0], RED_DARK[1], RED_DARK[2]);
-      doc.text(m.val, bX + 2, badgeY + 9.5);
-
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(6);
-      doc.setTextColor(MUTED_TEXT[0], MUTED_TEXT[1], MUTED_TEXT[2]);
-      doc.text(m.sub, bX + 2, badgeY + 12.8);
-    });
-
-    // Aggregation Rule & Disclaimer
-    let textY = y + 26;
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(6.8);
-    doc.setTextColor(DARK_TEXT[0], DARK_TEXT[1], DARK_TEXT[2]);
-    doc.text("Evaluation Label Aggregation Rule:", margin + 4, textY);
-    textY += 3.8;
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(6.5);
-    doc.setTextColor(MUTED_TEXT[0], MUTED_TEXT[1], MUTED_TEXT[2]);
-    doc.text(wrappedRule, margin + 4, textY);
-    textY += wrappedRule.length * 3.5 + 1.5;
-
-    doc.text(wrappedDisc, margin + 4, textY);
-
-    y += totalBoxHeight + 6;
-  }
-
-  renderFooter(2);
-
-  // ==========================================
-  // PAGE 3: METHODOLOGY, THRESHOLDS & DISCLOSURES
-  // ==========================================
-  if (totalPages >= 3) {
-    doc.addPage();
-    renderHeader(3);
-    y = 23;
-  }
-
-  // Section 6: Methodology & Threshold Definitions
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(9.5);
-  doc.setTextColor(RED_DARK[0], RED_DARK[1], RED_DARK[2]);
-  doc.text("6. METHODOLOGY, VERSIONED THRESHOLDS & EVIDENCE PROVENANCE", margin, y);
-  y += 4.5;
-
-  doc.setFillColor(BG_CARD[0], BG_CARD[1], BG_CARD[2]);
-  doc.setDrawColor(BORDER_LIGHT[0], BORDER_LIGHT[1], BORDER_LIGHT[2]);
-  doc.rect(margin, y, contentWidth, 58, "FD");
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(7.5);
-  doc.setTextColor(DARK_TEXT[0], DARK_TEXT[1], DARK_TEXT[2]);
-  doc.text("Analytical Framework & Scoring Semantics:", margin + 4, y + 5);
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(6.8);
-  doc.setTextColor(MUTED_TEXT[0], MUTED_TEXT[1], MUTED_TEXT[2]);
-  doc.text(
-    "GraphFin computes continuous anomaly scores as a weighted combination of 4 defensible indicators:",
-    margin + 4,
-    y + 9,
-  );
-  doc.text(
-    "- Volume Extremity (30%): Standardized Z-score of account-level total volume against account volume distribution.",
-    margin + 6,
-    y + 13,
-  );
-  doc.text(
-    "- Degree Divergence (25%): Normalized Z-score of entity transaction degree against observed network degree distribution.",
-    margin + 6,
-    y + 17,
-  );
-  doc.text(
-    "- Net Flow Asymmetry (20%): Volume-moderated absolute difference between total funds received and funds sent.",
-    margin + 6,
-    y + 21,
-  );
-  doc.text(
-    "- Topological Motifs (25%): Compounding presence of detected Fan-Out hubs, Fan-In collection sinks, and circular loops.",
-    margin + 6,
-    y + 25,
-  );
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(7.5);
-  doc.setTextColor(DARK_TEXT[0], DARK_TEXT[1], DARK_TEXT[2]);
-  doc.text("Configured & Versioned Thresholds:", margin + 4, y + 32);
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(6.8);
-  doc.setTextColor(MUTED_TEXT[0], MUTED_TEXT[1], MUTED_TEXT[2]);
-  const thresh = analysis.summary.thresholdConfig || {
-    volumeZThreshold: 2.5,
-    degreeZThreshold: 2.5,
-    fanOutRatio: 2.5,
-    fanInRatio: 2.5,
-    suspiciousScoreThreshold: 0.60,
-    version: "GraphFin-Analytical-v2.1",
-  };
-  doc.text(
-    `Algorithm Version: ${thresh.version} | Volume Threshold: Z >= ${thresh.volumeZThreshold} SD | Degree Threshold: Z >= ${thresh.degreeZThreshold} SD`,
-    margin + 4,
-    y + 36,
-  );
-  doc.text(
-    `Fan-Out Dispersal Ratio: >= ${thresh.fanOutRatio}x | Fan-In Aggregation Ratio: >= ${thresh.fanInRatio}x | Flagged Review Threshold: Score >= ${thresh.suspiciousScoreThreshold}`,
-    margin + 4,
-    y + 40,
-  );
-  doc.text(
-    doc.splitTextToSize(`Flag rule: score >= ${thresh.suspiciousScoreThreshold}, OR at least 2 motifs with score >= 0.40, OR account volume Z >= 3.0. These are review indicators, not confirmed fraud.`, contentWidth - 8),
-    margin + 4,
-    y + 44,
-  );
-  doc.text(
-    `Engine Executed: ${engine}`,
-    margin + 4,
-    y + 53,
-  );
-
-  y += 64;
-
-  // Legal & Regulatory Compliance Disclaimer
-  doc.setFillColor(BG_CARD[0], BG_CARD[1], BG_CARD[2]);
-  doc.setDrawColor(BORDER_LIGHT[0], BORDER_LIGHT[1], BORDER_LIGHT[2]);
-  doc.rect(margin, y, contentWidth, 34, "FD");
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(7.5);
-  doc.setTextColor(DARK_TEXT[0], DARK_TEXT[1], DARK_TEXT[2]);
-  doc.text("Legal & Regulatory Audit Disclosures:", margin + 4, y + 5);
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(6.6);
-  doc.setTextColor(MUTED_TEXT[0], MUTED_TEXT[1], MUTED_TEXT[2]);
-  doc.text(
-    "Anomaly scores generated by this system represent structural and mathematical divergence from observed transaction network",
-    margin + 4,
-    y + 9,
-  );
-  doc.text(
-    "distributions. Flagged accounts warrant compliance inquiry under applicable AML/CFT risk-based frameworks; they do not constitute",
-    margin + 4,
-    y + 13,
-  );
-  doc.text(
-    "autonomous evidence of illegal activity, fraud, or guilt without independent factual corroboration.",
-    margin + 4,
-    y + 17,
-  );
-  doc.text(
-    "Privacy: Raw transaction rows are excluded from optional local recovery. Saved account aggregates remain on this device;",
-    margin + 4,
-    y + 22,
-  );
-  doc.text(
-    "saving or backend transmission requires explicit user authorization. Labels are not confirmed fraud findings.",
-    margin + 4,
-    y + 26,
-  );
-
-  if (analysis.summary.transactionLabels) {
-    const labels = analysis.summary.transactionLabels;
-    const lines = doc.splitTextToSize(`Transaction labels: ${labels.normal} normal; ${labels.anomalous} anomalous; ${labels.unknown} unknown. Account review flags: ${analysis.summary.suspiciousAccountCount} (heuristic). Labels do not represent the number of flagged accounts. Backend ML: ${analysis.backendStatus === 'ml_verified' ? 'validated model response' : 'not verified'}.`, contentWidth - 8);
-    doc.text(lines, margin + 4, y + 42);
-  }
-  if (totalPages >= 3) {
-    renderFooter(3);
-  }
-
-  // Trigger download if running in browser
-  if (download && typeof window !== "undefined") {
-    const filename = `GraphFin_Audit_Report_${analysis.summary.datasetName.replace(/[^a-zA-Z0-9_-]/g, "_")}.pdf`;
-    doc.save(filename);
-  }
-
+  p.nextPage();p.section(section++,'Methodology & provenance');
+  p.paragraph(`Engine: ${r.engine}. Algorithm: ${r.algorithmVersion}. Renderer: GraphFin Audit PDF v3 / jsPDF. Analysis time: ${s.processedAt}.`,9.5);
+  p.table(['Component','Weight','Definition'],[
+    ['Volume extremity','30%','clamp(account-volume Z / 3.5, 0, 1); volume = sent + received.'],
+    ['Transaction-count divergence','25%','clamp(transaction-incidence Z / 3.5, 0, 1); not unique-neighbor degree.'],
+    ['Flow asymmetry','20%','Mean of count and amount asymmetry, multiplied by min(1, account volume / mean account volume).'],
+    ['Structural indicators','25%','min(1, 0.25 x number of indicators). Indicators can overlap.'],
+  ],[47,17,114],9);
+  const th=s.thresholdConfig;
+  p.paragraph(`The weighted sum is rounded to four decimals and bounded to [0.01, 1]. Volume outlier: volume > account mean + ${th?.volumeZThreshold??'unrecorded'} population SD (threshold ${s.accountVolumeThreshold===undefined?'not recorded':money(s.accountVolumeThreshold)}). Fan-in/out: directional transaction count > directional mean + ${th?.degreeZThreshold??'unrecorded'} x max(1, directional SD), with count ratio >= ${th?.fanInRatio??'unrecorded'} (in) / ${th?.fanOutRatio??'unrecorded'} (out). Flow imbalance requires volume above the account median and |net flow| / volume > 0.85.`,9.5);
+  p.paragraph(`Review: score >= ${th?.suspiciousScoreThreshold??'unrecorded'}, OR at least 2 indicators and score >= 0.40, OR volume Z >= 3.0. Scoring retains transaction-occurrence semantics; unique-neighbor metrics are descriptive.`,9.5);
+  p.paragraph(`Cycles qualify with >= 5 transfers in each direction of a reciprocal pair, OR a directed loop of 3/4 distinct accounts whose minimum aggregated edge amount exceeds 15% of mean account volume${c?` (${money(c.minimumLoopAmount)})`:''}. Rotations are deduplicated; opposite directions are distinct. Self-loops are excluded. Each 3/4-cycle scan has a ${n(c?.operationLimit)}-operation budget; truncated counts are lower bounds. Longer cycles are not enumerated.`,9.5);
+  p.note('BACKEND EXECUTION STATUS',r.mlStatus);
+  if(!e)p.paragraph(`Benchmark metrics unavailable: labels may be missing, incomplete, contain no positive accounts, or the cycle scan may be incomplete. Labels: ${n(s.transactionLabels?.anomalous)} positive / ${n(s.transactionLabels?.normal)} normal / ${n(s.transactionLabels?.unknown)} unknown. Unknown labels are not treated as normal.`,9.5);
+  p.note('INTERPRETATION & LIMITATIONS','Scores support review prioritization. They are not calibrated fraud probabilities, proof of fraud or causal explanations. Synthetic performance does not establish real-world generalization. Mixed currency totals have no FX normalization. Zero noteworthy loops does not mean no directed cycles exist.');
+  p.paragraph(`Coverage: ${n(r.acceptedRecords)} accepted of ${n(r.sourceRecords)} source records; ${n(r.rejectedRecords)} rejected. Input SHA-256: ${s.inputChecksum||'not recorded'}. A hash identifies content, not independently verified forensic provenance.`,9);
+  p.paragraph('Privacy: generated locally from the active analysis. No raw transaction rows are included or transmitted for this PDF. Optional saved sessions retain aggregates after consent. This report contains sensitive account identifiers and financial aggregates.',9);
+  const doc=p.finish();doc.setProperties({title:`GraphFin - ${s.datasetName}`,subject:TITLE,author:'GraphFin',creator:'GraphFin Audit PDF v3'});
+  if(download&&typeof window!=='undefined')doc.save(`GraphFin_Audit_Report_${s.datasetName.replace(/[^a-zA-Z0-9_-]/g,'_')}.pdf`);
   return doc;
 }

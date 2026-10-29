@@ -26,6 +26,8 @@ interface SimNode extends SimulationNodeDatum {
   y: number;
   radius: number;
   score: number;
+  uniqueInDegree?: number;
+  uniqueOutDegree?: number;
   inDegree: number;
   outDegree: number;
   totalDegree: number;
@@ -144,6 +146,8 @@ export function AnalysisGraphCanvas({
         y: initY,
         radius: Math.max(7, Math.min(18, 7 + Math.log10(Math.max(1, acc.totalDegree)) * 4.5)),
         score: acc.anomalyScore,
+        uniqueInDegree: acc.uniqueInDegree,
+        uniqueOutDegree: acc.uniqueOutDegree,
         inDegree: acc.inDegree,
         outDegree: acc.outDegree,
         totalDegree: acc.totalDegree,
@@ -664,9 +668,9 @@ export function AnalysisGraphCanvas({
               marginBottom: "4px",
             }}
           >
-            <span>Topology Degree:</span>
+            <span>Transactions:</span>
             <span style={{ fontFamily: "IBM Plex Mono, monospace", color: "#f5f5f5" }}>
-              {hoveredNode.inDegree} in / {hoveredNode.outDegree} out
+              {hoveredNode.inDegree} in / {hoveredNode.outDegree} out; unique neighbors {hoveredNode.uniqueInDegree ?? "N/A"} in / {hoveredNode.uniqueOutDegree ?? "N/A"} out
             </span>
           </div>
           {hoveredNode.patterns.length > 0 && (
